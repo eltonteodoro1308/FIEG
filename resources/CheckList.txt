@@ -1,0 +1,21 @@
+01 - Na planilha marcar o fonte como em andamento e no meu nome.
+
+02 - Copiar o fonte da pasta da v11 para pasta local
+
+03 - Efetua compatibilização do fonte
+
+04 - Ajusto cabeçalho
+
+05 - Adicionar a função U_LogCustom no início dos fontes
+
+06 - Compilo para testar sintaxe do fonte
+
+07 - Verifica erros e advertências de compilação e corrijo
+
+08 - Vericar erro no word do code analysis
+
+09 - Atualizar planilha para compatibilizado
+
+10 - Copiar o fonte da pasta local para v12
+
+11 - Evidenciar teste de validação do fonte (pode ser blocos de mais de um fonte)

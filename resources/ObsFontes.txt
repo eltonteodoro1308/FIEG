@@ -1,0 +1,1 @@
+MT103CWH.PRW - Verificar se fonte é desnecessário, executa o próprio when do campo quando o ponto de entrada serve para mudar o when do campo.
