@@ -1,1 +1,3 @@
 MT103CWH.PRW - Verificar se fonte é desnecessário, executa o próprio when do campo quando o ponto de entrada serve para mudar o when do campo.
+SICOMA28.prw - Verificar documentação incompleta
+SICOMA34.PRW - Verificar documentação incompleta
