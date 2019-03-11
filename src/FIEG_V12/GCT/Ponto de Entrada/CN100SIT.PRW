@@ -19,7 +19,7 @@ Ponto de Entrada apos alteracao da situcao do contrato.
 User Function CN100SIT()
 	Local _cLanctoCT := Alltrim(GetNewPar("SI_PCOCTSC","900051"))
 	Local _cNewSit   := ParamIXB[2] // 01 - Cancelado
-	Local lPrjCni    := FindFunction("ValidaCNI") .And. ValidaCNI()
+	//Local lPrjCni    := FindFunction("ValidaCNI") .And. ValidaCNI()
 	Local lExistLC   := .F.
 	Local _cAreaCNB
 
@@ -47,7 +47,7 @@ User Function CN100SIT()
 			If lExistLC
 				PcoFinLan(_cLanctoCT)
 			EndIf
-		
+
 		EndIf
 
 		CNB->(RestArea(_cAreaCNB))

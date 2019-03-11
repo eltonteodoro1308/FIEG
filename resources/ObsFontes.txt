@@ -1,3 +1,4 @@
 MT103CWH.PRW - Verificar se fonte é desnecessário, executa o próprio when do campo quando o ponto de entrada serve para mudar o when do campo.
 SICOMA28.prw - Verificar documentação incompleta
 SICOMA34.PRW - Verificar documentação incompleta
+CN140VCT.PRW - Fonte executa ponto de entrada com validação para se executa revisão do contrato fixa verdadeiro e com a lógica comentada, verificar necessidade.

@@ -29,8 +29,8 @@ User Function CWKFA005(_cNumPC,_lEnvMail)
 	Local oHTML
 	Local _cQuery   := ""
 	Local _cUrlFor  := GETMV("MV_XURLFO") //Parametro que guarda a URL do fornecedor
-	Local cxLogin   := ""
-	Local cxSenha   := ""
+	//Local cxLogin   := ""
+	//Local cxSenha   := ""
 	Local cxDataHr  := ""
 	Local cDescProd := ""
 	Local _cArqTRB  := CriaTrab(nil,.f.)

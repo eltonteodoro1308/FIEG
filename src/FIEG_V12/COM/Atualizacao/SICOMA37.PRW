@@ -18,7 +18,7 @@ Rotina de exclusao de ativos.
 
 User Function SICOMA37()
 
-	Local _cArea   := GetArea()
+	//Local _cArea   := GetArea()
 	Local _cArqTRB := CriaTrab(nil,.f.)
 	Private aCIAP  := {}
 
