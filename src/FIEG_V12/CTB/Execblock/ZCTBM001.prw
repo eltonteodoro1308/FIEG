@@ -41,7 +41,8 @@ User Function ZCTBM001()
 
 		If !ExistDir("C:\TEMP")
 			If MakeDir("C:\TEMP",NIL,.F.) != 0
-				lSegue := .F. //Return MsgStop('Erro ao tentar criar a pasta C:\TEMP no computador: ' + cValToChar(FError()), "ZCTBM001")
+				MsgStop('Erro ao tentar criar a pasta C:\TEMP no computador: ' + cValToChar(FError()), "ZCTBM001")
+				lSegue := .F. //Return
 			EndIf
 		EndIf
 

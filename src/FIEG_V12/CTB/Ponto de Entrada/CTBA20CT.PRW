@@ -1,30 +1,37 @@
-#INCLUDE "PROTHEUS.CH"
+#Include "Protheus.ch"
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
-ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
-ฑฑบPrograma  ณCTBA20CT  บAutor  ณMicrosiga           บ Data ณ  21/03/12   บฑฑ
-ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
-ฑฑบDesc.     ณ PE apos manutencao (inclusao,alteracao,exclusao) de Conta  บฑฑ
-ฑฑบ          ณ                                                            บฑฑ
-ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
-ฑฑบUso       ณ P11 - SISTEMA INDUSTRIA                                    บฑฑ
-ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
-฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
-*/
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} CTBA20CT
+Ponto de Entrada ap๓s manutencao (inclusใo,altera็ใo,exclusใo) de Conta.
+
+@type function
+@author Thiago Rasmussen
+@since 21/03/2012
+@version P12.1.23
+
+@obs Projeto ELO
+
+@history 18/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
 
 User Function CTBA20CT()
 
-//IF !lCTB020AUT
-//	MsgRun('Enviando pacote para ESB. Aguarde...',, {|| U_SIESBA17(,ParamIXB) } )
-//ENDIF                    
+	//--< Log das Personaliza็๕es >-----------------------------
+	U_LogCustom()
 
-If  !IsInCallStack("U_SIESBA01") .and.  !IsInCallStack("U_SICFGA01") /*Rotina ESB*//*Rotina CARGA*/
-	SZZ->(dbSetOrder(1))
-	IF SZZ->(dbSeek(XFilial("SZZ")+"CTBA020"))
-		MsgRun('Enviando pacote para ESB. Aguarde...',, {|| U_SIESBA17(,ParamIXB) } )
-	ENDIF
-Endif   
+	//--< Processamento da Rotina >-----------------------------
+
+	//IF !lCTB020AUT
+	//	MsgRun('Enviando pacote para ESB. Aguarde...',, {|| U_SIESBA17(,ParamIXB) } )
+	//EndIf
+
+	If  !IsInCallStack("U_SIESBA01") .and.  !IsInCallStack("U_SICFGA01") /*Rotina ESB*//*Rotina CARGA*/
+		SZZ->(dbSetOrder(1))
+		If SZZ->(dbSeek(XFilial("SZZ")+"CTBA020"))
+			MsgRun('Enviando pacote para ESB. Aguarde...',, {|| U_SIESBA17(,ParamIXB) } )
+		EndIf
+	EndIf
 
 Return()
