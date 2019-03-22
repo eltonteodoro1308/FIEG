@@ -186,6 +186,7 @@ Função para checagem se todos os campos existem para gravacao.
 
 @return Lógico, Verdadeiro ou Falso indicando se todos os campos existem para gravacao.s
 
+@deprecated  Static Function não está sendo chamada dentro do próprio fonte, foi mantida para efeito de documento e para evitar impactos em outras rotinas que venham executar essa rotina por StaticCall.
 /*/
 /*/================================================================================================================================/*/
 

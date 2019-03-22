@@ -235,6 +235,7 @@ Função chamado pela botao no browser para desmarcar todos os registros marcados.
 
 @history 19/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
+@deprecated  Static Function não está sendo chamada dentro do próprio fonte, foi mantida para efeito de documento e para evitar impactos em outras rotinas que venham executar essa rotina por StaticCall.
 /*/
 /*/================================================================================================================================/*/
 
@@ -1761,6 +1762,7 @@ Função para geração de Legenda.
 
 @history 19/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
+@deprecated  Static Function não está sendo chamada dentro do próprio fonte, foi mantida para efeito de documento e para evitar impactos em outras rotinas que venham executar essa rotina por StaticCall.
 /*/
 /*/================================================================================================================================/*/
 
@@ -1803,6 +1805,7 @@ Função auxiliar para contabilização.
 
 @return Indefinido, Valor retornado conforme parâmetros recebidos.
 
+@deprecated  Static Function não está sendo chamada dentro do próprio fonte, foi mantida para efeito de documento e para evitar impactos em outras rotinas que venham executar essa rotina por StaticCall.
 /*/
 /*/================================================================================================================================/*/
 
