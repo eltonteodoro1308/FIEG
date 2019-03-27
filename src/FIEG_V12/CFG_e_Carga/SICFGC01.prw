@@ -22,6 +22,12 @@ Seleciona o caminho do diretório, Consulta padrão com GetFile.
 
 User Function SICFGC01(_nOpc)
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	If _nOpc == 1
 		Return RetFile()
 	Else
@@ -49,6 +55,13 @@ Função de retorno da variável contendo o arquivo ou caminho selecionado para abe
 /*/================================================================================================================================/*/
 
 Static Function RetFile()
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 Return cArqSv
 
 /*/================================================================================================================================/*/
@@ -71,6 +84,12 @@ Getfile para busca de arquivo pela consulta padrao (F3).
 
 Static Function GetFile()
 	//Local cPathIni := GetSrvProfString("RootPath", "")+GetSrvProfString("Startpath", "")
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	//+---------------------------------------------------------------------+
 	//| Busca local para gravar o arquivo                                   |

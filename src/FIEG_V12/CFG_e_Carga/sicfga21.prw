@@ -17,5 +17,12 @@ Cadastro de Cargas.
 /*/================================================================================================================================/*/
 
 User Function SICFGA21()
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	AxCadastro("SZD","Integracao")
 Return()

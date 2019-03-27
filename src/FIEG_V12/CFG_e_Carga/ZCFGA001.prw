@@ -40,6 +40,12 @@ User function ZCFGA001()
 	Private lProcTot:= .F.
 	Private	nQtdUsr	:= 30
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	// Verifica se está sendo executado via tela ou JOB
 	If !lJob
 
@@ -136,6 +142,12 @@ Static Function fXProc(aXUsers,cXMsg)
 	Local nUsrExc	:= 0
 	Local aXInfoUsr	:= {}
 	Default cXMsg	:= ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	// Valor máximo da régua de progressão
 	If !lJob
@@ -269,6 +281,12 @@ Varre a tabela ZZZ em busca de registros que não existem no cadastro de usuários
 
 Static Function fProcExZZZ(aXUsers,nUsrExc)
 	Default nUsrExc	:= 0
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	ZZZ->(dbGoTop())
 

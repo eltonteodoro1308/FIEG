@@ -22,6 +22,11 @@ Ponto de entrada executado após a confirmação de saida do APSDU. Permite ao usuá
 User Function SduLogout()
 	Local cUser := ParamIXB[1]
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	cMensagem := 'Usuário...: ' + cUser + '<br>'
 	cMensagem += 'Computador: ' + GetComputerName() + '<br>'
 	cMensagem += 'IP........: ' + GetClientIP() + '<br>'
@@ -62,6 +67,11 @@ Envio de e-mail.
 Static Function SendMail(cPara, cAssunto, cMensagem)
 	Local lResul := .F.
 	Local cError := ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
 
 	CONNECT SMTP SERVER 'smtp.fieg.org.br' ACCOUNT 'protheus.fieg@fieg.org.br' PASSWORD 'Protheus01Fieg' RESULT lResul
 

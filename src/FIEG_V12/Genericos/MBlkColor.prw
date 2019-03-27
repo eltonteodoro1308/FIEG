@@ -26,6 +26,11 @@ Retorna as cores a serem utilizadas na pintura do browse quando o registro estiv
 User Function MBlkColor()
 	Local aRet := {}
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	aAdd(aRet, (CLR_RGB_VERMELHO)) //Cor do texto
 	aAdd(aRet, (CLR_RGB_BRANCO)  ) //Cor de fundo
 

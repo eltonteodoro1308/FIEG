@@ -25,6 +25,11 @@ User Function PE053BOT()
 	Local oObj
 	Local lPrjCni    := FindFunction("ValidaCNI") .And. ValidaCNI()
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	If lPrjCni
 		cStatus := "1"
 		cPedido := substr(HttpSession->PWSF053APH[1],16,6)

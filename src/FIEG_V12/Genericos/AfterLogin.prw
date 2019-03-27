@@ -25,6 +25,11 @@ User Function AfterLogin()
 	Local _CodigoUsuario := ParamIXB[1]
 	Local _NomeUsuario   := ParamIXB[2]
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	cMensagem := 'Usuário...: ' + _CodigoUsuario + ' - ' + AllTrim(_NomeUsuario) + '<br>'
 	cMensagem += 'Computador: ' + GetComputerName() + '<br>'
 	cMensagem += 'IP........: ' + GetClientIP() + '<br>'
@@ -66,6 +71,11 @@ Static Function SendMail(cPara, cAssunto, cMensagem)
 	Local lResul := .F.
 	Local cError := ""
 	Local lSegue := .T.
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
 
 	CONNECT SMTP SERVER 'smtp.fieg.org.br' ACCOUNT 'protheus.fieg@fieg.org.br' PASSWORD 'Protheus01Fieg' RESULT lResul
 

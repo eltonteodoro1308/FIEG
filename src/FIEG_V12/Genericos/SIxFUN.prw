@@ -35,6 +35,11 @@ User Function AbreArq(cTipo)
 	Local cType	:= "Arquivos "+cTipo+"|*."+cTipo+"|Todos os Arquivos|*.*"
 	Local cArq	:= ""
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	cTipo := Iif(cTipo==Nil ,"*",cTipo)
 	//+---------------------------------------------------------------------+
 	//| Seleciona o arquivo                                                 |
@@ -68,6 +73,11 @@ User Function RetCombo(cCampo, cChave)
 
 	Local aSx3Box	:= RetSx3Box( Posicione("SX3", 2, cCampo, "X3CBox()" ),,, 1 )
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 Return AllTrim( aSx3Box[aScan( aSx3Box, { |aBox| aBox[2] = cChave } )][3] )
 
 /*/================================================================================================================================/*/
@@ -93,6 +103,11 @@ Captura os campos informados no arquivo.
 User Function _SICFGCpo(_cAlias)
 	Local _aRet  := {}
 	Local _cMens := ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
 
 	_cLine := FT_FREADLN()
 
@@ -159,6 +174,11 @@ User Function _SICFGLOG( aErr, cLit )
 	Local cLinha  := ""
 	Local aRet    := {}
 	Local nI      := 0
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
 
 	For nI := 1 to LEN( aErr)
 		cLinha  := UPPER( aErr[nI] )

@@ -27,6 +27,12 @@ User Function ZCFGA010()
 	{ "Alterar"    ,"AxAltera",0,4},;
 	{ "Excluir"    ,"AxDeleta",0,5}}
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	MBrowse(,,,,cAlias,,,,,,)
 
 	RestArea(aArea)

@@ -27,6 +27,11 @@ User Function SICFGA01()
 	Private cArq      := ""
 	Private _nHandTXT := 0
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 	IF Len(_aRot := SICFG01Rot()) == 0
 		lSegue := .F.
 	ENDIF
@@ -81,6 +86,12 @@ Static Function SICFG01Atu(cArq)
 	Local _aDados  := {}
 	Local nVlr3    := 0
 	Local lSegue   := .T.
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	FT_FUSE(cArq)
 	nCnt := FT_FLASTREC()
@@ -348,6 +359,12 @@ Static Function SICFG01Inc(aCab,aItens,_nLinha)
 	Private lMsHelpAuto    := .T.
 	Private lAutoErrNoFile := .T.
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	_lExecAuto := SZD->ZD_EXECAUT=="1"
 
 	// Troca de variaveis do execauto dos movimentos contábeis
@@ -533,6 +550,12 @@ Static Function SICFG01Imp(aRegErr,_cAlias)
 	Private m_pag       := 01
 	Private wnrel       := 'SICFG01Imp'
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	//+---------------------------------------------------------------------+
 	//| Monta a interface padrao com o usuario...                           |
 	//+---------------------------------------------------------------------+
@@ -581,6 +604,12 @@ Processamento do Relatorio.
 Static Function RunReport( aRegErr )
 	Local nI := 0
 	Local nJ := 0
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	SetPrc( 80, 1 )
 
@@ -653,6 +682,12 @@ Captura os campos informados no arquivo.
 Static Function SICFG01Cpo(_cAliasH,_cAliasD,_lExecAuto)
 	Local _aRet  := {}
 	Local _cMens := ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	_cLine := FT_FREADLN()
 	_nPos  := At(";",_cLine)
@@ -766,6 +801,12 @@ Static Function SICFG01Log( aErr, cLit )
 	Local aRet    := {}
 	Local nI      := 0
 
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
 	For nI := 1 to LEN( aErr)
 		cLinha  := UPPER( aErr[nI] )
 		cLinha  := STRTRAN( cLinha,CHR(13), " " )
@@ -813,6 +854,12 @@ Static Function SICFG01Rot()
 	Local _aRet     := ""
 	Local nOpc      := 0
 	Local lSegue    := .T.
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	SZD->(dbSetOrder(1))
 	SZD->(dbGoTop())
@@ -885,6 +932,12 @@ Static Function SICFG01TXT(_lCabec)
 	Local _cDir    := "C:\TEMP\"
 	Local _cFile   := "carga"+Dtos(Date())+StrTran(Time(),":","")+".log"
 	Local _cMsgLOG := ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
 
 	IF _lCabec
 		IF !lIsDir( _cDir )
