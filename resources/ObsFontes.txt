@@ -5,3 +5,4 @@ CN140VCT.PRW - Fonte executa ponto de entrada com validação para se executa revi
 f240ind.prw  - Fonte com função PutSx1, verificar qual tratiova adotar.
 F240TBOR.PRW - Fonte obriga utilizas include rwmake.ch por utilizar componentes antigos de tela.
 DTATF01.prw  - Verificar documentação incompleta
+FINR01A.PRW  - Verifica documentação da funcinalidade da static function FR550TOT.

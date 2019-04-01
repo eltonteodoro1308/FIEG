@@ -1,0 +1,879 @@
+#Include "Protheus.ch"
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} Dcomr010
+Relatório para conciliação contábil.
+
+@type function
+@author Wagner Soares
+@since 11/07/2014
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 01/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function Dcomr010()
+	Local oReport
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	If FindFunction("TRepInUse") .And. TRepInUse()
+		//+------------------------------------------------------------------------+
+		//|Interface de impressao                                                  |
+		//+------------------------------------------------------------------------+
+		oReport:= ReportDef()
+		oReport:PrintDialog()
+	EndIf
+
+Return
+
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ReportDef
+Monta o objeto que representa o relatório.
+
+@type function
+@author Wagner Soares
+@since 11/07/2014
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 01/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Objeto, Objeto que representa o relatório.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ReportDef()
+
+	Local oReport
+	Local oSection1
+	Local oSection2
+	Local oSection3
+	Local oSection4
+	Local oSection5
+	Local oCell
+	Local aOrdem := {}
+	Local cTamVlr := TamSX3('D1_TOTAL')[1]
+	Local cTamImp := TamSX3('F1_VALIMP1')[1]
+	#IFNDEF TOP
+	Local cAliasSD1 := "SD1"
+	#ELSE
+	Local cAliasSD1 := GetNextAlias()
+	#ENDIF
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	AjustaSX1()
+	//+------------------------------------------------------------------------+
+	//|Criacao do componente de impressao                                      |
+	//|                                                                        |
+	//|TReport():New                                                           |
+	//|ExpC1 : Nome do relatorio                                               |
+	//|ExpC2 : Titulo                                                          |
+	//|ExpC3 : Pergunte                                                        |
+	//|ExpB4 : Bloco de codigo que sera executado na confirmacao da impressao  |
+	//|ExpC5 : Descricao                                                       |
+	//|                                                                        |
+	//+------------------------------------------------------------------------+
+	oReport:= TReport():New("Docomr010","Relacao de Notas Para Conciliacao Contábil","DOR010", {|oReport| ReportPrint(oReport,cAliasSD1)},"Relacao de Notas"+" "+"Concialicao"+" "+"Contabil")
+	oReport:SetTotalInLine(.F.)
+	If TamSX3("D1_COD")[1] > 15
+		oReport:SetLandScape()
+	Else
+		oReport:SetPortrait()
+	EndIf
+
+	Pergunte("DOR010",.F.)
+
+	Aadd( aOrdem, "Por Nota" )
+	//Aadd( aOrdem, "Por Produto"  )
+	Aadd( aOrdem, "Por Data Digitacao" )
+	//Aadd( aOrdem, "Por Data Emissao" )
+	Aadd( aOrdem, "Por Fornecedor" )
+
+	//+--------------------------------------------------------------+
+	//| Definicao da Sessao 1                                        |
+	//+--------------------------------------------------------------+
+	oSection1 := TRSection():New(oReport,"Relacao de Notas - Conciliacao Contabil",{"SD1","SF1","SA1","SA2","SB1"},aOrdem) //"Rela‡„o de Notas Fiscais"
+	oSection1 :SetTotalInLine(.F.)
+	oSection1 :SetReadOnly()
+
+	TRCell():New(oSection1,"D1_DOC","SD1",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/,,,,,,.F.)
+	TRCell():New(oSection1,"D1_DTDIGIT","SD1",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+	TRCell():New(oSection1,"D1_FORNECE","SD1",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+	TRCell():New(oSection1,"D1_LOJA","SD1",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+	TRCell():New(oSection1,"cRazSoc","   ",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+	oSection1:Cell("cRazSoc"):GetFieldInfo("A2_NOME")
+	oSection1:Cell("cRazSoc"):SetSize(30)
+	TRCell():New(oSection1,"nTotNF1","   ",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
+	oSection1:Cell("nTotNF1"):GetFieldInfo("F1_VALMERC")
+
+	oSection1:SetNoFilter("SF1")
+	oSection1:SetNoFilter("SA1")
+	oSection1:SetNoFilter("SA2")
+	oSection1:SetNoFilter("SB1")
+
+	oSection1:SetEditCell(.T.)
+
+
+Return(oReport)
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ReportPrint
+Descrição detalhada da função.
+
+@type function
+@author Wagner Soares
+@since 11/07/2014
+@version P12.1.23
+
+@param oReport, Objeto, Objeto que representa o relatório.
+@param cAliasSD1, Caractere, Alias da tabela SD1.
+@param nReg, Numérico, RECNO no registro posicionado.
+
+@obs Desenvolvimento FIEG
+
+@history 01/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ReportPrint(oReport,cAliasSD1,nReg)
+
+	Local oSection1 := oReport:Section(1)
+	Local nOrdem    := oReport:Section(1):GetOrder()
+	Local oBreak
+	Local aCampos   := {}
+	Local cFilUsrSD1:= ""
+	Local cSelect   := ""
+	Local cSelect1  := ""
+	Local cSelect3  := "%%"
+	Local cSelect4  := ""
+	Local cWhereSF1 := ""
+	Local cOrder    := ""
+	LOCAL cDocAnt     := ""
+	LOCAL cCodAnt     := ""
+	LOCAL cAliasSF1   := "SF1"
+	LOCAL cAliasSB1   := "SB1"
+	LOCAL cAliasSA1   := "SA1"
+	LOCAL cAliasSA2   := "SA2"
+	LOCAL cAliasSF4   := "SF4"
+	LOCAL cForCli     := ""
+	LOCAL cMuni       := ""
+	LOCAL cFornF1     := ""
+	LOCAL cLojaF1     := ""
+	LOCAL cDocF1      := ""
+	LOCAL cSerieF1    := ""
+	LOCAL cCondF1     := ""
+	LOCAL cTipoF1     := ""
+	LOCAL cDescri     := ""
+	LOCAL cFornAnt    := ""
+	LOCAL cName       := ""
+	LOCAL nMoedaF1    := 0
+	LOCAL nTxMoedaF1  := 0
+	LOCAL nFreteF1    := 0
+	LOCAL nDespesaF1  := 0
+	LOCAL nSeguroF1   := 0
+	LOCAL nValTotF1   := 0
+	LOCAL nValMerc    := 0
+	LOCAL nValDesc    := 0
+	LOCAL nValIcm     := 0
+	LOCAL nValIpi     := 0
+	LOCAL nValImpInc  := 0
+	LOCAL nValImpNoInc:= 0
+	LOCAL nTotGeral   := 0
+	LOCAL nTotGerImp  := 0
+	LOCAL nTotDesco   := 0
+	LOCAL nTotFrete   := 0
+	LOCAL nTotSeguro  := 0
+	LOCAL nTotDesp    := 0
+	LOCAL nTotProd    := 0
+	LOCAL nTotQger    := 0
+	LOCAL nTotData    := 0
+	LOCAL nTotForn    := 0
+	LOCAL nTotquant   := 0
+	LOCAL nTGerIcm    := 0
+	LOCAL nTGerIpi    := 0
+	LOCAL nTGImpInc   := 0
+	LOCAL nTGImpNoInc := 0
+	LOCAL nImpInc     := 0
+	LOCAL nImpNoInc   := 0
+	LOCAL nImpos      := 0
+	LOCAL nTaxa       := 1
+	LOCAL nMoeda      := 1
+	LOCAL lQuery      := .F.
+	LOCAL lImp	      := .F.
+	LOCAL lFiltro     := .T.
+	LOCAL lDescLine   := .T.
+	LOCAL lPrintLine  := .F.
+	LOCAL lEasy       := If(GetMV("MV_EASY")=="S",.T.,.F.)
+	LOCAL aImpostos   := {}
+	LOCAL dDtDig      := dDataBase
+	LOCAL dDataAnt    := dDataBase
+	LOCAL dEmissaoF1  := dDataBase
+	LOCAL dDtDigitF1  := dDataBase
+	LOCAL nX       := 0
+	Local nY       := 0
+	LOCAL aStrucSD1   := {}
+	#IFNDEF TOP
+	Local cCondicao := ""
+	#ENDIF
+
+	#IFDEF TOP
+	DbSelectArea("SX3")
+	SX3->(DbSetOrder(2))
+	SX3->(DbSeek("D1_VALIMP"))
+	While SX3->(!Eof()) .And. X3_ARQUIVO == "SD1" .And. X3_CAMPO = "D1_VALIMP"
+		AAdd(aCampos,X3_CAMPO)
+		SX3->(DbSkip())
+	EndDo
+	#ENDIF
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	If nOrdem == 1
+		oReport:SetTitle( oReport:Title()+" - "+"Por Nota")
+	ElseIf nOrdem == 2
+		oReport:SetTitle( oReport:Title()+" - "+"Por Data Digitacao")
+	ElseIf nOrdem == 3
+		oReport:SetTitle( oReport:Title()+" - "+"Por Fornecedor"	) //"Por Fornecedor"
+	Endif
+
+
+	//+--------------------------------------------------------------+
+	//| Posiciona a Ordem de todos os Arquivos usados no Relatorio   |
+	//+--------------------------------------------------------------+
+	dbSelectArea("SA1")
+	SA1->(dbSetOrder(1))
+	dbSelectArea("SA2")
+	SA2->(dbSetOrder(1))
+	dbSelectArea("SB1")
+	SB1->(dbSetOrder(1))
+	dbSelectArea("SF4")
+	SF4->(dbSetOrder(1))
+	dbselectarea("SF1")
+	SF1->(dbsetorder(1))
+	dbSelectArea("SD1")
+	SD1->(dbSetOrder(1))
+
+	//+------------------------------------------------------------------------+
+	//|Filtragem do relatório                                                  |
+	//+------------------------------------------------------------------------+
+	#IFDEF TOP
+	cALiasSF1 := cAliasSD1
+	cALiasSB1 := IIF(!lEasy,cAliasSD1,"SB1")
+	cALiasSA1 := cAliasSD1
+	cALiasSA2 := cAliasSD1
+	lQuery :=.T.
+	aStrucSD1 := SD1->(dbStruct())
+	//+------------------------------------------------------------------------+
+	//|Transforma parametros Range em expressao SQL                            |
+	//+------------------------------------------------------------------------+
+	MakeSqlExpr(oReport:uParam)
+	//+------------------------------------------------------------------------+
+	//|Query do relatório da secao 1                                           |
+	//+------------------------------------------------------------------------+
+	oReport:Section(1):BeginQuery()
+	//+------------------------------------------------------------------------+
+	//|Composicao do Select Inicial de acordo com a ordem escolhida            |
+	//+------------------------------------------------------------------------+
+	cSelect := "%"
+	cSelect += "SD1.D1_FILIAL,SD1.D1_DOC,SD1.D1_SERIE,SD1.D1_FORNECE,SD1.D1_LOJA,SD1.D1_DTDIGIT,SD1.D1_COD,SD1.D1_ITEM,"
+	cSelect += "%"
+	//+------------------------------------------------------------------------+
+	//|Composicao do Select dos impostos variaveis                             |
+	//+------------------------------------------------------------------------+
+	cSelect1 := "%"
+	For nX := 1 To Len(acampos)
+		cSelect1 +=acampos[nX]+","
+	Next nX
+	cSelect1 += "%"
+	cFilUsrSD1:= oSection1:GetAdvplExp()
+	If !Empty(cFilUsrSD1)
+		cSelect4 := "D1_FILIAL,D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA,D1_COD,D1_DTDIGIT,D1_QUANT,D1_TES,D1_IPI,"
+		cSelect4 += "D1_VUNIT,D1_TOTAL,D1_VALFRE,D1_DESPESA,D1_SEGURO,D1_PEDIDO,D1_ITEMPC,D1_PICM,D1_TIPO,D1_CF,"
+		cSelect4 += "D1_GRUPO,D1_LOCAL,D1_ITEM,D1_EMISSAO,D1_VALDESC,D1_ICMSRET,D1_VALICM,D1_VALIPI"
+		cSelect3 := "%"
+		For nX := 1 To SD1->(FCount())
+			cName := SD1->(FieldName(nX))
+			If AllTrim( cName ) $ cFilUsrSD1
+				If aStrucSD1[nX,2] <> "M"
+					If !cName $ cSelect .And. !cName $ cSelect1 .And. !cName $ cSelect4
+						cSelect3 += cName +","
+					Endif
+				EndIf
+			EndIf
+		Next nX
+		cSelect3 += "%"
+	Endif
+	//+------------------------------------------------------------------------+
+	//|Composicao do Where para Remito                                         |
+	//+------------------------------------------------------------------------+
+	cWhereSF1 := "%"
+	cWhereSF1 += "NOT ("+IsRemito(3,'SF1.F1_TIPODOC')+ ") "
+	cWhereSF1 += "%"
+	//+------------------------------------------------------------------------+
+	//|Composicao do Order By de acordo com a ordem escolhida                  |
+	//+------------------------------------------------------------------------+
+	cOrder := "%"
+	If nOrdem == 1
+		cOrder += "1,2,3,4,5,6,7"
+	ElseIf nOrdem == 2
+		cOrder += "1,7,2,3,4,5,6"
+	Else
+		cOrder += "1,4,5,2,3,6"
+	Endif
+	cOrder += "%"
+
+	BeginSql Alias cAliasSD1
+
+		SELECT 	%Exp:cSelect%
+		D1_DTDIGIT,D1_COD,D1_QUANT,D1_VUNIT,D1_TOTAL,D1_VALFRE,D1_DESPESA,D1_SEGURO,D1_PEDIDO,D1_ITEMPC,
+		%Exp:cSelect3%
+		D1_TES,D1_IPI,D1_PICM,D1_TIPO,D1_CF,D1_GRUPO,D1_LOCAL,D1_ITEM,D1_EMISSAO,D1_VALDESC,D1_ICMSRET,D1_VALICM,D1_VALIPI,
+		%Exp:cSelect1%
+		F1_FILIAL,F1_MOEDA,F1_TXMOEDA,F1_DTDIGIT,F1_TIPO,F1_COND,F1_VALICM,F1_VALIPI,F1_VALIMP1,
+		F1_FRETE,F1_DESPESA,F1_SEGURO,F1_DESCONT,F1_VALMERC,F1_DOC,F1_SERIE,F1_EMISSAO,F1_FORNECE,F1_LOJA,F1_VALBRUT,
+		A1_NOME RAZAO,A1_MUN RAZMUNI,SD1.R_E_C_N_O_ SD1RECNO
+
+		FROM %table:SF1% SF1,%table:SD1% SD1,%table:SA1% SA1
+
+		WHERE 	SF1.F1_FILIAL  =  %xFilial:SF1% 	AND
+		%Exp:cWhereSF1%	  	    	        AND
+		SF1.%NotDel%          		        AND
+		SD1.D1_FILIAL  =  	%xFilial:SD1%  	AND
+		SD1.D1_DOC     = 	SF1.F1_DOC     	AND
+		SD1.D1_SERIE   = 	SF1.F1_SERIE    AND
+		SD1.D1_FORNECE = 	SF1.F1_FORNECE  AND
+		SD1.D1_LOJA    = 	SF1.F1_LOJA     AND
+		SD1.D1_TIPO IN ('D','B') 			AND
+		SD1.D1_TIPODOC = SF1.F1_TIPODOC 	AND
+		SD1.%NotDel%          		        AND
+		SA1.A1_FILIAL  =  %xFilial:SA1% 	AND
+		SA1.A1_COD     = 	SD1.D1_FORNECE 	AND
+		SA1.A1_LOJA    =   	SD1.D1_LOJA    	AND
+		SA1.%NotDel%          		        AND
+		SD1.D1_DTDIGIT >= %Exp:Dtos(mv_par01)% AND
+		SD1.D1_DTDIGIT <= %Exp:Dtos(mv_par02)% AND
+		SD1.D1_TES     = %Exp:mv_par03%
+
+		UNION
+
+		SELECT 	%Exp:cSelect%
+		D1_DTDIGIT,D1_COD,D1_QUANT,D1_VUNIT,D1_TOTAL,D1_VALFRE,D1_DESPESA,D1_SEGURO,D1_PEDIDO,D1_ITEMPC,
+		%Exp:cSelect3%
+		D1_TES,D1_IPI,D1_PICM,D1_TIPO,D1_CF,D1_GRUPO,D1_LOCAL,D1_ITEM,D1_EMISSAO,D1_VALDESC,D1_ICMSRET,D1_VALICM,D1_VALIPI,
+		%Exp:cSelect1%
+		F1_FILIAL,F1_MOEDA,F1_TXMOEDA,F1_DTDIGIT,F1_TIPO,F1_COND,F1_VALICM,F1_VALIPI,F1_VALIMP1,
+		F1_FRETE,F1_DESPESA,F1_SEGURO,F1_DESCONT,F1_VALMERC,F1_DOC,F1_SERIE,F1_EMISSAO,F1_FORNECE,F1_LOJA,F1_VALBRUT,
+		A2_NOME RAZAO,A2_MUN RAZMUNI,SD1.R_E_C_N_O_ SD1RECNO
+
+		FROM %table:SF1% SF1,%table:SD1% SD1,%table:SA2% SA2
+
+		WHERE 	SF1.F1_FILIAL  =  %xFilial:SF1% 	AND
+		%Exp:cWhereSF1%	  	    	        AND
+		SF1.%NotDel%          		        AND
+		SD1.D1_FILIAL  =  	%xFilial:SD1%  	AND
+		SD1.D1_DOC     = 	SF1.F1_DOC     	AND
+		SD1.D1_SERIE   = 	SF1.F1_SERIE    AND
+		SD1.D1_FORNECE = 	SF1.F1_FORNECE  AND
+		SD1.D1_LOJA    = 	SF1.F1_LOJA     AND
+		SD1.D1_TIPO NOT IN ('D','B') 		AND
+		SD1.D1_TIPODOC = SF1.F1_TIPODOC 	AND
+		SD1.%NotDel%          		        AND
+		SA2.A2_FILIAL  =  %xFilial:SA2% 	AND
+		SA2.A2_COD     = 	SD1.D1_FORNECE 	AND
+		SA2.A2_LOJA    =   	SD1.D1_LOJA    	AND
+		SA2.%NotDel%          		        AND
+		SD1.D1_DTDIGIT >= %Exp:Dtos(mv_par01)% AND
+		SD1.D1_DTDIGIT <= %Exp:Dtos(mv_par02)% AND
+		SD1.D1_TES     = %Exp:mv_par03%
+		ORDER BY %Exp:cOrder%
+
+	EndSql
+	oReport:Section(1):EndQuery(/*Array com os parametros do tipo Range*/)
+
+	#ENDIF
+
+	cFilUsrSD1:= oSection1:GetAdvplExp()
+
+	//+------------------------------------------------------------------------+
+	//|Inicio da impressao do fluxo do relatório                               |
+	//+------------------------------------------------------------------------+
+	dbselectArea(cAliasSD1)
+	oReport:SetMeter(SD1->(LastRec()))
+
+	If !lquery
+		(cAliasSF1)->(dbseek( xFilial("SF1") + (cAliasSD1)->D1_DOC + (cAliasSD1)->D1_SERIE + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA)) //posiciona o cabecalho da nota
+	Endif
+
+	nTaxa   := (cAliasSF1)->F1_TXMOEDA
+	nMoeda  := (cAliasSF1)->F1_MOEDA
+	dDtDig  := (cAliasSF1)->F1_DTDIGIT
+	cDocAnt := (cAliasSD1)->D1_FILIAL + (cAliasSD1)->D1_DOC + (cAliasSD1)->D1_SERIE + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA
+
+	While !oReport:Cancel() .And. (cAliasSD1)->(!Eof()) .And. (cAliasSD1)->D1_FILIAL == xFilial("SD1")
+
+		lFiltro := .T.
+
+		//+--------------------------------------------------------------+
+		//| Se cancelado pelo usuario                            	     |
+		//+--------------------------------------------------------------+
+		If oReport:Cancel()
+			Exit
+		EndIf
+
+		//+--------------------------------------------------------------+
+		//| Despreza Nota Fiscal Cancelada.                              |
+		//+--------------------------------------------------------------+
+		#IFDEF SHELL
+		If D1_CANCEL == "S"
+			lFiltro := .F.
+		EndIf
+		#ENDIF
+
+		//+--------------------------------------------------------------+
+		//| Considera filtro escolhido                                   |
+		//+--------------------------------------------------------------+
+		dbSelectArea(cAliasSD1)
+		If !Empty(cFilUsrSD1)
+			If !(&(cFilUsrSD1))
+				lFiltro := .F.
+			EndIf
+		EndIf
+
+		If lFiltro
+
+			lImp := .T.
+			cDescri := ""
+			//+--------------------------------------------------------------+
+			//| Faz a Quebra da Linha de descricao para todas ordens do Rela.|
+			//+--------------------------------------------------------------+
+			If lDescLine == .T.
+
+				If nOrdem == 1
+
+					If (cAliasSD1)->D1_TIPO $ "BD"
+						If !lQuery
+							(cAliasSA1)->(dbSeek(xFilial("SA1") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->A1_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					Else
+						If !lQuery
+							(cAliasSA2)->(dbSeek(xFilial("SA2") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA2)->A2_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					EndIf
+
+					oSection1:Cell("nTotNF1"):SetValue((cAliasSD1)->F1_VALMERC)
+
+					oSection1:Init()
+					oSection1:PrintLine()
+
+				Elseif nOrdem == 2
+
+					If (cAliasSD1)->D1_TIPO $ "BD"
+						If !lQuery
+							(cAliasSA1)->(dbSeek(xFilial("SA1") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->A1_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					Else
+						If !lQuery
+							(cAliasSA2)->(dbSeek(xFilial("SA2") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA2)->A2_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					EndIf
+
+					oSection1:Cell("nTotNF1"):SetValue((cAliasSD1)->F1_VALMERC)
+
+					oSection1:Init()
+					oSection1:PrintLine()
+
+					dDataAnt := IIf(nOrdem == 2,(cAliasSD1)->D1_DTDIGIT,(cAliasSD1)->D1_EMISSAO)
+				Elseif nOrdem == 3
+
+
+					If (cAliasSD1)->D1_TIPO $ "BD"
+						If !lquery
+							(cAliasSA1)->(dbSeek(xFilial("SA1") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->A1_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					Else
+						If !lquery
+							(cAliasSA2)->(dbSeek(xFilial("SA2") + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA))
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA2)->A2_NOME)
+						Else
+							oSection1:Cell("cRazSoc"):SetValue((cAliasSA1)->RAZAO)
+						Endif
+					EndIf
+
+					oSection1:Cell("nTotNF1"):SetValue((cAliasSD1)->F1_VALMERC)
+					oSection1:Init()
+					oSection1:PrintLine()
+
+					cFornAnt := (cAliasSD1)->D1_FORNECE+(cAliasSD1)->D1_LOJA
+				Endif
+				lDescLine := .F.
+			Endif
+
+			//+--------------------------------------------------------------+
+			//|Posiciona o F4 para todas as ordens quando nao for query TES  |
+			//+--------------------------------------------------------------+
+			(cAliasSF4)->(dbSeek(xFilial("SF4") + (cAliasSD1)->D1_TES))
+
+			//+--------------------------------------------------------------+
+			//|Impressao do corpo do relatorio para todas as ordens          |
+			//+--------------------------------------------------------------+
+			If nOrdem == 1 .Or. nOrdem == 2 .Or. nOrdem == 3
+
+
+				If Empty(cDescri)
+					cDescri := Space(28)
+				Endif
+
+				nValIcm   += (cAliasSD1)->D1_VALICM
+				nValIpi   += (cAliasSD1)->D1_VALIPI
+				nTgerIcm  += (cAliasSD1)->D1_VALICM
+				nTgerIpi  += (cAliasSD1)->D1_VALIPI
+
+				If (cAliasSF4)->F4_AGREG != "N"
+					nValMerc  := nValMerc + (cAliasSD1)->D1_TOTAL + IIF(!(cAliasSF4)->F4_INCSOL$"A|N",(cAliasSD1)->D1_ICMSRET,0)
+					nTotGeral := nTotGeral + (cAliasSD1)->D1_TOTAL - (cAliasSD1)->D1_VALDESC + IIF((cAliasSF4)->F4_INCSOL!="A",(cAliasSD1)->D1_ICMSRET,0)
+					If (cAliasSF4)->F4_AGREG = "I"
+						nValMerc  += (cAliasSD1)->D1_VALICM
+						nTotGeral += (cAliasSD1)->D1_VALICM
+					Endif
+				Else
+					nTotGeral := nTotGeral - (cAliasSD1)->D1_VALDESC + IIF((cAliasSF4)->F4_INCSOL!="A",(cAliasSD1)->D1_ICMSRET,0)
+				Endif
+
+				//+--------------------------------------------------------------+
+				//| Soma valor do IPI caso a nota nao seja compl. de IPI    	 |
+				//| e o TES Calcula IPI nao seja "R"                             |
+				//+--------------------------------------------------------------+
+				If (cAliasSF4)->(dbSeek(xFilial("SF4") + (cAliasSD1)->D1_TES))
+					If (cAliasSD1)->D1_TIPO != "P" .And. (cAliasSF4)->F4_IPI != "R"
+						nValMerc  += (cAliasSD1)->D1_VALIPI
+						nTotGeral += (cAliasSD1)->D1_VALIPI
+					EndIf
+				Else
+					If (cAliasSD1)->D1_TIPO != "P"
+						nValMerc  += (cAliasSD1)->D1_VALIPI
+						nTotGeral += (cAliasSD1)->D1_VALIPI
+					EndIf
+				EndIf
+
+
+				nValDesc  +=(cAliasSD1)->D1_VALDESC
+				nTotDesco += (cAliasSD1)->D1_VALDESC
+
+
+
+				nTotFrete += (cAliasSD1)->D1_VALFRE
+				nTotSeguro+= (cAliasSD1)->D1_SEGURO
+				nTotDesp  += (cAliasSD1)->D1_DESPESA
+
+				cFornF1     := (cAliasSF1)->F1_FORNECE
+				cLojaF1     := (cAliasSF1)->F1_LOJA
+				cDocF1      := (cAliasSF1)->F1_DOC
+				cSerieF1    := (cAliasSF1)->F1_SERIE
+				cTipoF1     := (cAliasSF1)->F1_TIPO
+				cCondF1     := (cAliasSF1)->F1_COND
+				nMoedaF1    := (cAliasSF1)->F1_MOEDA
+				nTxMoedaF1  := (cAliasSF1)->F1_TXMOEDA
+				nFreteF1    := (cAliasSF1)->F1_FRETE
+				nDespesaF1  := (cAliasSF1)->F1_DESPESA
+				nSeguroF1   := (cAliasSF1)->F1_SEGURO
+				nValTotF1   := (cAliasSF1)->F1_VALBRUT
+				dEmissaoF1  := (cAliasSF1)->F1_EMISSAO
+				dDtDigitF1  := (cAliasSF1)->F1_DTDIGIT
+
+				If lQuery
+					cForCli  := (cAliasSF1)->RAZAO
+					cMuni    := (cAliasSF1)->RAZMUNI
+				Endif
+				//+--------------------------------------------------------------+
+				//|Incrementa a Regua de processamento no salto do registro      |
+				//+--------------------------------------------------------------+
+				dbSelectArea(cAliasSD1)
+				(cAliasSD1)->(dbSkip())
+
+				oReport:IncMeter()
+
+
+				//+--------------------------------------------------------------+
+				//| Imprime a linha totalizadora considerando as notas que nao   |
+				//| filtradas considerando a soma do valor 0 ao total            |
+				//+--------------------------------------------------------------+
+				If !lFiltro .And. nOrdem == 5 .And. "D1_TOTAL" $ cFilUsrSD1
+					nTotGeral:= nTotGeral + nValMerc + ( nTotDesp + nTotFrete + nTotSeguro )
+					nTotData := nTotData + nValMerc + ( nTotDesp + nTotFrete + nTotSeguro )
+					nTotForn := nTotForn + nValMerc + ( nTotDesp + nTotFrete + nTotSeguro )
+
+					If nTotData > 0
+						If (dDataAnt != (cAliasSD1)->D1_DTDIGIT) .And. nOrdem == 3 .Or. (dDataAnt != (cAliasSD1)->D1_EMISSAO) .And. nOrdem == 4
+							lDescLine := .T.
+							oReport:SkipLine()
+							nLin := oReport:Row()
+							oReport:PrintText("TOTAL NA DATA : ",nLin)
+							oReport:PrintText(TransForm(nTotData,Pesqpict("SD1","D1_TOTAL")),nLin,oSection1:Cell('nTotNF1'):ColPos()-35)
+							oReport:SkipLine()
+							oReport:FatLine()
+							oReport:SkipLine()
+							nTotData := 0
+						Endif
+					EndIf
+				EndIf
+
+				cDocAnt := (cAliasSD1)->D1_FILIAL + (cAliasSD1)->D1_DOC + (cAliasSD1)->D1_SERIE + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA
+
+				nValIpi     := 0
+				nValMerc    := 0
+				nValDesc    := 0
+				nTotDesp    := 0
+				nTotFrete   := 0
+				nTotSeguro  := 0
+				nValIcm     := 0
+				nValImpInc	:= 0
+				nValImpNoInc:= 0
+				nImpInc		:= 0
+				nImpNoInc	:= 0
+				If nOrdem <> 3 .Or. nOrdem <> 4 .Or. nOrdem <> 5
+					lDescLine  := .T.
+				Endif
+			Endif
+
+		Elseif nOrdem == 2
+
+			If dDataAnt != Iif(nOrdem == 3,(cAliasSD1)->D1_DTDIGIT,(cAliasSD1)->D1_EMISSAO) .And. lPrintLine // nTotData > 0
+				lDescLine := .T.
+				oReport:SkipLine()
+				nLin := oReport:Row()
+				oReport:PrintText("TOTAL NA DATA : ",nLin)
+				oReport:PrintText(TransForm(nTotData,Pesqpict("SD1","D1_TOTAL")),nLin,oSection1:Cell("nTotNF1"):ColPos()-80)
+				oReport:SkipLine()
+
+				nTotGerImp += nValMerc + ( nTotDesp + nTotFrete + nTotSeguro )
+
+				oSection3:PrintLine()
+				oReport:FatLine()
+				oReport:SkipLine()
+
+				oSection1:Finish()
+				oSection2:Finish()
+				oSection3:Finish()
+
+				nTotGeral += nTotData
+				dDataAnt := Iif(nOrdem == 2,(cAliasSD1)->D1_DTDIGIT,(cAliasSD1)->D1_EMISSAO)
+				nTotData := 0
+				nValIpi     := 0
+				nValMerc    := 0
+				nValDesc    := 0
+				nTotDesp    := 0
+				nTotFrete   := 0
+				nTotSeguro  := 0
+				nValIcm     := 0
+				nValImpInc	:= 0
+				nValImpNoInc:= 0
+				nImpInc		:= 0
+				nImpNoInc	:= 0
+				lPrintLine := .F.
+			Endif
+
+		Elseif nOrdem == 3
+
+			If cFornAnt != (cAliasSD1)->D1_FORNECE+(cAliasSD1)->D1_LOJA .And. lPrintLine // nTotForn > 0
+				lDescLine := .T.
+				oReport:SkipLine()
+				nLin := oReport:Row()
+				oReport:PrintText("TOTAL DO FORNECEDOR :",nLin)
+				oReport:PrintText(TransForm(nTotForn,Pesqpict("SD1","D1_TOTAL")),nLin,oSection1:Cell("nTotNF1"):ColPos()-30)
+				oReport:SkipLine()
+
+				nTotGerImp += nValMerc + ( nTotDesp + nTotFrete + nTotSeguro )
+
+				oSection3:PrintLine()
+				oReport:FatLine()
+
+				oSection1:Finish()
+				oSection2:Finish()
+				oSection3:Finish()
+
+				nTotGeral += nTotForn
+				cFornAnt := (cAliasSD1)->D1_FORNECE+(cAliasSD1)->D1_LOJA
+				nTotForn := 0
+				nValIpi     := 0
+				nValMerc    := 0
+				nValDesc    := 0
+				nTotDesp    := 0
+				nTotFrete   := 0
+				nTotSeguro  := 0
+				nValIcm     := 0
+				nValImpInc	:= 0
+				nValImpNoInc:= 0
+				nImpInc		:= 0
+				nImpNoInc	:= 0
+				lPrintLine := .F.
+			Endif
+
+		Endif
+
+		If !lquery
+			(cAliasSF1)->(dbseek( xFilial("SF1") + (cAliasSD1)->D1_DOC + (cAliasSD1)->D1_SERIE + (cAliasSD1)->D1_FORNECE + (cAliasSD1)->D1_LOJA)) //posiciona o cabecalho da nota
+		Endif
+
+		nTaxa  := (cAliasSF1)->F1_TXMOEDA
+		nMoeda := (cAliasSF1)->F1_MOEDA
+		dDtDig := (cAliasSF1)->F1_DTDIGIT
+
+	EndDo
+	If lImp
+		If nOrdem == 1
+			If (nTgerIcm + nTgerIpi + nTotGeral + nTgImpInc + nTgImpNoInc) > 0
+				oReport:FatLine()
+			Endif
+		ElseIf nOrdem == 2
+			oReport:SkipLine()
+			nLin := oReport:Row()
+			oReport:PrintText("TOTAL",nLin)
+			oReport:PrintText(TransForm(nTotGeral,PesqPict("SF1","F1_VALMERC",17)),nLin,oSection1:Cell("nTotNF1"):ColPos()-IIF(nOrdem==5,30,80))
+			oReport:SkipLine()
+		Endif
+
+	Endif
+
+Return NIL
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} AjustaSX1
+Ajusta perguntas do SX1.
+
+@type function
+@author Aline Correa do Vale
+@since 23/11/2003
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 01/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function AjustaSX1()
+
+	Local aHelpPor	:= {}
+	Local aHelpEng	:= {}
+	Local aHelpSpa	:= {}
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	cPerg := "DOR010"
+	cPerg := PADR(cPerg,len(SX1->X1_GRUPO))
+
+	Aadd( aHelpPor, "Informe a Data de Entrada Inicial." )
+	Aadd( aHelpEng, "Say the Start Due of enter " )
+	Aadd( aHelpSpa, "" )
+
+
+	//PutSx1(cPerg,"01","Data Entrada De? ","","","mv_chl","D",8,0,0,"G","","","","","mv_par01","","",""," " ," "," "," "," "," "," "," "," "," ","","","")
+
+	//PutSX1Help("P.DOR01001.",aHelpPor,aHelpEng,aHelpSpa)
+
+	/*-----------------------MV_PAR02--------------------------*/
+	aHelpPor	:= {}
+	aHelpEng	:= {}
+	aHelpSpa	:= {}
+
+	Aadd( aHelpPor, "Informe a Data de Entrada Final." )
+	Aadd( aHelpEng, "Say the Start Due of enter " )
+	Aadd( aHelpSpa, "" )
+
+
+	//PutSx1(cPerg,"02","Data Entrada Ate? ","","","mv_ch2","D",8,0,0,"G","","","","","mv_par02","","",""," " ," "," "," "," "," "," "," "," "," ","","","")
+
+	//PutSX1Help("P.DOR01002.",aHelpPor,aHelpEng,aHelpSpa)
+
+	/*-----------------------MV_PAR03--------------------------*/
+	aHelpPor	:= {}
+	aHelpEng	:= {}
+	aHelpSpa	:= {}
+
+	Aadd( aHelpPor, "Informe Qual o TES para pesquisa." )
+	Aadd( aHelpEng, "Say the Start Due of enter " )
+	Aadd( aHelpSpa, "" )
+
+	//PutSx1(cPerg, "03","TES ?","","","MV_CH3","C",3,0,0,"G","","SF4","","",;
+	//"MV_PAR03"," ","","","","","","","","","","","","","","","",aHelpPor,aHelpEng,aHelpSpa)
+
+
+	//PutSX1Help("P.DOR01003.",aHelpPor,aHelpEng,aHelpSpa)
+
+
+	/*
+	PutSx1(cPerg,"22","Somente NF com TES ?","Solo Fact.con TES ?","Only Inv with TES ?","mv_chm",;
+	"N",1,0,0,"C","","","","","mv_par22","Nao","No","No","","Sim","Si","Yes","","","","","","","","","",;
+	aHelpPor,aHelpEng,aHelpSpa)
+	*/
+
+Return Nil
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} Dcomr01V
+Função criada para controle de versao.
+
+@type function
+@author Thiago Rasmussen
+@since 02/09/2014
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 01/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Caractere, Versão atual.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function Dcomr01V()
+
+	Local cRet  := ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	cRet := "20140902001"
+
+Return (cRet)
