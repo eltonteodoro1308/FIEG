@@ -1,0 +1,111 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWEBSRV.CH"
+#include "TBICONN.CH"
+
+pdoc
+/**************************************************************************
+* Definicao da estruturas utilizadas *
+***************************************************************************/
+User Function WSCNIESTAT ; Return // "dummy" function - Internal Use
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} WSCNIESTAT
+WS para atualização dos pedidos de venda.
+
+@type function
+@author Thiago Rasmussen
+@since 08/01/2011
+@version P12.1.23
+
+@obs Projeto ELO
+
+@history 25/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+
+/***************************************************************************
+* Definicao do Web Service 							                       *
+***************************************************************************/
+WSSERVICE WSCNIESTAT
+
+	WSDATA cPedido				AS String
+ 	WSDATA OPC					As String
+
+	WSMETHOD PutEstatus		// INCLUI UM ESTATUS
+	WSMETHOD GetStatusBut
+
+ENDWSSERVICE
+
+/**************************************
+***********************************************************
+* METODO PUTESTATUS
+* Atualiza Status do Pedido de Compras
+* Ajustado pela FSW em 03/10/11 - Correção de erros no desenvolvimento
+/*************************************************************************************************/
+WSMethod PutEstatus WSReceive cPedido WSSEND OPC WSSERVICE WSCNIESTAT
+lFind   := .F.
+lRet	:= .T.
+
+	ConOut("["+DtoC(Date()) + " " + Time()+"] DEVELOP:: Processando...")
+
+	DbSelectArea("SC7")
+	SC7->(DbSetOrder(1))
+	lFind := SC7->( MsSeek(xFilial("SCR")+::cPedido) )
+
+	//Atualiza status => (' '=emitido -> '1'=recebido) - FSW
+	If lFind .And. Empty(SC7->C7_DTRECPT)
+
+		Reclock("SC7",.F.)
+			SC7->C7_DTRECPT	:= DTOC(dDatabase)+" - "+Time()
+		   	SC7->C7_XSTATUS	:= "1"
+		MsUnlock()
+
+		::OPC := "OK"
+
+	//Atualiza status => ('1'=recebido -> '2'=confirmado) - FSW
+	ElseIf lFind .And. Empty(SC7->C7_DTCONPT)
+
+		Reclock("SC7",.F.)
+			SC7->C7_DTCONPT	:= DTOC(dDatabase)+" - "+Time()
+		   	SC7->C7_XSTATUS	:= "2"
+		MsUnlock()
+
+		::OPC := "OK"
+
+	Else
+
+		lRet	:= .F.
+		SetSoapFault( 'PutEstatus', 'Pedido nao encontrado.' + ::cPedido )
+
+	EndIf
+
+Return lRet
+
+//Metodo para buscar o status de um pedido
+WSMethod GetStatusBut WSReceive cPedido WSSEND oPc WSSERVICE WSCNIESTAT
+Local cStatus := "1"
+Local lRet	  := .T.
+
+	DbSelectArea("SC7")
+	SC7->(DbSetOrder(1))
+
+	If SC7->(MsSeek(xFilial("SC7")+cPedido))
+
+		If !Empty(SC7->C7_DTCONPT)
+			//Confirmado
+			cStatus	:=	"4"
+		ElseIf !Empty(SC7->C7_DTRECPT)
+			//Pedido Recebido
+			cStatus	:=	"3"
+		ElseIf !Empty(SC7->C7_DTEMIPT)
+			//Pedido Emitido
+			cStatus	:=	"2"
+		Else
+			//Pedido Nao Enviado
+			cStatus	:=	"1"
+		EndIf
+
+	EndIf
+
+	::OPC := cStatus
+
+Return lRet

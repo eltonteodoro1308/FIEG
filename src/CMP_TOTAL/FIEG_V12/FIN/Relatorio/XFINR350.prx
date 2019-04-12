@@ -1,0 +1,2433 @@
+#Include "Protheus.ch"
+#Include "FwCommand.ch"
+
+#Define I_CORRECAO_MONETARIA     1
+#Define I_DESCONTO               2
+#Define I_JUROS                  3
+#Define I_MULTA                  4
+#Define I_VALOR_RECEBIDO         5
+#Define I_VALOR_PAGO             6
+#Define I_RECEB_ANT              7
+#Define I_PAGAM_ANT              8
+#Define I_MOTBX                  9
+#Define I_RECPAG_REAIS         	10
+#Define I_LEI10925              12
+
+Static lFWCodFil := FindFunction("FWCodFil")
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} xFinR350
+Posicao dos Fornecedores.
+
+@type function
+@author Thiago Rasmussen
+@since 25/06/2015
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Indefinido, Retorno da Função.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function xFinR350() // Thiago Rasmussen - 25/06/2015
+
+	Local uRet := Nil
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	AjustaHLP()
+	AjustaSX1()
+
+	If FindFunction("TRepInUse") .And. TRepInUse()//Personalizavel
+		//+------------------------------------------------------------------------+
+		//|Interface de impressao                                                  |
+		//+------------------------------------------------------------------------+
+		oReport := ReportDef()
+		If !Empty(oReport:uParam)
+			Pergunte(oReport:uParam,.F.)
+		EndIf
+		oReport:PrintDialog()
+	Else
+		uRet := FinR350R3() // Executa versão anterior do fonte
+	Endif
+
+Return uRet
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ReportDef
+A Função estatica ReportDef devera ser criada para todos os relatorios que poderao ser agendados pelo usuario.
+
+@type function
+@author Adrianne Furtado
+@since 27/06/2006
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Objeto, Objeto do relatório.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ReportDef()
+
+	Local oReport		:= Nil
+	Local oFornecedores	:= Nil
+	Local oTitsForn		:= Nil
+	Local oCell			:= Nil
+	Local oTotaisFilial	:= Nil
+	Local oTotaisEmp		:= Nil		/* GESTAO */
+	Local lGestao 		:= Iif( lFWCodFil, ( "E" $ FWSM0Layout() .And. "U" $ FWSM0Layout() ), .F. )     // Indica se usa Gestao Corporativa
+	Local nGestao 		:= Iif(lFWCodFil, FWSizeFilial() ,2)
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	//+------------------------------------------------------------------------+
+	//|Criacao do componente de impressao                                      |
+	//|                                                                        |
+	//|TReport():New                                                           |
+	//|ExpC1 : Nome do relatorio                                               |
+	//|ExpC2 : Titulo                                                          |
+	//|ExpC3 : Pergunte                                                        |
+	//|ExpB4 : Bloco de codigo que sera executado na confirmacao da impressao  |
+	//|ExpC5 : Descricao                                                       |
+	//|                                                                        |
+	//+------------------------------------------------------------------------+
+	oReport := TReport():New("FINR350","Movimento Financeiro Diario","FIN350", {|oReport| ReportPrint(oReport)},"Este programa ir  emitir o resumo da Movimentação"+" "+"Bancaria de um determinado dia.") //"Movimento Financeiro Diario"##"Este programa ir  emitir o resumo da Movimenta‡„o"##"Bancaria de um determinado dia."
+	oReport:SetTotalInLine(.F.)
+	/*
+	GESTAO - inicio */
+	oReport:SetUseGC(.F.)
+	/* GESTAO - fim
+	*/
+
+	oFornecedores := TRSection():New(oReport,"Por Codigo - Por Nome",{"SA2"},{OemToAnsi("Por Codigo"),OemToAnsi("Por Nome") })   //Por Codigo - Por Nome
+	TRCell():New(oFornecedores,"A2_COD" 	,"SA2","FORNECEDOR : "	)
+	TRCell():New(oFornecedores,"A2_NOME"	,"SA2",			)		//Substr(A1_NOME,1,40)
+	TRCell():New(oFornecedores,"A2_NREDUZ"	,"SA2",			)
+	oFornecedores:SetHeaderSection(.F.)	//Nao imprime o cabeçalho da secao
+
+	oTitsForn := TRSection():New(oFornecedores,"Titulos",{"SE2","SED"})	//"Titulos
+	oTitsForn:SetHeaderSection(.T.)
+	oTitsForn:SetHeaderPage(.T.)
+	oTitsForn:SetLinesBefore(0)
+	oTitsForn:SetAutosize(.F.)
+	//TRCell():New(oTitsForn,"E2_PREFIXO" 	,"SE2",STR0018,/*Picture*/,SE2->(LEN(E2_PREFIXO)+LEN('-')+LEN(E2_NUM))/*Tamanho*/,/*lPixel*/,{|| E2_PREFIXO+'-'+E2_NUM }) //"Prf Numero"
+	TRCell():New(oTitsForn,"E2_PREFIXO" 	  ,"SE2","Prf Numero",/*Picture*/,17/*Tamanho*/,/*lPixel*/,{|| E2_PREFIXO+'-'+E2_NUM }) //"Prf Numero"
+	TRCell():New(oTitsForn,"E2_PARCELA"		  ,"SE2","PC" ,,  3) 		//"PC"
+	TRCell():New(oTitsForn,"E2_TIPO"    	  ,"SE2","Tip" ,,  3) 		//"Tip"
+	TRCell():New(oTitsForn,"Emissao"  		  ,     ,"Emissao"  ,,12) 		//"Emissao"
+	TRCell():New(oTitsForn,"E2_VENCTO" 		  ,"SE2","Vencimento"	,,12) 		//"Vencimento"
+	TRCell():New(oTitsForn,"Baixa"			  ,     ,"Baixa"	,,12)		//"Baixa"
+	TRCell():New(oTitsForn,"Valor Original"   ,     ,"Valor Original"  ,,19) 		//"Valor Original"
+	TRCell():New(oTitsForn,"Lei 10925"    	  ,     ,"Lei 10925"	,,13) 		//"Lei 10925"
+	TRCell():New(oTitsForn,"Descontos"    	  ,     ,"Descontos"  ,,12) 		//"Descontos"
+	TRCell():New(oTitsForn,"Abatimentos"      ,     ,"Abatimentos"  ,,12)		//"Abatimentos"
+	TRCell():New(oTitsForn,"Juros"			  ,     ,"Juros"	,,12)		//"Juros"
+	TRCell():New(oTitsForn,"Multa"			  ,     ,"Multa" 	,,12)		//"Multa"
+	TRCell():New(oTitsForn,"Corr. Monet"      ,     ,"Corr. Monet"  ,,12)		//"Corr. Monet"
+	TRCell():New(oTitsForn,"Valor Pago"       ,     ,"Valor Pago"  ,,19)		//"Valor Pago"
+	TRCell():New(oTitsForn,"Pagto.Antecipado" ,     ,"Pagto.Antecipado"  ,,19)		//"Pagto.Antecipado"
+	TRCell():New(oTitsForn,"Saldo Atual"      ,     ,"Saldo Atual"  ,,19)		//"Saldo Atual"
+	TRCell():New(oTitsForn,"Motivo"           ,     ,"Motivo"	,,15)		//"Motivo"
+
+	If cPaisLoc != "BRA"
+		oTitsForn:Cell("Lei 10925"):Hide()
+		oTitsForn:Cell("Lei 10925"):SetTitle("")
+	EndIf
+
+	oTitsForn:Cell("Valor Original"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Emissao"):SetHeaderAlign("CENTER")
+	oTitsForn:Cell("Vencimento"):SetHeaderAlign("CENTER")
+	oTitsForn:Cell("Baixa"):SetHeaderAlign("CENTER")
+	oTitsForn:Cell("Lei 10925"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Descontos"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Abatimentos"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Juros"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Multa"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Corr. Monet"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Valor Pago"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Pagto.Antecipado"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Saldo Atual"):SetHeaderAlign("RIGHT")
+	oTitsForn:Cell("Motivo"):SetHeaderAlign("RIGHT")
+
+	oTitsForn:Cell("PC"):SetAlign("LEFT")
+	oTitsForn:Cell("Tip"):SetAlign("CENTER")
+	oTitsForn:Cell("Valor Original"):SetAlign("RIGHT")
+	oTitsForn:Cell("Emissao"):SetAlign("CENTER")
+	oTitsForn:Cell("Vencimento"):SetAlign("CENTER")
+	oTitsForn:Cell("Baixa"):SetAlign("CENTER")
+	oTitsForn:Cell("Lei 10925"):SetAlign("RIGHT")
+	oTitsForn:Cell("Descontos"):SetAlign("RIGHT")
+	oTitsForn:Cell("Abatimentos"):SetAlign("RIGHT")
+	oTitsForn:Cell("Juros"):SetAlign("RIGHT")
+	//oTitsForn:Cell("Multa"):SetAlign("RIGHT")
+	//oTitsForn:Cell("Corr. Monet"):SetAlign("RIGHT")
+	//oTitsForn:Cell("Valor Pago"):SetAlign("CENTER")
+	//oTitsForn:Cell("Pagto.Antecipado"):SetAlign("RIGHT")
+	oTitsForn:Cell("Saldo Atual"):SetAlign("RIGHT")
+	oTitsForn:Cell("Motivo"):SetAlign("RIGHT")
+
+	oTotaisForn := TRSection():New(oTitsForn,"Total Fornecedor",{"SE2","SED"})	//"Total Fornecedor
+	oTotaisForn:SetHeaderSection(.F.)	//Nao imprime o cabeçalho da secao
+	oTotaisForn:SetLinesBefore(0)
+	oTotaisForn:SetAutosize(.F.)
+	//TRCell():New(oTotaisForn,"TXTTOTAL"		,    ,"Totais : "	,, TamSX3("E2_PREFIXO")[1]+TamSX3("E2_NUM")[1]) //
+	TRCell():New(oTotaisForn,"TXTTOTAL"       ,,"Totais"         ,,17) //Totais
+	TRCell():New(oTotaisForn,"PC"             ,,"PC"             ,,02) //"PC"
+	TRCell():New(oTotaisForn,"TIP"            ,,"TIP"            ,,03) //"tip"
+	TRCell():New(oTotaisForn,"Emissao"        ,,"Emissao"        ,,12) //"Emissao"
+	TRCell():New(oTotaisForn,"Vencimento"     ,,"Vencimento"     ,,12) //"Vencimento"
+	TRCell():New(oTotaisForn,"Baixa"          ,,"Baixa"          ,,12) //"Baixa"
+	TRCell():New(oTotaisForn,"Valor Original" ,,"Valor Original" ,,19) //"Valor Original"
+	TRCell():New(oTotaisForn,"Lei 10925"      ,,"Lei 10925"      ,,14) //"Lei 10925"
+	TRCell():New(oTotaisForn,"Descontos"      ,,"Descontos"      ,,12) //"Descontos"
+	TRCell():New(oTotaisForn,"Abatimentos"    ,,"Abatimentos"    ,,12) //"Abatimentos"
+	TRCell():New(oTotaisForn,"Juros"          ,,"Juros"          ,,12) //"Juros"
+	TRCell():New(oTotaisForn,"Multa"          ,,"Multa"          ,,12) //"Multa"
+	TRCell():New(oTotaisForn,"Corr. Monet"    ,,"Corr. Monet"    ,,12) //"Corr. Monet"
+	TRCell():New(oTotaisForn,"Valor Pago"     ,,"Valor Pago"     ,,19) //"Valor Pago"
+	TRCell():New(oTotaisForn,"Pagto.Antecip"  ,,"Pagto.Antecip"  ,,19) //"Pagto.Antecip"
+	TRCell():New(oTotaisForn,"Saldo Atual"    ,,"Saldo Atual"    ,,19) //"Saldo Atual"
+	TRCell():New(oTotaisForn,"Motivo"         ,,"Motivo"         ,,15) //"Motivo"
+
+	oTotaisForn:Cell("Emissao"):Hide()
+	oTotaisForn:Cell("Vencimento"):Hide()
+	oTotaisForn:Cell("Baixa"):Hide()
+
+	If cPaisLoc != "BRA"
+		oTotaisForn:Cell("Lei 10925"):Hide()
+		oTotaisForn:Cell("Lei 10925"):SetTitle("")
+	EndIf
+
+	oTotaisFilial := TRSection():New(oReport,"Titulos")	//"Titulos
+	oTotaisFilial:SetHeaderSection(.F.)	//Nao imprime o cabeçalho da secao
+	oTotaisFilial:SetLinesBefore(0)
+	oTotaisFilial:SetAutosize(.F.)
+	TRCell():New(oTotaisFilial,"TXTTOTAL"       , ,"TXTTOTAL"       ,,58)
+	TRCell():New(oTotaisFilial,"Valor Original" , ,"Valor Original" ,,19) //"Valor Original"
+	TRCell():New(oTotaisFilial,"Lei 10925"      , ,"Lei 10925"      ,,14) //"Lei 10925"
+	TRCell():New(oTotaisFilial,"Descontos"      , ,"Descontos"      ,,12) //"Descontos"
+	TRCell():New(oTotaisFilial,"Abatimentos"    , ,"Abatimentos"    ,,12) //"Abatimentos"
+	TRCell():New(oTotaisFilial,"Juros"          , ,"Juros"          ,,12) //"Juros"
+	TRCell():New(oTotaisFilial,"Multa"          , ,"Multa"          ,,12) //"Multa"
+	TRCell():New(oTotaisFilial,"Corr. Monet"    , ,"Corr. Monet"    ,,12) //"Corr. Monet"
+	TRCell():New(oTotaisFilial,"Valor Pago"     , ,"Valor Pago"     ,,19) //"Valor Pago"
+	TRCell():New(oTotaisFilial,"Pagto.Antecip"  , ,"Pagto.Antecip"  ,,19) //"Pagto.Antecip"
+	TRCell():New(oTotaisFilial,"Saldo Atual"    , ,"Saldo Atual"    ,,19) //"Saldo Atual"
+	TRCell():New(oTotaisFilial,"Motivo"         , ,"Motivo"         ,,15) //"Motivo"
+
+	If cPaisLoc != "BRA"
+		oTotaisFilial:Cell("Lei 10925"):Hide()
+		oTotaisFilial:Cell("Lei 10925"):SetTitle("")
+	EndIf
+	/*
+	GESTAO - inicio */
+	oTotaisEmp := TRSection():New(oReport,"TOTAISEMP")
+	oTotaisEmp:SetHeaderSection(.F.)	//Nao imprime o cabeçalho da secao
+	oTotaisEmp:SetLinesBefore(0)
+	oTotaisEmp:SetAutosize(.F.)
+	TRCell():New(oTotaisEmp,"TXTTOTAL"       ,,,,58)
+	TRCell():New(oTotaisEmp,"Valor Original" ,,,,19) //"Valor Original"
+	TRCell():New(oTotaisEmp,"Lei 10925"      ,,,,14) //"Lei 10925"
+	TRCell():New(oTotaisEmp,"Descontos"      ,,,,12) //"Descontos"
+	TRCell():New(oTotaisEmp,"Abatimentos"    ,,,,12) //"Abatimentos"
+	TRCell():New(oTotaisEmp,"Juros"          ,,,,12) //"Juros"
+	TRCell():New(oTotaisEmp,"Multa"          ,,,,12) //"Multa"
+	TRCell():New(oTotaisEmp,"Corr. Monet"    ,,,,12) //"Corr. Monet"
+	TRCell():New(oTotaisEmp,"Valor Pago"     ,,,,19) //"Valor Pago"
+	TRCell():New(oTotaisEmp,"Pagto.Antecip"  ,,,,19) //"Pagto.Antecip"
+	TRCell():New(oTotaisEmp,"Saldo Atual"    ,,,,19) //"Saldo Atual"
+	TRCell():New(oTotaisEmp,"Motivo"         ,,,,15) //"Motivo"
+
+	If cPaisLoc != "BRA"
+		oTotaisEmp:Cell("Lei 10925"):Hide()
+		oTotaisEmp:Cell("Lei 10925"):SetTitle("")
+	EndIf
+	/* GESTAO - fim
+	*/
+	//Totalizador Geral
+	oTotalGeral := TRSection():New(oTitsForn,"Total Geral",{"SE2","SED"})	//"Total Geral
+	oTotalGeral:SetHeaderSection(.F.)	//Nao imprime o cabeçalho da secao
+	oTotalGeral:SetLinesBefore(0)
+	TRCell():New(oTotalGeral,"TXTTOTAL"       ,,"TXTTOTAL"       ,,58)
+	TRCell():New(oTotalGeral,"Valor Original" ,,"Valor Original" ,,17) //"Valor Original"
+	TRCell():New(oTotalGeral,"Lei 10925"      ,,"Lei 10925"      ,,14) //"Lei 10925"
+	TRCell():New(oTotalGeral,"Descontos"      ,,"Descontos"      ,,12) //"Descontos"
+	TRCell():New(oTotalGeral,"Abatimentos"    ,,"Abatimentos"    ,,12) //"Abatimentos"
+	TRCell():New(oTotalGeral,"Juros"          ,,"Juros"          ,,12) //"Juros"
+	TRCell():New(oTotalGeral,"Multa"          ,,"Multa"          ,,12) //"Multa"
+	TRCell():New(oTotalGeral,"Corr. Monet"    ,,"Corr. Monet"    ,,12) //"Corr. Monet"
+	TRCell():New(oTotalGeral,"Valor Pago"     ,,"Valor Pago"     ,,19) //"Valor Pago"
+	TRCell():New(oTotalGeral,"Pagto.Antecip"  ,,"Pagto.Antecip"  ,,19) //"Pagto.Antecip"
+	TRCell():New(oTotalGeral,"Saldo Atual"    ,,"Saldo Atual"    ,,19) //"Saldo Atual"
+	TRCell():New(oTotalGeral,"Motivo"         ,,"Motivo"         ,,15) //"Motivo"
+
+	If cPaisLoc != "BRA"
+		oTotalGeral:Cell("Lei 10925"):Hide()
+		oTotalGeral:Cell("Lei 10925"):SetTitle("")
+	EndIf
+
+	If TCSrvType() <> "AS/400"
+		#IFNDEF TOP
+		TRPosition():New ( oTitsForn, "SA2" , 1 ,{|| xfilial("SA2")+SE2->(E2_FORNECE+E2_LOJA) } , .T. )
+		TRPosition():New ( oTitsForn, "SED" , 1 ,{|| xfilial("SED")+SE2->(E2_NATUREZ) } , .T. )
+		#ENDIF
+	Endif
+
+	oFornecedores:SetColSpace(0)
+	oTitsForn:SetColSpace(0)
+	oTotaisForn:SetColSpace(0)
+	oTotaisFilial:SetColSpace(0)
+	oTotaisEmp:SetColSpace(0)		/* GESTAO */
+
+	oReport:SetLandScape()
+	oReport:lDisableOrientation := .T.
+
+Return(oReport)
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ReportPrint
+A funcao estatica ReportDef devera ser criada para todos os relatorios que poderao ser agendados pelo usuario.
+
+@type function
+@author Adrianne Furtado
+@since 27/06/2006
+@version P12.1.23
+
+@param oReport, Objeto, Objeto do relatório
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ReportPrint(oReport)
+	Local oFornecedores	:= oReport:Section(1)
+	Local oTitsForn		:= oReport:Section(1):Section(1)
+	Local oTotaisForn	:= oReport:Section(1):Section(1):Section(1)
+	Local oTotalGeral	:= oReport:Section(1):Section(1):Section(1)
+	Local oTotaisFilial	:= oReport:Section(2)
+	Local oTotaisEmp	:= oReport:Section("TOTAISEMP")
+	Local cAlias
+	Local cAliasSE2		:= "SE2"
+	Local cAliasSA2 	:= "SA2"
+	Local cFornecedor
+	Local cSql1, cSql2	:= ""
+	Local nDecs, nMoeda
+	Local aValor 		:= {}
+	Local nTotAbat
+	Local bPosTit		:= { || }		// Posiciona a impressao dos titulos do fornecedor
+	Local bWhile		:= { || }		// Condicao para impressao dos titulos do fornecedor
+	#IFNDEF TOP
+	Local cCondicao  := ""
+	Local cCondicao2 := ""
+	#ENDIF
+	Local cFiltSED		:=	oFornecedores:GetAdvplExp('SED')
+	Local cFiltSE2		:=	oFornecedores:GetAdvplExp('SE2')
+	Local cFiltSA2		:=	oFornecedores:GetAdvplExp('SA2')
+	Local lInitForn	:=	.T.
+	Local	lPrintForn	:=	.T.
+	Local cFilDe,cFilAte, cFilDeSA2,cFilAteSA2
+	Local cFiliAnt:= cFiliAtu := ""
+	Local cFornAnt:= cFornAtu := ""
+	Local nTotFil0:= nTotForn0:= nTotGeral0:=0
+	Local nTotFil1:= nTotForn1:= nTotGeral1:=0
+	Local nTotFil2:= nTotForn2:= nTotGeral2:=0
+	Local nTotFil3:= nTotForn3:= nTotGeral3:=0
+	Local nTotFil4:= nTotForn4:= nTotGeral4:=0
+	Local nTotFil5:= nTotForn5:= nTotGeral5:=0
+	Local nTotFil6:= nTotForn6:= nTotGeral6:=0
+	Local nTotFil7:= nTotForn7:= nTotGeral7:=0
+	Local nTotFil8:= nTotForn8:= nTotGeral8:=0
+	Local nTotFil9:= nTotForn9:= nTotGeral9:=0
+	Local lProcSQL := .T.
+	Local lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"
+	Local nValorOrig := 0
+	Local lPaBruto	:= GetNewPar("MV_PABRUTO","2") == "1"  //Indica se o PA terá o valor dos impostos descontados do seu valor
+	Local lImpTit	:= .T.		// Indica se imprime o titulo a pagar (SE2)
+	Local nInc		:= 0
+	Local aSM0		:= {}
+	Local lGestao	:= Iif( lFWCodFil, FWSizeFilial() > 2, .F. )	// Indica se usa Gestao Corporativa
+	Local lSegue    := .T.
+
+	//******************************************
+	// Utilizados pelo ponto de entrada F350MFIL
+	//******************************************
+	Local lMovFil	:= .T. //Default: Imprime todas as filiais
+	Local lImpMFil 	:= .T.
+	Local nReg		:= 0
+	//******************************************
+
+	Local nX		:= 0
+	Local aFilProc	:= {}	// Filiais jah processadas
+	/*
+	GESTAO - inicio */
+	Local aSelFil		:= {}
+	Local lTotEmp		:= .F.
+	Local cEmpAtual		:= ""
+	Local nRegEmp		:= 0
+	Local nLenSelFil	:= 0
+	Local nTamEmp		:= 0
+	Local nTotEmp0		:= 0
+	Local nTotEmp1		:= 0
+	Local nTotEmp2		:= 0
+	Local nTotEmp3		:= 0
+	Local nTotEmp4		:= 0
+	Local nTotEmp5		:= 0
+	Local nTotEmp6		:= 0
+	Local nTotEmp7		:= 0
+	Local nTotEmp8		:= 0
+	Local nTotEmp9		:= 0
+	Local nValRet 		:= 0
+	/* GESTAO - fim
+	*/
+
+	Private nRegSM0 := SM0->(Recno())
+	Private nAtuSM0 := SM0->(Recno())
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	If oReport:lXlsTable
+		ApMsgAlert("Formato de impressão Tabela não suportado neste relatório") //"Formato de impressão Tabela não suportado neste relatório"
+		oReport:CancelPrint()
+		Lsegue := .F.
+	EndIf
+
+	If lSegue
+
+		Pergunte( "FIN350", .F. )
+
+		/*
+		GESTAO - inicio */
+		#IFDEF TOP
+
+		If MV_PAR22 == 1 .and. lGestao //Seleciona filiais e gestão
+			If FindFunction("FwSelectGC") .And. lGestao
+				aSelFil := FwSelectGC()
+			Else
+				aSelFil := AdmGetFil(.F.,(MV_PAR22 == 1),"SE2")
+			Endif
+
+			SM0->(DbGoTo(nRegSM0))
+		ElseIf MV_PAR22 == 1 .And. !lGestao
+
+			AdmSelecFil("FIN350",22,.F.,@aSelFil,"SE2",.F.)
+			SM0->(DbGoTo(nRegSM0))
+
+		ElseIf MV_PAR19 == 2 //Não considera filiais
+			If Empty(aSelFil) //Não seleciona filiais
+				Aadd(aSelFil,cFilAnt)
+			Endif
+		Else
+			aSelFil := {}
+		Endif
+
+		Asort(aSelFil)
+		nLenSelFil := Len(aSelFil)
+		lTotEmp := .F.
+		nTamEmp := Len(FWSM0LayOut(,1))
+		If nLenSelFil > 1
+			nX := 1
+			While nX < nLenSelFil .And. !lTotEmp
+				nX++
+				lTotEmp := !(Substr(aSelFil[nX-1],1,nTamEmp) == Substr(aSelFil[nX],1,nTamEmp))
+			Enddo
+		Endif
+
+		#ELSE
+		aSelFil := {}
+		#ENDIF
+
+		If lGestao
+			aSM0 := FWLoadSM0()
+		Else
+			aSM0 := AdmAbreSM0()
+		EndIf
+
+		nDecs 	:=Msdecimais(mv_par10)
+		nMoeda 	:= Iif(mv_par10 == 0, 1,mv_par10)
+
+		oReport:SetMeter(RecCount())
+
+		#IFDEF TOP
+
+
+		If (Len(aSelFil)== 1 .And. !lGestao) //empresa sem gestao e 'Considera filiais = NAO" deve selecionar somente a filial logada.
+
+			cFilDe 	:=	aSelFil[1]
+			cFilAte 	:= aSelFil[1]
+			cFilDeSA2 := aSelFil[1]
+			cFilAteSA2:= aSelFil[1]
+			nInc 	:= 0
+
+			For nReg := Len(aSM0) To 1 Step(-1)
+
+				If !lGestao .And. aSM0[nReg,1] <> cEmpAnt //nao utiliza gestao de empresa
+					Adel(aSM0,nReg)
+					nInc++
+					Loop
+				Endif
+
+				If  aSM0[nReg,2] <> cFilDe
+					Adel(aSM0,nReg)
+					nInc++
+				Endif
+
+			Next
+			If nInc > 0
+				Asize(aSM0,Len(aSM0) - nInc)
+			Endif
+
+		ElseIf (Empty(aSelFil) .And. MV_PAR19 == 1)
+			cFilDe 	:=	mv_par20
+			cFilAte 	:= mv_par21
+			cFilDeSA2 := cFilDe
+			cFilAteSA2:= cFilAte
+			nInc 	:= 0
+
+			For nReg := Len(aSM0) To 1 Step(-1)
+
+				If !lGestao .And. aSM0[nReg,1] <> cEmpAnt //nao utiliza gestao de empresa
+					Adel(aSM0,nReg)
+					nInc++
+					Loop
+				Endif
+
+				If  aSM0[nReg,2]>= cFilDe .And. aSM0[nReg,2]<= cFilAte
+					Aadd(aSelFil,aSM0[nReg,SM0_CODFIL])
+				Endif
+
+				If  !(aSM0[nReg,2]>= cFilDe .And. aSM0[nReg,2]<= cFilAte)
+					Adel(aSM0,nReg)
+					nInc++
+				Endif
+
+			Next
+			If nInc > 0
+				Asize(aSM0,Len(aSM0) - nInc)
+			Endif
+
+		Else
+			If len(aSelFil) == 0
+				aSelFil := {cFilAnt}
+			Endif
+			cFilDe := aSelFil[1]
+			cFilAte := aSelFil[Len(aSelFil)]
+			cFilDeSA2 := cFilDe
+			cFilAteSA2:= cFilAte
+			nInc := 0
+			/* Deixo na aSM0 somente as filiais selecionas para impressao. */
+			For nReg := Len(aSM0) To 1 Step(-1)
+				If  Ascan(aSelFil,aSM0[nReg,SM0_CODFIL]) == 0
+					Adel(aSM0,nReg)
+					nInc++
+				Endif
+			Next
+			If nInc > 0
+				Asize(aSM0,Len(aSM0) - nInc)
+			Endif
+
+		Endif
+		#ELSE
+		//+-----------------------------------------------------------+
+		//| Atribui valores as variaveis ref a filiais                |
+		//+-----------------------------------------------------------+
+		If mv_par19 == 2
+			cFilDe  := xFilial("SE2")
+			If !Empty( Iif( lGestao, FWFilial("SE2"), xFilial("SE2") ) )
+				cFilAte := xFilial("SE2")
+			Else
+				If lGestao
+					cFilAte := AllTrim( cFilDe ) + Replicate( "Z", TamSX3("E2_FILIAL")[1] - Len( AllTrim( cFilDe ) ) )
+				Else
+					cFilAte := Replicate( "Z", TamSX3("E2_FILIAL")[1] )
+				EndIf
+			EndIf
+		Else
+			If Empty(xFilial("SE2"))
+				cFilDe	:= ""
+				cFilAte	:= Replicate( "Z", TamSX3("E2_FILIAL")[1] )
+			Else
+				cFilDe 	:= mv_par20	// Todas as filiais
+				cFilAte	:= mv_par21
+			Endif
+		Endif
+		//+-----------------------------------------------------------+
+		//| Atribui valores as variaveis ref a filiais                |
+		//+-----------------------------------------------------------+
+		If mv_par19 == 2 .or. Alltrim(xFilial("SA2")) == ""
+			cFilDeSA2  := xFilial("SA2")
+			cFilAteSA2 := xFilial("SA2")
+		Else
+			cFilDeSA2 := mv_par20	// Todas as filiais
+			cFilAteSA2:= mv_par21
+		Endif
+		#ENDIF
+		/* GESTAO - fim
+		*/
+
+		oFornecedores:Init()
+		oTitsForn:Init()
+
+		If ExistBlock("F350MFIL")
+			lMovFil := ExecBlock("F350MFIL",.F.,.F.)
+		Endif
+
+		For nInc := 1 To Len( aSM0 )
+
+			If aSM0[nInc][1] == cEmpAnt .Or. !Empty(aSelFil)
+
+				cFilAnt := aSM0[nInc][2]
+
+				If	!Empty(cFilAte) .And. (aSM0[nInc][2] >= cFilDe .and. aSM0[nInc][2] <= cFilAte) .And. AScan( aFilProc, xFilial("SE2") ) == 0
+
+					nReg := 0 //Zera a contagem de registros impressos.
+					//+------------------------------------------------------------------------+
+					//|Filtragem do relatório                                                  |
+					//+------------------------------------------------------------------------+
+					#IFDEF TOP
+
+					If lProcSQL
+						lProcSQL := .F.
+						cAlias := GetNextAlias()
+					EndIf
+
+					bPosTit 	:= { || cFornecedor := (cAliasSA2)->( A2_COD + A2_LOJA ) }
+					bCondTit	:= { || (cAliasSE2)->( E2_FORNECE + E2_LOJA ) == cFornecedor }
+
+					cSql0 := "A2_FILIAL = '"+xFilial("SA2")+"' AND "
+					cSql0 += "E2_FILIAL = '"+xFilial("SE2")+"' AND "
+					cSql0 := "%"+cSql0+"%"
+
+					cSql1 := If(mv_par18 == 1,"E2_EMISSAO","E2_EMIS1") + " between '" + DTOS(mv_par05)+ "' AND '" + DTOS(mv_par06) + "' AND E2_TIPO NOT IN "+FormatIn(MVABATIM,"|")+" AND "
+					cSql1 := "%"+cSql1+"%"
+
+					cSql2 := If(mv_par18 == 1,"E2_EMISSAO","E2_EMIS1") + "<= '"+DTOS(dDataBase)+"' AND "
+					If mv_par09 == 2
+						cSql2 += "E2_TIPO != '"+MVPROVIS+"' AND "
+					EndIf
+					If mv_par16 == 2
+						cSql2 += "E2_TIPO != 'PA ' AND "
+					EndIf
+					If mv_par12 == 2
+						If cpaisLOC =="BRA"
+							cSql2 += "E2_FATURA IN('"+Space(Len(SE2->E2_FATURA))+"','NOTFAT') AND SE2.E2_DTFATUR <= '" + DTOS(mv_par06) + "' AND ""
+						Else
+							cSql2 += "E2_ORIGEM <>'FINA085A' AND "
+						EndIf
+					Endif
+					If mv_par13 == 2
+						cSQL2 += " E2_MOEDA = " + STR(mv_par10) +" AND "
+					Endif
+
+					cSql2 := "%"+cSql2+"%"
+					If oFornecedores:GetOrder() == 1
+						cOrder := "A2_FILIAL,E2_FILIAL,A2_COD,A2_NOME,E2_PREFIXO,E2_NUM,E2_PARCELA,E2_TIPO"
+						SA2->( dbSetOrder( 1 ) )
+					Else
+						cOrder := "A2_FILIAL,E2_FILIAL,A2_NOME,A2_COD,E2_PREFIXO,E2_NUM,E2_PARCELA,E2_TIPO"
+						SA2->( dbSetOrder( 2 ) )
+					EndIf
+					cOrder := "%"+cOrder+"%"
+					//+------------------------------------------------------------------------+
+					//|Transforma parametros Range em expressao SQL                            |
+					//+------------------------------------------------------------------------+
+					MakeSqlExpr(oReport:uParam)
+
+					//+------------------------+
+					//|Query do relatório      |
+					//+------------------------+
+					oFornecedores:BeginQuery()
+
+					BeginSql Alias cAlias
+						SELECT  A2_FILIAL,A2_COD,A2_NOME,A2_NREDUZ,A2_LOJA,SE2.*
+						FROM %table:SA2% SA2,%table:SE2% SE2
+						LEFT OUTER JOIN %table:SED% SED
+						ON	(	ED_FILIAL 	= 	%xFilial:SED% AND
+						ED_CODIGO 	=	E2_NATUREZ AND
+						SED.%NotDel% )
+						WHERE %exp:cSql0%
+						E2_FORNECE 	= A2_COD 		AND
+						E2_LOJA 	= A2_LOJA		AND
+						E2_FORNECE 	between %Exp:mv_par01% AND %Exp:mv_par02% AND
+						E2_LOJA 	between %Exp:mv_par03% AND %Exp:mv_par04% AND
+						%exp:cSql1%
+						E2_VENCREA 	between %Exp:DTOS(mv_par07)% AND %Exp:DTOS(mv_par08)% AND
+						%exp:cSql2%
+						SE2.%notDel% AND
+						SA2.%notDel%
+
+						ORDER BY %exp:cOrder%
+
+					EndSql
+					//+------------------------------------------------------------------------+
+					//|Metodo EndQuery ( Classe TRSection )                                    |
+					//|Prepara o relatório para executar o Embedded SQL.                       |
+					//|ExpA1 : Array com os parametros do tipo Range                           |
+					//+------------------------------------------------------------------------+
+					oFornecedores:EndQuery(/*Array com os parametros do tipo Range*/)
+
+					oTitsForn:SetParentQuery()
+					oTitsForn:SetParentFilter({|cParam| (cAlias)->(E2_FORNECE+E2_LOJA) == cParam}, { || (cAlias)->(A2_COD+A2_LOJA) })
+
+					cAliasSE2	:= cAlias
+					cAliasSA2 	:= cAlias
+
+					(cAlias)->( dbGoTop() )
+
+					#ELSE
+
+					bPosTit 	:= { || (cAliasSE2)->( MsSeek( xFilial((cAliasSE2)) + (cAliasSA2)->( A2_COD + A2_LOJA ) ) ) }
+
+					bCondTit	:= { || (cAliasSE2)->( E2_FORNECE + E2_LOJA ) == (cAliasSA2)->( A2_COD + A2_LOJA ) }
+
+					//+------------------------------------------------------------------------+
+					//|Transforma parametros Range em expressao Advpl                          |
+					//+------------------------------------------------------------------------+
+
+					DbSelectArea("SA2")
+					SA2->(DbSetOrder(1))
+
+					MakeAdvplExpr(oReport:uParam)
+					cCondicao := 'SA2->A2_FILIAL == "'+xFilial("SA2")+'" .And. '
+					cCondicao += 'SA2->A2_COD  >= "' + mv_par01 + '" .And. SA2->A2_COD  <= "' + mv_par02 + '" .And. '
+					cCondicao += 'SA2->A2_LOJA >= "' + mv_par03 + '" .And. SA2->A2_LOJA <= "' + mv_par04+'"'
+					oFornecedores:SetFilter( cCondicao, Indexkey() )
+
+					DbSelectArea("SE2")
+					SE2->(DbSetOrder(6))
+					cCondicao := 'SE2->E2_FILIAL == "'+xFilial("SE2")+'"'
+					oTitsForn:SetFilter( cCondicao, Indexkey() )
+
+					oTitsForn:SetRelation( {|| xFilial((cAliasSE2))+(cAliasSA2)->(A2_COD+A2_LOJA)},cAliasSE2,6,.T.)
+					oTitsForn:SetParentFilter( {|cParam| (cAliasSE2)->(E2_FORNECE+E2_LOJA) == cParam}, { || (cAliasSA2)->(A2_COD+A2_LOJA) } )
+
+					oFornecedores:NoUserFilter()
+					#ENDIF
+
+					//+------------------------------------------------------------------------+
+					//|Inicio da impressao do fluxo do relatório                               |
+					//+------------------------------------------------------------------------+
+					If (cAliasSA2)->( !EoF() )
+						If oReport:cTitle = oReport:cRealTitle
+							oReport:SetTitle("Posicao dos Fornecedores " + " - " + GetMv("MV_MOEDA"+Str(nMoeda,1)))
+						Else
+							oReport:SetTitle(oReport:cTitle + " - " + GetMv("MV_MOEDA"+Str(nMoeda,1)))
+						EndIf
+
+						oReport:SetMeter((cAliasSE2)->(LastRec()))
+
+						//If !oReport:lXlsTable
+						If mv_par15 == 1
+							oFornecedores:Cell("A2_NREDUZ"):Disable()
+						Else
+							oFornecedores:Cell("A2_NOME"):Disable()
+						EndIf
+						//EndIf
+
+					EndIf
+
+					//+-----------------------------------------------------+
+					//|Posicionamento do SE5 neste ponto que servira para   |
+					//|pesquisa de descarte de registros geradores de       |
+					//|desdobramento                                        |
+					//+-----------------------------------------------------+
+					dbSelectArea("SE5")
+					SE5->(dbSetOrder(7))
+					dbSelectArea("SE2")
+
+					While !oReport:Cancel() .And. (cAliasSA2)->(!Eof())
+
+						oReport:IncMeter()
+
+						If oReport:Cancel()
+							Exit
+						EndIf
+
+						lFirst := .T.
+
+						Eval( bPosTit )
+
+						While !oReport:Cancel() .And. !(cAliasSE2)->(Eof()) .And. Eval( bCondTit )
+
+							If oReport:Cancel()
+								Exit
+							EndIf
+
+							//+-----------------------------------------------------+
+							//|Pesquisa de descarte de registros geradores de       |
+							//|desdobramento                                        |
+							//+-----------------------------------------------------+
+							If SE5->(dbSeek(xFilial("SE5") + (cAliasSE2)->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)))
+								If AllTrim(SE5->E5_TIPODOC) == "BA" .AND. AllTrim(SE5->E5_MOTBX) == "DSD"
+									(cAliasSE2)->(dbSkip())
+									Loop
+								Endif
+							Endif
+
+							#IFNDEF TOP
+							//+--------------------------------------------------------------+
+							//| Verifica condicoes dos parametros para o titulo posicionado  |
+							//+--------------------------------------------------------------+
+							lImpTit := Fr350Skip(cAlias)
+							//+--------------------------------------------------------------+
+							//| Considera filtro do usuario - SE2                            |
+							//+--------------------------------------------------------------+
+							lImpTit := lImpTit .And. (Empty(cFiltSE2) .Or. (cAliasSE2)->(&(cFiltSE2)))
+
+							//+--------------------------------------------------------------+
+							//| Considera filtro do usuario - SED                            |
+							//+--------------------------------------------------------------+
+							If !Empty(cFiltSED)
+								SED->(DbSetOrder(1))
+								SED->(MsSeek(xFilial()+(cAliasSE2)->E2_NATUREZ))
+								lImpTit := lImpTit .And. SED->(&(cFiltSED))
+							Endif
+
+							//+--------------------------------------------------------------+
+							//| Considera filtro do usuario - SA2                            |
+							//+--------------------------------------------------------------+
+							If !Empty(cFiltSA2)
+								SA2->(DbSetOrder(1))
+								SA2->(MsSeek(xFilial()+(cAliasSE2)->E2_FORNECE+(cAliasSE2)->E2_LOJA))
+								lImpTit := lImpTit .And. SA2->(&(cFiltSA2))
+							Endif
+							#ELSE
+							//+---------------------------------------------------------------------------------------------------+
+							//| O alias SE2 eh utilizado nas funcoes Baixa() e SaldoTit() abaixo, por isso deve estar posicionado |
+							//+---------------------------------------------------------------------------------------------------+
+							SE2->( dbSetOrder(1) )
+							If mv_par19 == 1 .And. Iif( lGestao, !Empty( FWFilial("SE2") ), !Empty( xFilial("SE2") ) )
+								lImpTit := SE2->( MsSeek( aSM0[nInc][2] +(cAliasSE2)->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA ) ) )
+							Else
+								lImpTit := SE2->( MsSeek( xFilial("SE2")+(cAliasSE2)->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA ) ) )
+							EndIf
+
+							// Thiago Rasmussen - 25/06/2015 - Filtro por Motivo
+							IF !EMPTY(mv_par23)
+								lImpTit := SE5->E5_MOTBX$mv_par23
+							ENDIF
+							#ENDIF
+
+							//+---------------------------------------------------------------------------+
+							//| Imprime o titulo a pagar do fornecedor se passou nas condicoes de filtros |
+							//+---------------------------------------------------------------------------+
+							If lImpTit
+								aValor :=Baixas((cAliasSE2)->E2_NATUREZA,(cAliasSE2)->E2_PREFIXO,(cAliasSE2)->E2_NUM,(cAliasSE2)->E2_PARCELA,(cAliasSE2)->E2_TIPO,;
+								nMoeda,"P",(cAliasSE2)->E2_FORNECE,dDataBase,(cAliasSE2)->E2_LOJA,(cAliasSE2)->E2_FILORIG)
+
+								If SE2->E2_TIPO == "NDF"
+									aValor[I_VALOR_PAGO]:=0
+								Endif
+
+								If mv_par14 == 1
+									nSaldo :=SaldoTit((cAliasSE2)->E2_PREFIXO,(cAliasSE2)->E2_NUM,(cAliasSE2)->E2_PARCELA,(cAliasSE2)->E2_TIPO,;
+									(cAliasSE2)->E2_NATUREZA,"P",(cAliasSE2)->E2_FORNECE,nMoeda,;
+									If(mv_par11==1,dDataBase,(cAliasSE2)->E2_VENCREA),,(cAliasSE2)->E2_LOJA,,If(mv_par17 == 1 ,(cAliasSE2)->E2_TXMOEDA,0))
+
+								Else
+									nSaldo := Round(xMoeda(((cAliasSE2)->E2_SALDO+(cAliasSE2)->E2_SDACRES-(cAliasSE2)->E2_SDDECRE),(cAliasSE2)->E2_MOEDA,mv_par10,;
+									If(mv_par17 == 1,If(mv_par18 == 1,(cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. (cAliasSE2)->E2_TXMOEDA>0,(cAliasSE2)->E2_TXMOEDA, )),nDecs)
+								Endif
+
+								aValor[I_DESCONTO]+= (cAliasSE2)->E2_SDDECRE
+								aValor[I_JUROS]   += (cAliasSE2)->E2_SDACRES
+
+								nTotAbat:=SumAbatPag(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_FORNECE,mv_par10,"V",,SE2->E2_LOJA,If(mv_par18==1,"1","2"),mv_par05,mv_par06,;
+								If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,))
+
+								If !((cAliasSE2)->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG) .And. !( MV_PAR14 == 2 .And. nSaldo == 0 ) // nao deve olhar abatimento pois e zerado o saldo na liquidacao final do titulo
+									nSaldo -= nTotAbat
+								EndIf
+								//+--------------------------------------------------------------+
+								//| Se foi gerada fatura, colocar Motbx == Faturado				  |
+								//+--------------------------------------------------------------+
+								If !Empty((cAliasSE2)->E2_DTFATUR) .and. (cAliasSE2)->E2_DTFATUR <= dDataBase
+									aValor[I_MOTBX] := "Faturado"  //"Faturado"
+									aValor[I_VALOR_PAGO] -= nTotAbat
+								Endif
+
+								If cPaisLoc == "BRA" .And. !lPaBruto  .And. alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG
+									nValorOrig:=(cAliasSE2)->E2_VALOR+(cAliasSE2)->E2_COFINS+(cAliasSE2)->E2_PIS+(cAliasSE2)->E2_CSLL
+								Else
+									nValorOrig:=(cAliasSE2)->E2_VALOR
+								EndIf
+
+								oTitsForn:Cell("Emissao"	):SetBlock({|| If(mv_par18==1, (cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1)}) //"Emissao"
+								oTitsForn:Cell("Valor Original" 	):SetBlock({||Round(xMoeda(nValorOrig,(cAliasSE2)->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,(cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. (cAliasSE2)->E2_TXMOEDA>0,(cAliasSE2)->E2_TXMOEDA,))*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1),nDecs)})
+								oTitsForn:Cell("Baixa"	):SetBlock({||IIf(dDataBase >= (cAliasSE2)->E2_BAIXA,IIF(!Empty((cAliasSE2)->E2_BAIXA),(cAliasSE2)->E2_BAIXA," "),"")})		          //"Baixa"
+								If cPaisLoc == "BRA"
+									If lPCCBaixa
+										// Calcula valor de PA com PCC
+										If SE2->E2_TIPO $ MVPAGANT .Or. (!Empty(SE2->E2_BAIXA) .Or. !Empty(SE2->E2_NUMBOR))
+											If aValor[I_LEI10925] < (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL) .And. !Empty(SE2->E2_BAIXA)
+												nValRet := aValor[I_LEI10925]
+											Endif
+
+											aValor[I_LEI10925]   := (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL)
+
+											If !lPaBruto
+												aValor[I_VALOR_PAGO] := Iif(nValRet > 0, (NVALORORIG - (nValRet + nSaldo)), (NVALORORIG - (aValor[I_LEI10925]+nSaldo)))
+											Else
+												aValor[I_VALOR_PAGO] += Iif(nValRet > 0, nValRet, (aValor[I_LEI10925]+nSaldo))
+											EndIf
+										EndIf
+										oTitsForn:Cell("Lei 10925"	):SetBlock({||aValor[I_LEI10925]})  				//"Lei 10925"
+									Else
+										aValor[I_LEI10925]:= (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL)
+										oTitsForn:Cell("Lei 10925"	):SetBlock({||aValor[I_LEI10925]})  				//"Lei 10925"
+									Endif
+								EndIf
+								oTitsForn:Cell("Descontos"	):SetBlock({||aValor[I_DESCONTO]})  				//"Descontos"
+								oTitsForn:Cell("Abatimentos"	):SetBlock({||nTotAbat})  							//"Abatimentos"
+								oTitsForn:Cell("Juros"	):SetBlock({||aValor[I_JUROS]})  					//"Juros"
+								oTitsForn:Cell("Multa"	):SetBlock({||aValor[I_MULTA]})  					//"Multa"
+								oTitsForn:Cell("Corr. Monet"	):SetBlock({||aValor[I_CORRECAO_MONETARIA]})  		//"Corr. Monet"
+								oTitsForn:Cell("Valor Pago"	):SetBlock({||aValor[I_VALOR_PAGO]})//SetBlock({||xMoeda(aValor[I_VALOR_PAGO],(cAliasSE2)->E2_MOEDA,nMoeda,If(mv_par18 == 1,(cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1),,If(mv_par17 == 1,(cAliasSE2)->E2_TXMOEDA,0))*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1) })
+								oTitsForn:Cell("Pagto.Antecipado"	):SetBlock({||aValor[I_PAGAM_ANT]})  				//"Pagto.Antecip"
+								oTitsForn:Cell("Saldo Atual"	):SetBlock({||nSaldo*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1)})  //"Saldo Atual"
+								oTitsForn:Cell("Motivo"	):SetBlock({||aValor[I_MOTBX]})  					//"Motivo"
+
+								nTotForn0+=Round(xMoeda(nValorOrig,(cAliasSE2)->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,(cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. (cAliasSE2)->E2_TXMOEDA>0,(cAliasSE2)->E2_TXMOEDA,))*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1),nDecs)
+								nTotForn1+=aValor[I_LEI10925]
+								nTotForn2+=aValor[I_DESCONTO]
+								nTotForn3+=nTotAbat
+								nTotForn4+=aValor[I_JUROS]
+								nTotForn5+=aValor[I_MULTA]
+								nTotForn6+=aValor[I_CORRECAO_MONETARIA]
+								If ! ((cAliasSE2)->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG )
+									nTotForn7+=aValor[I_VALOR_PAGO]
+								Else
+									nTotForn7-=aValor[I_VALOR_PAGO]
+									nTotForn8+=aValor[I_PAGAM_ANT]
+								Endif
+								nTotForn9+=nSaldo*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1)
+
+								nTotFil0+=Round(xMoeda(nValorOrig,(cAliasSE2)->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,(cAliasSE2)->E2_EMISSAO,(cAliasSE2)->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. (cAliasSE2)->E2_TXMOEDA>0,(cAliasSE2)->E2_TXMOEDA,),If(mv_par17 == 1 .and. (cAliasSE2)->E2_TXMOEDA>0,1,))*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1),nDecs)
+								nTotFil1+=aValor[I_LEI10925]
+								nTotFil2+=aValor[I_DESCONTO]
+								nTotFil3+=nTotAbat
+								nTotFil4+=aValor[I_JUROS]
+								nTotFil5+=aValor[I_MULTA]
+								nTotFil6+=aValor[I_CORRECAO_MONETARIA]
+								If ! ((cAliasSE2)->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG )
+									nTotFil7+=aValor[I_VALOR_PAGO]
+								Else
+									nTotFil7-=aValor[I_VALOR_PAGO]
+									nTotFil8+=aValor[I_PAGAM_ANT]
+								Endif
+								nTotFil9+=nSaldo*if(alltrim((cAliasSE2)->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1)
+
+								oTitsForn:Cell("Valor Original"	):SetPicture(Tm(nValorOrig,oTitsForn:Cell("Valor Original"	):nSize,nDecs))  	//"Valor original"
+								oTitsForn:Cell("Lei 10925"	):SetPicture(Tm(aValor[I_LEI10925],oTitsForn:Cell("Lei 10925"	):nSize,nDecs))  	//"Lei 10925"
+								oTitsForn:Cell("Descontos"	):SetPicture(Tm(aValor[I_DESCONTO],oTitsForn:Cell("Descontos"	):nSize,nDecs)) 	//"Descontos"
+								oTitsForn:Cell("Abatimentos"	):SetPicture(Tm(nTotAbat,oTitsForn:Cell("Abatimentos"	):nSize,nDecs))  	//"Abatimentos"
+								oTitsForn:Cell("Juros"	):SetPicture(Tm(aValor[I_JUROS],oTitsForn:Cell("Juros"	):nSize,nDecs)) 	//"Juros"
+								oTitsForn:Cell("Multa"	):SetPicture(Tm(aValor[I_MULTA],oTitsForn:Cell("Multa"	):nSize,nDecs)) 	//"Multa"
+								oTitsForn:Cell("Corr. Monet"	):SetPicture(Tm(aValor[I_CORRECAO_MONETARIA],oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))  //"Corr. Monet"
+								oTitsForn:Cell("Valor Pago" 	):SetPicture(Tm(aValor[I_VALOR_PAGO],oTitsForn:Cell("Valor Pago"	):nSize,nDecs))  //"Valor Pago"
+								oTitsForn:Cell("Pagto.Antecipado"	):SetPicture(Tm(aValor[I_PAGAM_ANT],oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))  //"Pagto.Antecip"
+								oTitsForn:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nSaldo,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs))) 	//"SAldo atual"
+
+								If lPrintForn
+									oFornecedores:PrintLine()
+									lPrintForn	:=	.F.
+								Endif
+								oTitsForn:PrintLine()
+								oReport:IncMeter()
+								nReg++
+								nRegEmp++
+
+							EndIf
+
+							(cAliasSE2)->(dbSkip())
+
+							If !Eval( bCondTit )
+								if nTotForn0 > 0
+									oTotaisForn:Cell("TXTTOTAL"):SetBlock({||"Totais : "  }) //
+									oTotaisForn:Cell("Valor Original"   ):SetBlock({||nTotForn0 }) 	//"Valor Original
+									If cPaisLoc == "BRA"
+										oTotaisForn:Cell("Lei 10925"   ):SetBlock({||nTotForn1 })  	//"Lei 10925"
+									EndIf
+									oTotaisForn:Cell("Descontos"   ):SetBlock({||nTotForn2 })  	//"Descontos"
+									oTotaisForn:Cell("Abatimentos"   ):SetBlock({||nTotForn3 })  	//"Abatimentos"
+									oTotaisForn:Cell("Juros"   ):SetBlock({||nTotForn4 })  	//"Juros"
+									oTotaisForn:Cell("Multa"   ):SetBlock({||nTotForn5 })  	//"Multa"
+									oTotaisForn:Cell("Corr. Monet"   ):SetBlock({||nTotForn6 })  	//"Corr. Monet"
+									oTotaisForn:Cell("Valor Pago"   ):SetBlock({||nTotForn7 })  	//"Valor Pago"
+									oTotaisForn:Cell("Pagto.Antecipado"   ):SetBlock({||nTotForn8 })  	//"Pagto.Antecip"
+									oTotaisForn:Cell("Saldo Atual"   ):SetBlock({||nTotForn9 })  	//"Saldo Atual"
+
+									oTotaisForn:Cell("Valor Original"	):SetPicture(Tm(nTotForn0,oTitsForn:Cell("Valor Original"	):nSize,nDecs)) //"Valor original"
+									oTotaisForn:Cell("Lei 10925"	):SetPicture(Tm(nTotForn1,oTitsForn:Cell("Lei 10925"	):nSize,nDecs)) //"Lei 10925"
+									oTotaisForn:Cell("Descontos"	):SetPicture(Tm(nTotForn2,oTitsForn:Cell("Descontos"	):nSize,nDecs)) //"Descontos"
+									oTotaisForn:Cell("Abatimentos"	):SetPicture(Tm(nTotForn3,oTitsForn:Cell("Abatimentos"	):nSize,nDecs)) //"Abatimentos"
+									oTotaisForn:Cell("Juros"	):SetPicture(Tm(nTotForn4,oTitsForn:Cell("Juros"	):nSize,nDecs)) //"Juros"
+									oTotaisForn:Cell("Multa"	):SetPicture(Tm(nTotForn5,oTitsForn:Cell("Multa"	):nSize,nDecs)) //"Multa"
+									oTotaisForn:Cell("Corr. Monet"	):SetPicture(Tm(nTotForn6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs)) //"Corr. Monet"
+									oTotaisForn:Cell("Valor Pago" 	):SetPicture(Tm(nTotForn7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs)) //"Valor Pago"
+									oTotaisForn:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotForn8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs)) //"Pagto.Antecip"
+									oTotaisForn:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotForn9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs))) //"SAldo atual"
+
+									oTotaisForn:Init()
+									oReport:ThinLine()
+									oTotaisForn:PrintLine()
+									oTotaisForn:Finish()
+									oReport:SkipLine()
+								EndIf
+
+								nTotGeral0 += nTotForn0
+								nTotGeral1 += nTotForn1
+								nTotGeral2 += nTotForn2
+								nTotGeral3 += nTotForn3
+								nTotGeral4 += nTotForn4
+								nTotGeral5 += nTotForn5
+								nTotGeral6 += nTotForn6
+								nTotGeral7 += nTotForn7
+								nTotGeral8 += nTotForn8
+								nTotGeral9 += nTotForn9
+								/*
+								GESTAO - inicio */
+								nTotEmp0 += nTotForn0
+								nTotEmp1 += nTotForn1
+								nTotEmp2 += nTotForn2
+								nTotEmp3 += nTotForn3
+								nTotEmp4 += nTotForn4
+								nTotEmp5 += nTotForn5
+								nTotEmp6 += nTotForn6
+								nTotEmp7 += nTotForn7
+								nTotEmp8 += nTotForn8
+								nTotEmp9 += nTotForn9
+								/* GESTAO - fim
+								*/
+								nTotForn0:=	nTotForn1:=	nTotForn2:=	nTotForn3:=	nTotForn4:=	nTotForn5:=	nTotForn6:=	nTotForn7:=	nTotForn8:=	nTotForn9:=0
+
+								lPrintForn	:=	.T.
+							EndIf
+						EndDo
+
+						//imprime os totais por fornecedor
+						#IFNDEF TOP
+						(cAliasSA2)->(dbSkip())
+						#ENDIF
+					EndDo
+
+					//Imprime ou não as filiais sem movimento - P.E. F350MFIL
+					If lMovFil
+						lImpMFil := Iif(nReg != 0, .T., .F.)
+					Endif
+
+					If (mv_par19 == 1 .Or. !Empty(aSelFil)) .and. Len( aSM0 ) > 1 .And. lImpMFil
+						oTotaisFilial:Cell("TXTTOTAL"):SetBlock({||AllTrim("TXTTOTAL") + AllTrim( aSM0[nInc][2] ) + "-" + AllTrim(aSM0[nInc][7]) })
+						oTotaisFilial:Cell("Valor Original"   ):SetBlock({||nTotFil0 }) 		//"Valor Original
+						If cPaisLoc == "BRA"
+							oTotaisFilial:Cell("Lei 10925"   ):SetBlock({||nTotFil1 })  //"Lei 10925"
+						EndIf
+						oTotaisFilial:Cell("Descontos"   ):SetBlock({||nTotFil2 })  	//"Descontos"
+						oTotaisFilial:Cell("Abatimentos"   ):SetBlock({||nTotFil3 })  	//"Abatimentos"
+						oTotaisFilial:Cell("Juros"   ):SetBlock({||nTotFil4 })  	//"Juros"
+						oTotaisFilial:Cell("Multa"   ):SetBlock({||nTotFil5 })  	//"Multa"
+						oTotaisFilial:Cell("Corr. Monet"   ):SetBlock({||nTotFil6 })  	//"Corr. Monet"
+						oTotaisFilial:Cell("Valor Pago"   ):SetBlock({||nTotFil7 })  	//"Valor Pago"
+						oTotaisFilial:Cell("Pagto.Antecipado"   ):SetBlock({||nTotFil8 })  	//"Pagto.Antecip"
+						oTotaisFilial:Cell("Saldo Atual"   ):SetBlock({||nTotFil9 })  	//"Saldo Atual"
+
+						oTotaisFilial:Cell("Valor Original"	):SetPicture(Tm(nTotFil0,oTitsForn:Cell("Valor Original"	):nSize,nDecs))					//"Valor original"
+						oTotaisFilial:Cell("Lei 10925"	):SetPicture(Tm(nTotFil1,oTitsForn:Cell("Lei 10925"	):nSize,nDecs))					//"Lei 10925"
+						oTotaisFilial:Cell("Descontos"	):SetPicture(Tm(nTotFil2,oTitsForn:Cell("Descontos"	):nSize,nDecs))					//"Descontos"
+						oTotaisFilial:Cell("Abatimentos"	):SetPicture(Tm(nTotFil3,oTitsForn:Cell("Abatimentos"	):nSize,nDecs))					//"Abatimentos"
+						oTotaisFilial:Cell("Juros"	):SetPicture(Tm(nTotFil4,oTitsForn:Cell("Juros"	):nSize,nDecs))					//"Juros"
+						oTotaisFilial:Cell("Multa"	):SetPicture(Tm(nTotFil5,oTitsForn:Cell("Multa"	):nSize,nDecs))					//"Multa"
+						oTotaisFilial:Cell("Corr. Monet"	):SetPicture(Tm(nTotFil6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))					//"Corr. Monet"
+						oTotaisFilial:Cell("Valor Pago"	):SetPicture(Tm(nTotFil7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))					//"Valor Pago"
+						oTotaisFilial:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotFil8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))					//"Pagto.Antecip"
+						oTotaisFilial:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotFil9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))	//"SAldo atual"
+
+						oTotaisFilial:Init()
+						oReport:ThinLine()
+						oTotaisFilial:PrintLine()
+						oTotaisFilial:Finish()
+						oReport:SkipLine(2)
+						nTotFil0:= nTotFil1:= nTotFil2:= nTotFil3:= nTotFil4:= nTotFil5:= nTotFil6:= nTotFil7:= nTotFil8:= nTotFil9:=0
+					EndIf
+
+					lInitForn := .T.
+
+					AAdd( aFilProc, xFilial("SE2") )
+					/*
+					GESTAO - inicio */
+					If lTotEmp
+						If nInc <= Len(aSM0)
+							If (nInc == Len(aSM0)) .Or. !(Substr(aSM0[nInc,SM0_CODFIL],1,nTamEmp) == Substr(aSM0[nInc+1,SM0_CODFIL],1,nTamEmp))
+								If lImpMFil .Or. nRegEmp <> 0
+									oTotaisEmp:Cell("TXTTOTAL"):SetBlock({||"Total empresa" + " - " + Substr(aSM0[nInc,SM0_CODFIL],1,nTamEmp)})		//"Total empresa"
+									oTotaisEmp:Cell("Valor Original"   ):SetBlock({||nTotEmp0 }) 		//"Valor Original
+									If cPaisLoc == "BRA"
+										oTotaisEmp:Cell("Lei 10925"   ):SetBlock({||nTotEmp1 })  //"Lei 10925"
+									EndIf
+									oTotaisEmp:Cell("Descontos"   ):SetBlock({||nTotEmp2 })  	//"Descontos"
+									oTotaisEmp:Cell("Abatimentos"   ):SetBlock({||nTotEmp3 })  	//"Abatimentos"
+									oTotaisEmp:Cell("Juros"   ):SetBlock({||nTotEmp4 })  	//"Juros"
+									oTotaisEmp:Cell("Multa"   ):SetBlock({||nTotEmp5 })  	//"Multa"
+									oTotaisEmp:Cell("Corr. Monet"   ):SetBlock({||nTotEmp6 })  	//"Corr. Monet"
+									oTotaisEmp:Cell("Valor Pago"   ):SetBlock({||nTotEmp7 })  	//"Valor Pago"
+									oTotaisEmp:Cell("Pagto.Antecipado"   ):SetBlock({||nTotEmp8 })  	//"Pagto.Antecip"
+									oTotaisEmp:Cell("Saldo Atual"   ):SetBlock({||nTotEmp9 })  	//"Saldo Atual"
+
+									oTotaisEmp:Cell("Valor Original"	):SetPicture(Tm(nTotEmp0,oTitsForn:Cell("Valor Original"	):nSize,nDecs))					//"Valor original"
+									oTotaisEmp:Cell("Lei 10925"	):SetPicture(Tm(nTotEmp1,oTitsForn:Cell("Lei 10925"	):nSize,nDecs))					//"Lei 10925"
+									oTotaisEmp:Cell("Descontos"	):SetPicture(Tm(nTotEmp2,oTitsForn:Cell("Descontos"	):nSize,nDecs))					//"Descontos"
+									oTotaisEmp:Cell("Abatimentos"	):SetPicture(Tm(nTotEmp3,oTitsForn:Cell("Abatimentos"	):nSize,nDecs))					//"Abatimentos"
+									oTotaisEmp:Cell("Juros"	):SetPicture(Tm(nTotEmp4,oTitsForn:Cell("Juros"	):nSize,nDecs))					//"Juros"
+									oTotaisEmp:Cell("Multa"	):SetPicture(Tm(nTotEmp5,oTitsForn:Cell("Multa"	):nSize,nDecs))					//"Multa"
+									oTotaisEmp:Cell("Corr. Monet"	):SetPicture(Tm(nTotEmp6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))					//"Corr. Monet"
+									oTotaisEmp:Cell("Valor Pago"	):SetPicture(Tm(nTotEmp7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))					//"Valor Pago"
+									oTotaisEmp:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotEmp8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))					//"Pagto.Antecip"
+									oTotaisEmp:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotEmp9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))	//"SAldo atual"
+
+									oTotaisEmp:Init()
+									oReport:ThinLine()
+									oTotaisEmp:PrintLine()
+									oTotaisEmp:Finish()
+									oReport:SkipLine(2)
+									nTotEmp0:= nTotEmp1:= nTotEmp2:= nTotEmp3:= nTotEmp4:= nTotEmp5:= nTotEmp6:= nTotEmp7:= nTotEmp8:= nTotEmp9:=0
+									nRegEmp := 0
+								Endif
+							Endif
+						Endif
+					Endif
+					/* GESTAO - fim
+					*/
+				EndIf
+
+			EndIf
+
+		Next
+
+		//Imprime Total geral
+		oTotalGeral:Cell("TXTTOTAL"):SetBlock({||"TOTAL GERAL ---->"  })
+		oTotalGeral:Cell("Valor Original"   ):SetBlock({||nTotGeral0 }) 			//"Valor Original
+		If cPaisLoc == "BRA"
+			oTotalGeral:Cell("Lei 10925"   ):SetBlock({||nTotGeral1 })  	//"Lei 10925"
+		EndIf
+		oTotalGeral:Cell("Descontos"   ):SetBlock({||nTotGeral2 })  		//"Descontos"
+		oTotalGeral:Cell("Abatimentos"   ):SetBlock({||nTotGeral3 })  		//"Abatimentos"
+		oTotalGeral:Cell("Juros"   ):SetBlock({||nTotGeral4 })  		//"Juros"
+		oTotalGeral:Cell("Multa"   ):SetBlock({||nTotGeral5 })  		//"Multa"
+		oTotalGeral:Cell("Corr. Monet"   ):SetBlock({||nTotGeral6 })  		//"Corr. Monet"
+		oTotalGeral:Cell("Valor Pago"   ):SetBlock({||nTotGeral7 })  		//"Valor Pago"
+		oTotalGeral:Cell("Pagto.Antecipado"   ):SetBlock({||nTotGeral8 })  		//"Pagto.Antecip"
+		oTotalGeral:Cell("Saldo Atual"   ):SetBlock({||nTotGeral9 })  		//"Saldo Atual"
+
+		oTotalGeral:Cell("Valor Original"	):SetPicture(PictParent(Tm(nTotGeral0,oTitsForn:Cell("Valor Original"	):nSize,nDecs)))		//"Valor original"
+		oTotalGeral:Cell("Lei 10925"	):SetPicture(Tm(nTotGeral1,oTitsForn:Cell("Lei 10925"	):nSize,nDecs))						//"Lei 10925"
+		oTotalGeral:Cell("Descontos"	):SetPicture(Tm(nTotGeral2,oTitsForn:Cell("Descontos"	):nSize,nDecs))						//"Descontos"
+		oTotalGeral:Cell("Abatimentos"	):SetPicture(Tm(nTotGeral3,oTitsForn:Cell("Abatimentos"	):nSize,nDecs))						//"Abatimentos"
+		oTotalGeral:Cell("Juros"	):SetPicture(Tm(nTotGeral4,oTitsForn:Cell("Juros"	):nSize,nDecs))						//"Juros"
+		oTotalGeral:Cell("Multa"	):SetPicture(Tm(nTotGeral5,oTitsForn:Cell("Multa"	):nSize,nDecs))						//"Multa"
+		oTotalGeral:Cell("Corr. Monet"	):SetPicture(Tm(nTotGeral6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))						//"Corr. Monet"
+		oTotalGeral:Cell("Valor Pago" 	):SetPicture(Tm(nTotGeral7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))						//"Valor Pago"
+		oTotalGeral:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotGeral8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))						//"Pagto.Antecip"
+		oTotalGeral:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotGeral9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))		//"SAldo atual"
+
+		oTotalGeral:Init()
+		oReport:ThinLine()
+		oTotalGeral:PrintLine()
+		oTotalGeral:Finish()
+
+		oTitsForn:Finish()
+		oFornecedores:Finish()
+
+		SM0->(dbGoTo(nRegSM0))
+		cFilAnt := IIf( lFWCodFil, FWGETCODFILIAL, SM0->M0_CODFIL )
+
+	EndIf
+
+Return NIL
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} FinR350R3
+Posicao dos Fornecedores.
+
+@type function
+@author Paulo Boschetti
+@since 01/06/1992
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function FinR350R3() // Thiago Rasmussen - 25/06/2015
+	//+--------------------------------------------------------------+
+	//| Define Variaveis                                             |
+	//+--------------------------------------------------------------+
+	Local cDesc1 :=OemToAnsi("Este programa ir  emitir a posição dos fornecedores")  //"Este programa ir  emitir a posi‡„o dos fornecedores"
+	Local cDesc2 :=OemToAnsi("referente a data base do sistema.")  //"referente a data base do sistema."
+	Local cDesc3 :=""
+	Local cString:="SE2"
+	Local nMoeda
+	Local lSegue := .T.
+
+	Private aLinha :={}
+	Private aReturn:={OemToAnsi("Zebrado"),1,OemToAnsi("Administracao"),1,2,1,"",1}  //"Zebrado"###"Administracao"
+	Private cPerg  :="FIN350"
+	Private cabec1,cabec2,nLastKey:=0,titulo,wnrel,tamanho:="G"
+	Private nomeprog :="FINR350"
+	Private aOrd :={OemToAnsi("Por Codigo"),OemToAnsi("Por Nome") }  //"Por Codigo"###"Por Nome"
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	//+--------------------------------------------------------------+
+	//| Definicao dos cabecalhos                                     |
+	//+--------------------------------------------------------------+
+
+	titulo:= OemToAnsi("Posicao dos Fornecedores ")  //"Posicao dos Fornecedores "
+
+	cabec1:= OemToAnsi("Prf Numero       PC Tip Valor Original Emissao   Vencto   Baixa                          P  A  G  A  M  E  N  T  O  S                                                                                     ")  //"Prf Numero       PC Tip Valor Original Emissao   Vencto   Baixa                          P  A  G  A  M  E  N  T  O  S                                                                                     "
+
+	If cPaisLoc == "BRA"
+		cabec2:= OemToAnsi("                                                                           Lei 10925    Descontos   Abatimentos         Juros         Multa   Corr. Monet      Valor Pago  Pagto.Antecip.        Saldo Atual  Motivo")	//"                                                                           Lei 10925    Descontos   Abatimentos         Juros         Multa   Corr. Monet      Valor Pago  Pagto.Antecip.        Saldo Atual  Motivo"
+	Else
+		cabec2:= OemToAnsi("                                                                                        Descontos   Abatimentos         Juros         Multa   Corr. Monet      Valor Pago  Pagto.Antecip.        Saldo Atual  Motivo")	//"                                                                                        Descontos   Abatimentos         Juros         Multa   Corr. Monet      Valor Pago  Pagto.Antecip.        Saldo Atual  Motivo"
+	EndIf
+
+	//+--------------------------------------------------------------+
+	//| Verifica as perguntas selecionadas                           |
+	//+--------------------------------------------------------------+
+	pergunte("FIN350",.F.)
+
+	//+----------------------------------------------------------+
+	//| Variaveis utilizadas para parametros                     |
+	//| mv_par01    // Do Fornecedor                     		 |
+	//| mv_par02    // Ate o Fornecedor                  		 |
+	//| mv_par03    // Da Loja                           		 |
+	//| mv_par04    // Ate a Loja                        		 |
+	//| mv_par05    // Da Emissao                        		 |
+	//| mv_par06    // Ate a Emissao                     		 |
+	//| mv_par07    // Do Vencimento                     		 |
+	//| mv_par08    // Ate o Vencimento                  		 |
+	//| mv_par09    // Imprime os t¡tulos provis¢rios    		 |
+	//| mv_par10    // Qual a moeda                      		 |
+	//| mv_par11    // Reajusta pela DataBase ou Vencto  		 |
+	//| mv_par12    // Considera Faturados               		 |
+	//| mv_par13    // Imprime Outras Moedas             		 |
+	//| mv_par14    // Considera Data Base               		 |
+	//| mv_par15    // Imprime Nome?(Raz.Social/N.Reduz.)		 |
+	//| mv_par16    // Imprime PA? Sim ou Não            		 |
+	//| mv_par17    // Conv. val. pela Data de? Hoje ou Mov 	 |
+	//| mv_par18	// Considera Data de Emissao:"Do Documento" ou "Do Sistema"
+	//| mv_par19	// Consid Filiais  ?  						 |
+	//| mv_par20	// da filial								 |
+	//| mv_par21	// a flial 									 |
+	//+----------------------------------------------------------+
+	//+----------------------------------------------------------+
+	//| Envia controle para a funcao SETPRINT                    |
+	//+----------------------------------------------------------+
+	wnrel:="FINR350"            //Nome Default do relatorio em Disco
+	wnrel:=SetPrint(cString,wnrel,cPerg,@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,,Tamanho)
+
+	If nLastKey == 27
+		lSegue := .F.
+	Endif
+
+	If lSegue
+
+		SetDefault(aReturn,cString)
+
+		If nLastKey == 27
+			lSegue := .F.
+		Endif
+
+		If lSegue
+
+			nMoeda := Iif(mv_par10 == 0, 1, mv_par10)
+			Titulo += " - " + GetMv("MV_MOEDA"+Str(nMoeda,1))
+
+			RptStatus({|lEnd| Fa350Imp(@lEnd,wnRel,cString)},Titulo)
+
+		Endif
+
+	Endif
+
+Return
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} FA350Imp
+Posicao dos Fornecedores.
+
+@type function
+@author Paulo Boschetti
+@since 01/06/1992
+@version P12.1.23
+
+@param lEnd, Lógico, Ação do Codeblock.
+@param wnRel, Numérico, Título do relat¢rio.
+@param cString, Caractere, Mensagem.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Nil, Função sem retorno.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function FA350Imp(lEnd,wnRel,cString)
+
+	Local CbTxt,cbCont
+	Local nOrdem,nTotAbat:=0
+	Local nTit1:=0,nTit2:=0,nTit3:=0,nTit4:=0,nTit5:=0,nTit6:=0,nTit7:=0,nTit8:=0,nTit9:=0,nTit10:=0
+	Local nTot1:=0,nTot2:=0,nTot3:=0,nTot4:=0,nTot5:=0,nTot6:=0,nTot7:=0,nTot8:=0,nTot9:=0,nTot10:=0
+	Local lContinua:=.T.,cForAnt:=Space(6),nSaldo:=0
+	Local aValor	:={0,0,0,0,0,0}
+	Local nMoeda	:=0
+	Local dDataMoeda
+	Local cCond1,cCond2,cChave,cIndex
+	#IFDEF TOP
+	Local cOrder
+	Local aStru := SE2->(dbStruct()), ni
+	#ENDIF
+	Local cFilterUser := aReturn[7]
+	Local ndecs		:=Msdecimais(mv_par10)
+	Local cAliasSA2 := "SA2"
+	Local lImpPAPag	:= IiF(MV_PAR16=2, .T. ,.F.)  //Imprime PA Gerada pela Ordem de Pago.
+	Local nConv		:= mv_par17
+	Local cCpoEmis 	:= If(mv_par18 == 1,"E2_EMISSAO","E2_EMIS1")
+	Local nTotFil1:=0
+	Local nTotFil2:=0
+	Local nTotFil3:=0
+	Local nTotFil4:=0
+	Local nTotFil5:=0
+	Local nTotFil6:=0
+	Local nTotFil7:=0
+	Local nTotFil8:=0
+	Local nTotFil9:=0
+	Local nTotFil10:=0
+	Local lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"
+	Local nAj := iif(cPaisLoc == "BRA",0,9)
+	Local nValorOrig := 0
+	Local lPaBruto	:= GetNewPar("MV_PABRUTO","2") == "1"  //Indica se o PA terá o valor dos impostos descontados do seu valor
+	Local nInc		:= 0
+	Local aSM0		:= AdmAbreSM0()
+	Local nVlOriMoed := 0
+
+	//******************************************
+	// Utilizados pelo ponto de entrada F350MFIL
+	//******************************************
+	Local lMovFil	:= .T. //Default: Imprime todas as filiais
+	Local lImpMFil 	:= .T.
+	Local nReg
+
+	//acrescentado por Fernando Radu Muscalu em 11/10/11
+	//Chamado/FNC - TDKB53	00000018446/2011
+	Local aFilProc	:= {}
+	Local nValRet := 0
+
+	//******************************************
+	Private nRegSM0 := SM0->(Recno())
+	Private nAtuSM0 := SM0->(Recno())
+	Private cFilNome	:= ""
+	PRIVATE cFilDe,cFilAte
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	dDataMoeda:=dDataBase
+
+	//+--------------------------------------------------------------+
+	//| Variaveis utilizadas para Impressao do Cabecalho e Rodape    |
+	//+--------------------------------------------------------------+
+	cbtxt :=Space(10)
+	cbcont:=00
+	li    :=80
+	m_pag :=01
+	nOrdem := aReturn[8]
+
+	nMoeda := mv_par10
+
+	SomaAbat("","","","P")
+
+	//+-----------------------------------------------------------+
+	//| Atribui valores as variaveis ref a filiais                |
+	//+-----------------------------------------------------------+
+	If mv_par19 == 2
+		cFilDe  := IIf( lFWCodFil, FWGETCODFILIAL, SM0->M0_CODFIL )
+		cFilAte := IIf( lFWCodFil, FWGETCODFILIAL, SM0->M0_CODFIL )
+	ELSE
+		cFilDe := mv_par20	// Todas as filiais
+		cFilAte:= mv_par21
+	Endif
+
+	If ExistBlock("F350MFIL")
+		lMovFil := ExecBlock("F350MFIL",.F.,.F.)
+	Endif
+
+	For nInc := 1 To Len( aSM0 )
+
+		//alterado por Fernando Radu Muscalu em 11/10/11
+		//Chamado/FNC - TDKB53	00000018446/2011
+		cFilAnt := aSM0[nInc][2]
+
+		//acrescentado por Fernando Radu Muscalu em 11/10/11
+		//Chamado/FNC - TDKB53	00000018446/2011
+		If aSM0[nInc][1] == cEmpAnt .AND. (aSM0[nInc][2] >= cFilDe .and. aSM0[nInc][2] <= cFilAte) .and. AScan( aFilProc, xFilial("SE2") ) == 0
+
+			nReg := 0 //Zera a contagem de registros impressos.
+
+			dbSelectArea("SE2")
+
+			cFilNome := aSM0[nInc][7]
+
+			dbSelectArea("SE2")
+			If nOrdem == 1
+				SE2->(dbSetOrder(6))
+				cChave := IndexKey()
+				SE2->(dbSeek (cFilial+mv_par01+mv_par03,.t.))
+				cCond1 :='SE2->E2_FORNECE+SE2->E2_LOJA <= mv_par02+mv_par04 .and. SE2->E2_FILIAL == xFilial("SE2")'
+				cCond2 := "SE2->E2_FORNECE+SE2->E2_LOJA"
+				#IFDEF TOP
+				cOrder := SqlOrder(cChave)
+				#ENDIF
+			Else
+				cChave  := "E2_FILIAL+E2_NOMFOR+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO"
+				#IFDEF TOP
+				If TCSrvType() == "AS/400"
+					cIndex	:= CriaTrab(nil,.f.)
+					dbSelectArea("SE2")
+					IndRegua("SE2",cIndex,cChave,,FR350FIL(),OemToAnsi("Selecionando Registros..."))  //"Selecionando Registros..."
+					nIndex	:= RetIndex("SE2")
+					SE2->(dbSetOrder(nIndex+1))
+				Else
+					cOrder := SqlOrder(cChave)
+				EndIf
+				#ELSE
+				cIndex	:= CriaTrab(nil,.f.)
+				dbSelectArea("SE2")
+				IndRegua("SE2",cIndex,cChave,,FR350FIL(),OemToAnsi("Selecionando Registros..."))  //"Selecionando Registros..."
+				nIndex	:= RetIndex("SE2")
+				dbSetIndex(cIndex+OrdBagExt())
+				SE2->(dbSetOrder(nIndex+1))
+				#ENDIF
+				cCond1 := ".T."
+				cCond2 := "SE2->E2_FORNECE+SE2->E2_LOJA"
+				SE2->( dbGoTop() )
+			EndIf
+			SetRegua(RecCount())
+
+			#IFDEF TOP
+			If TcSrvType() != "AS/400"
+				dbSelectArea("SE2")
+				aStru := dbStruct()
+				cQuery := "SELECT SE2.*,SA2.A2_COD,SA2.A2_NOME,SA2.A2_NREDUZ "
+				cQuery += " FROM " + RetSqlName("SE2") +" SE2, "+ RetSqlName("SA2") +" SA2 "
+				cQuery += " WHERE SE2.E2_FILIAL = '" + xFilial("SE2") + "'"
+				cQuery += " AND SA2.A2_FILIAL = '" + xFilial("SA2") + "'"
+				cQuery += " AND SE2.E2_FORNECE = SA2.A2_COD "
+				cQuery += " AND SE2.E2_LOJA = SA2.A2_LOJA "
+				cQuery += " AND SE2.E2_FORNECE||SE2.E2_LOJA between '" + mv_par01+mv_par03+ "' AND '" + mv_par02+mv_par04+ "'"
+				cQuery += " AND SE2."+cCpoEmis+"  between '" + DTOS(mv_par05)  + "' AND '" + DTOS(mv_par06) + "'"
+				cQuery += " AND SE2.E2_VENCREA between '" + DTOS(mv_par07)  + "' AND '" + DTOS(mv_par08) + "'"
+				cQuery += " AND SE2.E2_TIPO NOT IN " + FormatIn(MVABATIM,"|")
+				cQuery += " AND SE2."+cCpoEmis+"  <=  '"     + DTOS(dDataBase) + "'"
+				If mv_par09 == 2
+					cQuery += " AND SE2.E2_TIPO != '"+MVPROVIS+"' "
+				EndIf
+				If mv_par12 == 2
+					If cpaisLOC =="BRA"
+						cQuery += "AND SE2.E2_FATURA IN('"+Space(Len(SE2->E2_FATURA))+"','NOTFAT') "
+						cQuery += "AND SE2.E2_DTFATUR <= '" + DTOS(mv_par06) + "' "
+					Else
+						cQuery += "AND SE2.E2_ORIGEM <>'FINA085A'"
+					EndIf
+				Endif
+				If mv_par13 == 2
+					cQuery += " AND SE2.E2_MOEDA = " + STR(mv_par10)
+				Endif
+				cQuery += " AND SE2.D_E_L_E_T_ = ' ' "
+				cQuery += " AND SA2.D_E_L_E_T_ = ' ' "
+				cQuery += " ORDER BY " + cOrder
+
+				cQuery := ChangeQuery(cQuery)
+
+				dbSelectArea("SE2")
+				SE2->(dbCloseArea())
+
+				dbUseArea(.T., "TOPCONN", TCGenQry(,,cQuery), 'SE2', .T., .T.)
+
+				For ni := 1 to Len(aStru)
+					If aStru[ni,2] != 'C' .and. FieldPos(aStru[ni,1]) > 0
+						TCSetField('SE2', aStru[ni,1], aStru[ni,2],aStru[ni,3],aStru[ni,4])
+					Endif
+				Next
+
+				cAliasSA2 := "SE2"
+
+			EndIf
+			#ENDIF
+
+			//+-----------------------------------------------------+
+			//|Posicionamento do SE5 neste ponto que servira para   |
+			//|pesquisa de descarte de registros geradores de       |
+			//|desdobramento                                        |
+			//+-----------------------------------------------------+
+			dbSelectArea("SE5")
+			SE5->(dbSetOrder(7))	//E5_FILIAL+E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR+E5_LOJA+E5_SEQ
+			dbSelectArea("SE2")
+
+			While SE2->(!Eof()) .And. lContinua .And. &cCond1
+
+				dbSelectArea("SE2")
+
+				IF lEnd
+					@PROW()+1,001 PSAY OemToAnsi("CANCELADO PELO OPERADOR")  //"CANCELADO PELO OPERADOR"
+					Exit
+				EndIF
+
+				//+--------------------------------------------------------------+
+				//| Considera filtro do usuario                                  |
+				//+--------------------------------------------------------------+
+				If !Empty(cFilterUser).and.!(&cFilterUser)
+					dbSelectArea("SE2")
+					SE2->(dbSkip())
+					Loop
+				Endif
+
+				nCont:=1
+				nTit1:=nTit2:=nTit3:=nTit4:=nTit5:=nTit6:=nTit7:=nTit8:=nTit9:=nTit10:=0
+				cForAnt:= &cCond2
+
+				While &cCond2 == cForAnt .And. lContinua .And. &cCond1 .And. SE2->(!Eof())
+					IF (ALLTRIM(SE2->E2_TIPO)$MV_CPNEG+","+MVPAGANT .Or. SUBSTR(SE2->E2_TIPO,3,1)=="-").and. Iif(cPaisLoc<> "BRA","FINA085" $ Upper( AllTrim( SE2->E2_ORIGEM)),.T.);
+					.And. lImpPAPag // Nao imprime o PA qdo ele for gerado pela Ordem de Pago
+						dbSelectArea("SE2")
+						SE2->(dbSkip())
+						Loop
+					Else
+						IF lEnd
+							@PROW()+1,001 PSAY OemToAnsi("CANCELADO PELO OPERADOR")  //"CANCELADO PELO OPERADOR"
+							lContinua := .F.
+							Exit
+						EndIF
+
+						IncRegua()
+						//+--------------------------------------------------------------+
+						//| Considera filtro do usuario                                  |
+						//+--------------------------------------------------------------+
+						If !Empty(cFilterUser).and.!(&cFilterUser)
+							dbSelectArea("SE2")
+							SE2->(dbSkip())
+							Loop
+						Endif
+
+						//+-----------------------------------------------------+
+						//|Pesquisa de descarte de registros geradores de       |
+						//|desdobramento                                        |
+						//+-----------------------------------------------------+
+						If SE5->(dbSeek(xFilial("SE5") + SE2->(E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA)))
+							If AllTrim(SE5->E5_TIPODOC) == "BA" .AND. AllTrim(SE5->E5_MOTBX) == "DSD"
+								SE2->(dbSkip())
+								Loop
+							Endif
+						Endif
+
+						#IFDEF TOP
+						If TcSrvType() == "AS/400"
+							dbSelectArea(cAliasSA2)
+							(cAliasSA2)->(dbSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA))
+						Endif
+						#ELSE
+						dbSelectArea(cAliasSA2)
+						(cAliasSA2)->(dbSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA))
+						#ENDIF
+
+						IF li > 58
+							nAtuSM0 := SM0->(Recno())
+							SM0->(dbGoto(nRegSM0))
+							cabec(titulo,cabec1,cabec2,nomeprog,tamanho,15)
+							SM0->(dbGoTo(nAtuSM0))
+						EndIF
+
+						If nCont = 1
+							@li,0 PSAY OemToAnsi("FORNECEDOR : ")+(cAliasSA2)->A2_COD+" "+IIF(mv_par15 == 1,(cAliasSA2)->A2_NOME,(cAliasSA2)->A2_NREDUZ)  //"FORNECEDOR : "
+							li+=2
+							nCont++
+						Endif
+
+						dbSelectArea("SE2")
+
+						IF mv_par11 == 1
+							dDataMoeda	:=	dDataBase
+						Else
+							dDataMoeda	:=	SE2->E2_VENCREA
+						Endif
+						aValor:=Baixas( SE2->E2_NATUREZA,SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_TIPO,nMoeda,"P",SE2->E2_FORNECE,dDataBase,SE2->E2_LOJA,SE2->E2_FILORIG)
+
+						If SE2->E2_TIPO == "NDF"
+							aValor[I_VALOR_PAGO]:=0
+						Endif
+
+
+						If mv_par14 == 1
+							nSaldo :=SaldoTit(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_TIPO,SE2->E2_NATUREZA,"P",SE2->E2_FORNECE,nMoeda,;
+							If(mv_par11==1,dDataBase,SE2->E2_VENCREA),,SE2->E2_LOJA,,If(mv_par17 == 1 ,SE2->E2_TXMOEDA,0))
+
+						Else
+							nSaldo := Round(xMoeda((SE2->E2_SALDO+SE2->E2_SDACRES-SE2->E2_SDDECRE),SE2->E2_MOEDA,mv_par10,If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,)),nDecs)
+						Endif
+
+						nTotAbat:=SumAbatPag(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_FORNECE,mv_par10,"V",,SE2->E2_LOJA,If(mv_par18==1,"1","2"),mv_par05,mv_par06,;
+						If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,1,))
+
+						aValor[I_JUROS] += SE2->E2_SDACRES
+						aValor[I_DESCONTO] += SE2->E2_SDDECRE
+
+						If ! (SE2->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG) .And. ;
+						! ( MV_PAR14 == 2 .And. nSaldo == 0 ) // nao deve olhar abatimento pois e zerado o saldo na liquidacao final do titulo
+							nSaldo -= nTotAbat
+						EndIf
+
+						//+--------------------------------------------------------------+
+						//| Se foi gerada fatura, colocar Motbx == Faturado				  |
+						//+--------------------------------------------------------------+
+						If !Empty(SE2->E2_DTFATUR) .and. SE2->E2_DTFATUR <= dDataBase
+							aValor[I_MOTBX] := "Faturado"  //"Faturado"
+							aValor[I_VALOR_PAGO] -= nTotAbat
+						Endif
+
+						If cPaisLoc == "BRA" .And. !lPaBruto  .And. alltrim(SE2->E2_TIPO)$"PA ,"+MV_CPNEG
+							nValorOrig:=SE2->E2_VALOR+SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL
+						Else
+							nValorOrig:=SE2->E2_VALOR
+						EndIf
+
+						@li,00     PSAY SE2->E2_PREFIXO+"-"+SE2->E2_NUM
+						@li,17+nAj PSAY SE2->E2_PARCELA
+						@li,20+nAj PSAY SE2->E2_TIPO
+						If ! ( SE2->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG )
+							nVlOriMoed := Round(xMoeda(nValorOrig,SE2->E2_MOEDA,nMoeda,;
+							IIf(mv_par17 == 1,IIf(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),;
+							nDecs+1,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,)),nDecs)
+						Else
+							nVlOriMoed := Round(xMoeda(nValorOrig,SE2->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,))*if(alltrim(SE2->E2_TIPO)$"PA ,"+MV_CPNEG,-1,1),nDecs)
+						EndIf
+
+
+						@li,24+nAj PSAY SayValor( nVlOriMoed, 15, ( SE2->E2_TIPO == "PA " ), nDecs )
+
+						@li,41+nAj PSAY If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1)
+						@li,52+nAj PSAY SE2->E2_VENCREA
+
+						IF dDataBase >= SE2->E2_BAIXA
+							@li,63+nAj PSAY IIF(!Empty(SE2->E2_BAIXA),SE2->E2_BAIXA," ")
+						End
+
+						If cPaisLoc == "BRA"
+							If lPCCBaixa
+								// Calcula valor de PA com PCC
+								If SE2->E2_TIPO $ MVPAGANT .Or. (!Empty(SE2->E2_BAIXA) .Or. !Empty(SE2->E2_NUMBOR))
+									If aValor[I_LEI10925] < (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL) .And. !Empty(SE2->E2_BAIXA)
+										nValRet := aValor[I_LEI10925]
+									Endif
+
+									aValor[I_LEI10925]   := (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL)
+
+									If !lPaBruto
+										aValor[I_VALOR_PAGO] := Iif(nValRet > 0, (NVALORORIG - (nValRet + nSaldo)), (NVALORORIG - (aValor[I_LEI10925]+nSaldo)))
+									Else
+										aValor[I_VALOR_PAGO] += Iif(nValRet > 0, nValRet, (aValor[I_LEI10925]+nSaldo))
+									EndIf
+								EndIf
+								@li, 73 PSAY aValor[I_LEI10925]           Picture Tm(aValor[I_LEI10925],11,nDecs)
+							Else
+								aValor[I_LEI10925]:= (SE2->E2_COFINS+SE2->E2_PIS+SE2->E2_CSLL)
+								@li, 73 PSAY aValor[I_LEI10925]           Picture Tm(aValor[I_LEI10925],11,nDecs)
+							Endif
+						EndIf
+						@li, 84 PSAY aValor[I_DESCONTO]           Picture Tm(aValor[I_DESCONTO],13,nDecs)
+						@li, 98 PSAY nTotAbat                     Picture Tm(nTotAbat,13,nDecs)
+						@li,112 PSAY aValor[I_JUROS]    	      Picture Tm(aValor[I_JUROS],13,nDecs)
+						@li,126 PSAY aValor[I_MULTA]              Picture Tm(aValor[I_MULTA],13,nDecs)
+						@li,140 PSAY aValor[I_CORRECAO_MONETARIA] Picture Tm(aValor[I_CORRECAO_MONETARIA],13,nDecs)
+						@li,154 PSAY SayValor(aValor[I_VALOR_PAGO],15,.F.,nDecs)
+						@li,170 PSAY aValor[I_PAGAM_ANT]          Picture Tm(aValor[I_PAGAM_ANT],15,nDecs)
+
+						@li,188 PSAY SayValor(nSaldo,16,.F.,nDecs)
+						@li,206 PSAY aValor[I_MOTBX]
+						If ! ( SE2->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG )
+							nTit1+= Round(xMoeda(SE2->E2_VALOR,SE2->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,)),nDecs)
+							nTit7+=aValor[I_VALOR_PAGO]
+							nTit9+=nSaldo
+						Else
+							nTit1-= Round(xMoeda(nValorOrig,SE2->E2_MOEDA,nMoeda,If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),nDecs+1,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,)),nDecs)
+							nTit7-=aValor[I_VALOR_PAGO]
+							nTit9-=nSaldo
+						Endif
+
+						nTit2+=aValor[I_DESCONTO]
+						nTit3+=nTotAbat
+						nTit4+=aValor[I_JUROS]
+						nTit5+=aValor[I_MULTA]
+						nTit6+=aValor[I_CORRECAO_MONETARIA]
+						nTit8+=aValor[I_PAGAM_ANT]
+						If cPaisLoc == "BRA"
+							nTit10+=aValor[I_LEI10925]
+						EndIf
+						dbSelectArea("SE2")
+						SE2->(dbSkip())
+						li++
+						nReg++
+					Endif
+				Enddo
+				If ( ABS(nTit1)+ABS(nTit2)+ABS(nTit3)+ABS(nTit4)+ABS(nTit5)+ABS(nTit6)+ABS(nTit7)+ABS(nTit8)+ABS(nTit9)+ABS(nTit10) > 0 )
+					ImpSubTot(nTit1,nTit2,nTit3,nTit4,nTit5,nTit6,nTit7,nTit8,nTit9,nTit10,nDecs)
+					li++
+				Endif
+				nTot1+=nTit1
+				nTot2+=nTit2
+				nTot3+=nTit3
+				nTot4+=nTit4
+				nTot5+=nTit5
+				nTot6+=nTit6
+				nTot7+=nTit7
+				nTot8+=nTit8
+				nTot9+=nTit9
+				nTot10+=nTit10
+
+				nTotFil1 += nTit1
+				nTotFil2 += nTit2
+				nTotFil3 += nTit3
+				nTotFil4 += nTit4
+				nTotFil5 += nTit5
+				nTotFil6 += nTit6
+				nTotFil7 += nTit7
+				nTotFil8 += nTit8
+				nTotFil9 += nTit9
+				nTotFil10+= nTit10
+			EndDO
+
+			SE2->(DbCloseArea())
+
+			//Imprime ou não as filiais sem movimento - P.E. F350MFIL
+			If !lMovFil
+				lImpMFil := Iif(nReg != 0, .T., .F.)
+			Endif
+			//+----------------------------------------+
+			//| Imprimir TOTAL por filial somente quan-|
+			//| do houver mais do que 1 filial.        |
+			//+----------------------------------------+
+			if mv_par19 == 1 .and. SM0->(Reccount()) > 1 .And. lImpMFil
+				ImpFil350(nTotFil1,nTotFil2,nTotFil3,nTotFil4,nTotFil5,nTotFil6,nTotFil7,nTotFil8,nTotFil9,nTotFil10,nDecs)
+			Endif
+			Store 0 To nTotFil1,nTotFil2,nTotFil3,nTotFil4,nTotFil5,nTotFil6,nTotFil7,nTotFil8,nTotFil9
+			If Empty(xFilial("SE1"))
+				Exit
+			Endif
+
+			//acrescentado por Fernando Radu Muscalu em 11/10/11
+			//Chamado/FNC - TDKB53	00000018446/2011
+			AAdd( aFilProc, xFilial("SE2") )
+		EndIf
+	Next
+
+	cFilAnt := IIf( lFWCodFil, FWGETCODFILIAL, SM0->M0_CODFIL )
+
+	IF li > 55 .and. li != 80
+		cabec(titulo,cabec1,cabec2,nomeprog,tamanho,15)
+	EndIF
+
+	IF li != 80
+		ImpTotG(nTot1,nTot2,nTot3,nTot4,nTot5,nTot6,nTot7,nTot8,nTot9,nTot10,nDecs)
+		roda(cbcont,cbtxt,tamanho)
+	EndIF
+
+	Set Device To Screen
+
+	#IFNDEF TOP
+	dbSelectArea("SE2")
+	dbClearFil()
+	RetIndex( "SE2" )
+	If !Empty(cIndex)
+		FErase (cIndex+OrdBagExt())
+	Endif
+	SE2->(dbSetOrder(1))
+	#ELSE
+	if TcSrvType() != "AS/400"
+		dbSelectArea("SE2")
+		SE2->(dbCloseArea())
+		ChkFile("SE2")
+		dbSelectArea("SE2")
+		SE2->(dbSetOrder(1))
+	else
+		dbSelectArea("SE2")
+		dbClearFil()
+		If Select("__SE2") <> 0
+			__SE2->(dbCloseArea())
+		Endif
+		RetIndex( "SE2" )
+		If !Empty(cIndex)
+			FErase (cIndex+OrdBagExt())
+		Endif
+		SE2->(dbSetOrder(1))
+	endif
+	#ENDIF
+
+	If aReturn[5] = 1
+		Set Printer TO
+		dbCommitAll()
+		ourspool(wnrel)
+	Endif
+
+	MS_FLUSH()
+Return()
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ImpSubTot
+Imprimir linha de SubTotal do relatorio.
+
+@type function
+@author Paulo Boschetti
+@since 01/06/1992
+@version P12.1.23
+
+@param nTit1,  Numérico, Posição do Título 1.
+@param nTit2,  Numérico, Posição do Título 2.
+@param nTit3,  Numérico, Posição do Título 3.
+@param nTit4,  Numérico, Posição do Título 4.
+@param nTit5,  Numérico, Posição do Título 5.
+@param nTit6,  Numérico, Posição do Título 6.
+@param nTit7,  Numérico, Posição do Título 7.
+@param nTit8,  Numérico, Posição do Título 8.
+@param nTit9,  Numérico, Posição do Título 9.
+@param nTit10, Numérico, Posição do Título 10.
+@param nDecs, Numérico, Número de decimais.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Lógico, Fixo Verdadeiro.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ImpSubTot(nTit1,nTit2,nTit3,nTit4,nTit5,nTit6,nTit7,nTit8,nTit9,nTit10,nDecs)
+
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	li++
+	@li,000 PSAY OemToAnsi("Totais : ")  //"Totais : "
+	@li,022 PSAY nTit1  Picture Tm(nTit1,17,nDecs)
+	If cPaisLoc == "BRA"
+		@li,071 PSAY nTit10 PicTure Tm(nTit10,13,nDecs)
+	EndIf
+	@li,084 PSAY nTit2  PicTure Tm(nTit2,13,nDecs)
+	@li,098 PSAY nTit3  PicTure Tm(nTit3,13,nDecs)
+	@li,112 PSAY nTit4  PicTure Tm(nTit4,13,nDecs)
+	@li,126 PSAY nTit5  PicTure Tm(nTit5,13,nDecs)
+	@li,140 PSAY nTit6  PicTure Tm(nTit6,13,nDecs)
+	@li,154 PSAY nTit7  PicTure Tm(nTit7,15,nDecs)
+	@li,170 PSAY nTit8  PicTure Tm(nTit8,15,nDecs)
+	@li,187 PSAY nTit9  PicTure Tm(nTit9,17,nDecs)
+	li++
+	@li,  0 PSAY REPLICATE("-",220)
+	li++
+Return(.T.)
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ImpTotg
+Imprimir linha de Total do Relatorio.
+
+@type function
+@author Paulo Boschetti
+@since 01/06/1992
+@version P12.1.23
+
+@param nTit1,  Numérico, Posição do Título 1.
+@param nTit2,  Numérico, Posição do Título 2.
+@param nTit3,  Numérico, Posição do Título 3.
+@param nTit4,  Numérico, Posição do Título 4.
+@param nTit5,  Numérico, Posição do Título 5.
+@param nTit6,  Numérico, Posição do Título 6.
+@param nTit7,  Numérico, Posição do Título 7.
+@param nTit8,  Numérico, Posição do Título 8.
+@param nTit9,  Numérico, Posição do Título 9.
+@param nTit10, Numérico, Posição do Título 10.
+@param nDecs, Numérico, Número de decimais.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Lógico, Fixo Verdadeiro.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function ImpTotg(nTot1,nTot2,nTot3,nTot4,nTot5,nTot6,nTot7,nTot8,nTot9,nTot10,nDecs)
+
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	li++
+	@li,000 PSAY OemToAnsi("TOTAL GERAL ---->")  //"TOTAL GERAL ---->"
+	@li,022 PSAY nTot1  Picture Tm(nTot1,17,nDecs)
+	If cPaisLoc == "BRA"
+		@li,071 PSAY nTot10 PicTure Tm(nTot10,13,nDecs)
+	EndIf
+	@li,084 PSAY nTot2  PicTure Tm(nTot2,13,nDecs)
+	@li,098 PSAY nTot3  PicTure Tm(nTot3,13,nDecs)
+	@li,112 PSAY nTot4  PicTure Tm(nTot4,13,nDecs)
+	@li,126 PSAY nTot5  PicTure Tm(nTot5,13,nDecs)
+	@li,140 PSAY nTot6  PicTure Tm(nTot6,13,nDecs)
+	@li,154 PSAY nTot7  PicTure Tm(nTot7,15,nDecs)
+	@li,170 PSAY nTot8  PicTure Tm(nTot8,15,nDecs)
+	@li,187 PSAY nTot9  PicTure Tm(nTot9,17,nDecs)
+	li++
+Return(.t.)
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} FR350FIL
+Monta Indregua para impressao do relatório.
+
+@type function
+@author Andreia
+@since 12/01/1999
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Caractere, Filtro monstado.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function FR350FIL()
+	Local cString
+	Local cCpoEmis 	:= If(mv_par18 == 1,"E2_EMISSAO","E2_EMIS1")
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	cString := 'E2_FILIAL="'+xFilial("SE2")+'".And.'
+	cString += 'dtos('+cCpoEmis+'  )>="'+dtos(mv_par05)+'".and.dtos('+cCpoEmis+'  )<="'+dtos(mv_par06)+'".And.'
+	cString += 'dtos(E2_VENCREA)>="'+dtos(mv_par07)+'".and.dtos(E2_VENCREA)<="'+dtos(mv_par08)+'".And.'
+	cString += 'E2_FORNECE>="'+mv_par01+'".and.E2_FORNECE<="'+mv_par02+'".And.'
+	cString += 'E2_LOJA>="'+mv_par03+'".and.E2_LOJA<="'+mv_par04+'"'
+
+Return cString
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} AndaTRB
+Movimenta area temporaria e reposiciona SE1 ou SE2 ou SE5.
+
+@type function
+@author Emerson / Sandro
+@since 20/09/1999
+@version P12.1.23
+
+@param xMyAlias, Caractere, Alias da tabela.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function AndaTRB(xMyAlias) // Thiago Rasmussen - 25/06/2015
+	#IFDEF TOP
+	Local cAlias:= Alias()
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	If TcSrvType() != "AS/400"
+		dbSelectArea(XMyAlias)
+		(XMyAlias)->(dbSkip())
+		(cAlias)->(dbGoTo((xMyAlias)->Recno))
+		dbSelectArea(cAlias)
+	Else
+		(XMyAlias)->(dbSkip())
+	Endif
+	#ELSE
+	(XMyAlias)->(dbSkip())
+	#ENDIF
+
+Return
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} Fr350Skip
+Pula registros de acordo com as condicoes (AS 400/CDX/ADS).
+
+@type function
+@author Pilar S. Albaladejo
+@since 13/10/1999
+@version P12.1.23
+
+@param cAlias, Caractere, Alias da tabela.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Lógico, Verdadeiro ou Falso indicando se pula o registro.
+
+@deprecated Função sem uso no fonte.
+/*/
+/*/================================================================================================================================/*/
+
+Static Function Fr350Skip(cAlias)
+	Local lRet := .T.
+	Local cEmissao
+	Default cAlias := "SE2"
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	cEmissao := If(mv_par18 == 1, (cAlias)->E2_EMISSAO, (cAlias)->E2_EMIS1)
+
+	//+--------------------------------------------------------------+
+	//| Verifica se esta dentro dos parametros                       |
+	//+--------------------------------------------------------------+
+	IF (cAlias)->E2_FORNECE < mv_par01 .OR. (cAlias)->E2_FORNECE > mv_par02 .OR. ;
+	(cAlias)->E2_LOJA    < mv_par03 .OR. (cAlias)->E2_LOJA    > mv_par04 .OR. ;
+	cEmissao   < mv_par05 .OR. cEmissao   > mv_par06 .OR. ;
+	(cAlias)->E2_VENCREA < mv_par07 .OR. (cAlias)->E2_VENCREA > mv_par08 .OR. ;
+	(cAlias)->E2_TIPO $ MVABATIM
+		lRet :=  .F.
+
+		//+--------------------------------------------------------------+
+		//| Verifica se o t¡tulo ‚ provis¢rio                            |
+		//+--------------------------------------------------------------+
+	ElseIf ((cAlias)->E2_TIPO $ MVPROVIS .and. mv_par09==2)
+		lRet := .F.
+
+	ElseIF cEmissao   > dDataBase
+		lRet := .F.
+
+		//+----------------------------------------+
+		//| Verifica se deve imprimir outras moedas|
+		//+----------------------------------------+
+	Elseif mv_par13 == 2 .And. (cAlias)->E2_MOEDA != mv_par10 //verifica moeda do campo=moeda parametro
+		lret := .F.
+		//+--------------------------------------------------------------+
+		//| Verifica se o t¡tulo foi aglutinado em uma fatura            |
+		//+--------------------------------------------------------------+
+	ElseIf !Empty((cAlias)->E2_FATURA) .and. Substr((cAlias)->E2_FATURA,1,6)!="NOTFAT" .and. !Empty( (cAlias)->E2_DTFATUR ) .and. DtoS( (cAlias)->E2_DTFATUR ) <= DtoS( mv_par06 ).And.;
+	mv_par12 <> 1
+		lRet :=  .F. 	// Considera Faturados = mv_par12
+		//+----------------------------------------+
+		//| Verifica se deve imprimir outras moedas|
+		//+----------------------------------------+
+	Elseif mv_par13 == 2 // nao imprime
+		If (cAlias)->E2_MOEDA != mv_par10 //verifica moeda do campo=moeda parametro
+			lret := .F.
+		Endif
+	Endif
+Return lRet
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} SayValor
+Formata valor numérico em uma string.
+Retorna String de valor entre () caso Valor < 0.
+
+@type function
+@author Júlio Wittwer
+@since 24/06/1999
+@version P12.1.23
+
+@param nNum, Numérico, Valor a ser formatado.
+@param nTam, Numérico, Tamanho do número.
+@param lInvert, Lógico, Indica se inverte o sinal.
+@param nDecs, Numérico, Número de decimais.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Caractere, Valor fomatado.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function SayValor(nNum,nTam,lInvert,nDecs)
+	Local cPicture,cRetorno
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	nDecs := IIF(nDecs == NIL, 2, nDecs)
+
+	cPicture := tm(nNum,nTam,nDecs)
+	cRetorno := Transform(nNum,cPicture)
+	IF nNum<0 .or. lInvert
+		cRetorno := "("+substr(cRetorno,2)+")"
+	Endif
+Return cRetorno
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} PictParent
+TRansforme uma Picture em Picture com "()"parenteses para valores negativos.
+
+@type function
+@author Adrianne Furtado
+@since 03/07/2006
+@version P12.1.23
+
+@param cPict, Caractere, Picture a ser transformada.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Caractere, Picture transformada.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function PictParent(cPict)
+	Local cRet
+	Local nAt := At("9",cPict)
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	cRet := SubStr(cPict,1,nAt-2)+")"+SubStr(cPict,nAt-1,Len(cPict))
+Return cRet
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} ImpFil350
+Imprimir total do relatorio.
+
+@type function
+@author Adrianne Furtado
+@since 27/10/2006
+@version P12.1.23
+
+@param nTit1,  Numérico, Posição do Título 1.
+@param nTit2,  Numérico, Posição do Título 2.
+@param nTit3,  Numérico, Posição do Título 3.
+@param nTit4,  Numérico, Posição do Título 4.
+@param nTit5,  Numérico, Posição do Título 5.
+@param nTit6,  Numérico, Posição do Título 6.
+@param nTit7,  Numérico, Posição do Título 7.
+@param nTit8,  Numérico, Posição do Título 8.
+@param nTit9,  Numérico, Posição do Título 9.
+@param nTit10, Numérico, Posição do Título 10.
+@param nDecs, Numérico, Número de decimais.
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Lógico, Fixo Verdadeiro.
+
+/*/
+/*/================================================================================================================================/*/
+
+STATIC Function ImpFil350(nTotFil1,nTotFil2,nTotFil3,nTotFil4,nTotFil5,nTotFil6,nTotFil7,nTotFil8,nTotFil9,nTotFil10,nDecs)
+
+	DEFAULT nDecs := Msdecimais(mv_par15)
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	li--
+	IF li > 58
+		cabec(titulo,cabec1,cabec2,nomeprog,tamanho,GetMv("MV_COMP"))
+	EndIF
+
+	@li,000 PSAY AllTrim(OemToAnsi("T O T A L   F I L I A L ----> "))+" "+Iif(mv_par19==1,cFilAnt+" " + Substr(cFilNome,1,10),"")  //"T O T A L   F I L I A L ----> "
+	@li,050 PSAY nTotFil1        Picture TM(nTotFil1,14,nDecs)
+	If cPaisLoc == "BRA"
+		@li,074 PSAY nTotFil10       Picture TM(nTotFil10,10,nDecs)
+	EndIf
+	@li,084 PSAY nTotFil2        Picture TM(nTotFil2,13,nDecs)
+	@li,98 PSAY nTotFil3         Picture TM(nTotFil3,13,nDecs)
+	@li,112 PSAY nTotFil4		 Picture TM(nTotFil4,13,nDecs)
+	@li,126 PSAY nTotFil5 		 Picture TM(nTotFil5,13,nDecs)
+	@li,140 PSAY nTotFil6        Picture TM(nTotFil6,13,nDecs)
+	@li,154 PSAY nTotFil7		 Picture TM(nTotFil7,15,nDecs)
+	@li,170 PSAY nTotFil8 		 Picture TM(nTotFil8,15,nDecs)
+	@li,187 PSAY nTotFil9 		 Picture TM(nTotFil9,17,nDecs)
+
+	li++
+	@li,000 PSAY Replicate("-",220)
+	li+=2
+Return .T.
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±+----------Â----------Â-------Â-----------------------Â------Â----------+±±
+±±|Fun‡„o	 |AjustaHLP | Autor | Ana Paula       	    | Data | 14.05.07 |±±
+±±Ã----------Å----------Á-------Á-----------------------Á------Á----------´±±
+±±|Descri‡„o |Cria help para perguma 15(compoe saldo)  					  |±±
+±±Ã----------Å------------------------------------------------------------´±±
+±±| Uso		 | FINR350.PRX												  |±±
+±±+----------Á------------------------------------------------------------+±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} AjustaHLP
+Cria help para perguma 15(compoe saldo).
+
+@type function
+@author Ana Paula
+@since 14/05/2007
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function AjustaHLP()
+	Local aHelpPor := {}
+	Local aHelpEng := {}
+	Local aHelpSpa := {}
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	Aadd( aHelpPor, 'Selecione "SIM" para compor Saldo ')
+	Aadd( aHelpPor, 'Retroativo ou "Nao" para nao compor')
+
+	Aadd( aHelpEng, 'Select "YES" to make the retroactive')
+	Aadd( aHelpEng, 'balance, otherwise "No".')
+
+	Aadd( aHelpSpa, 'Selecione "SI" para formar el Saldo')
+	Aadd( aHelpSpa, 'Retroactivo o "No" en caso contrario.')
+
+	PutSX1Help("P.FIN35014.",aHelpPor,aHelpEng,aHelpSpa)
+
+	If cPaisLoc<>"BRA"
+		aHelpEspP:=	{}
+		aHelpPorP:=	{}
+		aHelpEngP:=	{}
+
+		dbSelectArea("SX1")
+		SX1->(dbSetOrder(1))
+		If SX1->( MsSeek( PadR("FIN350", Len(SX1->X1_GRUPO) ) + "12" ) )//Dbseek(cteste)
+			RecLock("SX1")
+			Replace  X1_PERGUNT	With "Considera Ord. Pagos"
+			Replace  X1_PERSPA	With "Considera Orden de Pago"
+			Replace  X1_PERENG	With "Consider Payment Order?"
+			SX1->(MsUnlock())
+		EndIf
+
+
+		Aadd(aHelpEspP,"Seleccione 'Sí' para que el informe considere los títulos")
+		Aadd(aHelpEspP," generados por la orden de pago, de lo contrario, seleccione 'No'.")
+		Aadd(aHelpPorP,"Selecione 'Sim' para que o relatório considere os títulos ")
+		Aadd(aHelpPorP,"gerados pela ordem de pago ou 'Não', caso contrario")
+		Aadd(aHelpEngP,"Select 'Yes' so that the report considers the bills")
+		Aadd(aHelpEngP," generated by the payment order, otherwise, select 'No'.")
+
+		PutHelp("P.FIN35012.",aHelpPorP,aHelpEngP,aHelpEspP,.T.)
+	EndIf
+
+Return()
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} AdmAbreSM0
+Retorna um array com as informacoes das filias das empresas.
+
+@type function
+@author Orizio
+@since 22/01/2010
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+@return Array, Array com as informacoes das filias das empresas.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function AdmAbreSM0()
+	Local aArea			:= SM0->( GetArea() )
+	Local aAux			:= {}
+	Local aRetSM0		:= {}
+	Local lFWLoadSM0	:= FindFunction( "FWLoadSM0" )
+	Local lFWCodFilSM0 	:= FindFunction( "FWCodFil" )
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	If lFWLoadSM0
+		aRetSM0	:= FWLoadSM0()
+	Else
+		DbSelectArea( "SM0" )
+		SM0->( DbGoTop() )
+		While SM0->( !Eof() )
+			aAux := { 	SM0->M0_CODIGO,;
+			IIf( lFWCodFilSM0, FWGETCODFILIAL, SM0->M0_CODFIL ),;
+			"",;
+			"",;
+			"",;
+			SM0->M0_NOME,;
+			SM0->M0_FILIAL }
+
+			aAdd( aRetSM0, aClone( aAux ) )
+			SM0->( DbSkip() )
+		End
+	EndIf
+
+	RestArea( aArea )
+Return aRetSM0
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} AjustaSX1
+Efetuar ajustes nas perguntas do relatorio.
+
+@type function
+@author Marcos Berto
+@since 27/05/2013
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@history 29/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function AjustaSX1()
+
+	Local aArea		:= GetArea()
+	Local aHelpPor	:= {}
+	Local aHelpSpa	:= {}
+	Local aHelpEng	:= {}
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+
+	SX1->(DbSetOrder(1))
+
+	If (SX1->(DbSeek(Padr("FIN350",Len(SX1->X1_GRUPO)) + "16")))
+		If AllTrim(SX1->X1_PERGUNT) == "Imprimi Pa ?"
+			RecLock("SX1",.F.)
+			Replace X1_PERGUNT	With "Imprimir Pa ?"
+			Replace X1_PERSPA	With "+Imprimir Pa?"
+			Replace X1_PERENG	With "Print Pa?"
+			SX1->(MsUnLock())
+		EndIf
+	Endif
+	/*
+	GESTAO - inicio */
+	If SX1->(DbSeek(PadR("FIN350",Len(SX1->X1_GRUPO))+"19"))
+		RecLock("SX1",.F.)
+		Replace X1_HELP With " "
+		SX1->(MsUnLock())
+		aHelpPor := {"Informe se deve considerar um intervalo","de filiais a ser informado nos próximos","parâmetros. Esta pergunta terá","efeito em ambiente TOTVSDBACCESS","(TOPCONNECT) / TReport."}
+		aHelpSpa := {"Informe si debe considerar un intervalo","de sucursales a informarse en los","proximos parametros. Esta pregunta no","tendra efecto en el entorno","TOTVSDBACCESS (TOPCONNECT) / TReport."}
+		aHelpEng := {"Enter whether to include a branch range","to be entered in the next parameters.","This question does not work in","TOTVSDBACCESS (TOPCONNECT) / TReport","environments."}
+		PutSX1Help("P.FIN35019.",aHelpPor,aHelpEng,aHelpSpa,.T.)
+	Endif
+	/*-*/
+	If SX1->(DbSeek(PadR("FIN350",Len(SX1->X1_GRUPO))+"20"))
+		RecLock("SX1",.F.)
+		Replace X1_HELP With " "
+		SX1->(MsUnLock())
+		aHelpPor := {"Informe o código da filial inicial a ser","considerado nos intervalos de filiais.","Esta pergunta não terá efeito em ambiente","TOTVSDBACCESS (TOPCONNECT) / TReport."}
+		aHelpSpa := {"Informe el código de la sucursal inicial","a considerarse en los intervalores de","sucursales. Esta pregunta no tendra","efecto en el entorno TOTVSDBACCESS","(TOPCONNECT) / TReport."}
+		aHelpEng := {"Enter initial branch code to be included","in the branch ranges. This question does","not work in TOTVSDBACCESS (TOPCONNECT) /","TReport environments."}
+		PutSX1Help("P.FIN35020.",aHelpPor,aHelpEng,aHelpSpa,.T.)
+	Endif
+	/*-*/
+	If SX1->(DbSeek(PadR("FIN350",Len(SX1->X1_GRUPO))+"21"))
+		RecLock("SX1",.F.)
+		Replace X1_HELP With " "
+		SX1->(MsUnLock())
+		aHelpPor := {"Informe o código da filial final a ser","considerado nos intervalos de filiais.","Esta pergunta não terá efeito em ambiente","TOTVSDBACCESS (TOPCONNECT) / TReport."}
+		aHelpSpa := {"Informe el código de la sucursal final","a considerarse en los intervalores de","sucursales. Esta pregunta no tendra","efecto en el entorno TOTVSDBACCESS","(TOPCONNECT) / TReport."}
+		aHelpEng := {"Enter final branch code to be included","in the branch ranges. This question does","not work in TOTVSDBACCESS (TOPCONNECT) /","TReport environments."}
+		PutSX1Help("P.FIN35021.",aHelpPor,aHelpEng,aHelpSpa,.T.)
+	Endif
+	/*-*/
+	If SX1->(!DbSeek(PadR("FIN350",Len(SX1->X1_GRUPO))+"22"))
+		aHelpPor := {"Escolha Sim se deseja selecionar ","as filiais. ","Esta pergunta somente terá efeito em","ambiente TOTVSDBACCESS (TOPCONNECT) / ","TReport."}
+		aHelpEng := {"Enter Yes if you want to select ","the branches.","This question affects TOTVSDBACCESS","(TOPCONNECT) / TReport environment only."}
+		aHelpSpa := {"La opción Sí, permite seleccionar ","las sucursales.","Esta pregunta solo tendra efecto en el ","entorno TOTVSDBACCESS (TOPCONNECT) / ","TReport."}
+
+		PutSx1( "FIN350", "22", "Seleciona Filiais?" ,"+Selecciona sucursales?" ,"Select Branches?","mv_chm","N",1,0,2,"C","","","","S","mv_par22","Sim","Si ","Yes","","Nao","No","No","","","","","","","","","",aHelpPor,aHelpEng,aHelpSpa)
+
+		PutSX1Help("P.FIN35022.",aHelpPor,aHelpEng,aHelpSpa,.T.)
+	Endif
+	/* GESTO - fim */
+
+
+	RestArea(aArea)
+Return()
