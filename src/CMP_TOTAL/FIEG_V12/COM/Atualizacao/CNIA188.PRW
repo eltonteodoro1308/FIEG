@@ -276,7 +276,7 @@ Static Function CarregaCols(aCols1, aCols2, nOpc, cAlias)
 		(cAlias)->(dbSkip())
 	End
 
-	SX3MDI->( DbCloseAsrea() )
+	SX3MDI->( DbCloseArea() )
 
 Return
 

@@ -20,30 +20,30 @@ Gera Contrato ou Registro de preço.
 @history 02/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Retorna Falso se a tecla de cancelar for digitada na tela de parâmetros.
-
 /*/
 /*/================================================================================================================================/*/
 
 User Function CNIA100(nOpc,cContr, aDadosCot, aDadosCompl,aAuditoria)
+
 	Local aArea		:= GetArea()
-	Local cQuery		:= ''
+	Local cQuery	:= ''
 	Local nItem		:= 0
-	Local nVlTtCNA		:= 0
-	Local nVlTtCN9		:= 0
-	Local aParam		:= {}
-	Local nX			:= 0
-	Local nY			:= 0
-	Local nZ			:= 0
-	Local cFornec		:= ""
-	Local cTpCto		:= GETMV("FS_GCTCOT")
-	Local aContrGer 	:= {}
-	Local cMensagem 	:= ""
-	Local cContrato 	:= ""
-	Local aCTBEnt		:= If(FindFunction("CTBEntArr"),CTBEntArr(),{})
+	Local nVlTtCNA	:= 0
+	Local nVlTtCN9	:= 0
+	Local aParam	:= {}
+	Local nX		:= 0
+	Local nY		:= 0
+	Local nZ		:= 0
+	Local cFornec	:= ""
+	Local cTpCto	:= GETMV("FS_GCTCOT")
+	Local aContrGer := {}
+	Local cMensagem := ""
+	Local cContrato := ""
+	Local aCTBEnt	:= If(FindFunction("CTBEntArr"),CTBEntArr(),{})
 	Local cFilAtual	:= "", cFilSC8 := ""
 	Local nPosAudit := 0
 	Local lRet      := .T.
-	Private aRet		:= {}
+	Private aRet	:= {}
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
@@ -51,10 +51,10 @@ User Function CNIA100(nOpc,cContr, aDadosCot, aDadosCompl,aAuditoria)
 	//--< Processamento da Rotina >-----------------------------
 
 	//Abertura das Tabelas de Contrato
-	ChkFile("CN9")
-	ChkFile("CNA")
-	ChkFile("CNB")
-	ChkFile("CNN")
+	//ChkFile("CN9")
+	//ChkFile("CNA")
+	//ChkFile("CNB")
+	//ChkFile("CNN")
 
 	//Exibe Tela de Parametros
 	If !GeraGCTParam(@aRet)
@@ -372,6 +372,7 @@ User Function CNIA100(nOpc,cContr, aDadosCot, aDadosCompl,aAuditoria)
 
 Return lRet
 
+
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} ValidaGCT
 Valida Codigo de Contrato.
@@ -410,6 +411,7 @@ User Function ValidaGCT()
 	RestArea(aArea)
 Return lRet
 
+
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} SeparaGanhador
 Separa os ganhadores de uma cotação.
@@ -428,7 +430,6 @@ Separa os ganhadores de uma cotação.
 @history 02/04/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Array, Função sem retorno.
-
 /*/
 /*/================================================================================================================================/*/
 
@@ -444,7 +445,7 @@ Static Function SeparaGanhador(aDadosCot, aDadosCompl)
 
 	//--< Processamento da Rotina >-----------------------------
 
-	//Verifica ganhadores
+	//--< Verifica ganhadores >---------------------------------
 	For nX := 1 to Len(aDadosCot)
 
 		For nY := 1 to Len(aDadosCot[nX])
@@ -464,7 +465,7 @@ Static Function SeparaGanhador(aDadosCot, aDadosCompl)
 
 	Next
 
-	//Separa Ganhadores por Fornecedor + Filial de Entrega
+	//--< Separa Ganhadores por Fornecedor + Filial de Entrega >--
 	For nX := 1 to Len(aGanhadores)
 
 		//Filial
@@ -474,8 +475,8 @@ Static Function SeparaGanhador(aDadosCot, aDadosCompl)
 
 		If nPosFor = 0
 
-			aAdd(  aFornec, {} 								)
-			aAdd(  aFornec[Len(aFornec)], aGanhadores[nX]  )
+			aAdd( aFornec, {} 								)
+			aAdd( aFornec[Len(aFornec)], aGanhadores[nX]  )
 			aAdd( aFornecID, {aGanhadores[nX][2], aGanhadores[nX][nPosFil] } )
 
 		Else
@@ -487,6 +488,7 @@ Static Function SeparaGanhador(aDadosCot, aDadosCompl)
 	Next
 
 Return aFornec
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} GeraGCTParam

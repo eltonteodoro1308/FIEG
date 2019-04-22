@@ -28,7 +28,7 @@ User Function SIESTA08()
 	//--< Processamento da Rotina >-----------------------------
 
 	// 10/03/2016 - Thiago Rasmussen
-	IF cFilAnt$"02GO0001;03GO0001"
+	IF /*cFilAnt*/CN9->CN9_FILIAL$"02GO0001;03GO0001"
 		AADD(aRotina,{ "Pesquisa","AxPesqui" ,0,1})
 		AADD(aRotina,{ "Visual" ,"U_CNIComp" ,0,2})
 		AADD(aRotina,{ "Inclui" ,"U_CNIComp" ,0,3})
@@ -47,6 +47,7 @@ User Function SIESTA08()
 	ENDIF
 
 Return
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CNIComp
@@ -100,7 +101,6 @@ User Function CNIComp(cAlias,nReg,nOpcx)
 
 	//--< Processamento da Rotina >-----------------------------
 
-
 	aSize := MsAdvSize() // Sera utilizado tres areas na janela
 	// 1ª - Enchoice, sendo 80 pontos pixel
 	// 2ª - MsGetDados, o que sobrar em pontos pixel e para este objeto
@@ -147,8 +147,9 @@ User Function CNIComp(cAlias,nReg,nOpcx)
 		//| Cria aHeader e aCols da GetDados                         |
 		//+----------------------------------------------------------+
 		nUsado:=0
-		dbSelectArea("SX3")
-		SX3->(dbSeek("PB1"))
+		//dbSelectArea("SX3")
+		OpenSxs(,,,,cEmpAnt,"SX3TMP","SX3",,.F.,.T.)
+		SX3TMP->(dbSeek("PB1"))
 		aHeader:={}
 
 
@@ -168,7 +169,6 @@ User Function CNIComp(cAlias,nReg,nOpcx)
 			DEFINE MSDIALOG oDlg TITLE cTitulo FROM aSize[7],aSize[1] TO aSize[6],aSize[5] OF oMainWnd PIXEL
 			EnChoice( cAlias, nReg, nOpcx, , , , , aPObj[1])
 
-
 			oGet := MSGetDados():New(aPObj[2,1],aPObj[2,2],aPObj[2,3],aPObj[2,4],nOpcx,,,"+PB1_ITEM",.T.,,,,,"U_CNICompX")//,,,,,
 			ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{|| IIF( Mod3TOk(nOpcx), ( nOpcA := 1, oDlg:End() ), NIL) },{|| oDlg:End() })
 			// Validações necessárias
@@ -187,6 +187,7 @@ User Function CNIComp(cAlias,nReg,nOpcx)
 	EndIf
 
 Return lRet
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CNIConfC
@@ -311,6 +312,7 @@ User Function CNIConfC (nOpcx)
 
 Return .T.
 
+
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} Mod3TOk
 Validação dos campos.
@@ -384,6 +386,7 @@ Static Function Mod3TOk (nOpc)
 	EndIf
 
 Return lRet
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CNIExcComp
@@ -467,6 +470,7 @@ Static Function CNIExcComp()
 
 Return lRet
 
+
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CNICompX
 Função para gatilhar os campos visuais do aCols.
@@ -531,6 +535,7 @@ User Function CNICompX()
 
 Return lRet
 
+
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} Mod3aHeader
 Monstar o Header.
@@ -554,11 +559,11 @@ Static Function Mod3aHeader()
 	U_LogCustom()
 
 	//--< Processamento da Rotina >-----------------------------
-
-	dbSelectArea("SX3")
-	SX3->(dbSetOrder(1))
-	SX3->(dbSeek("PB1"))
-	While SX3->(!EOF()) .And. X3_ARQUIVO == "PB1"
+	//dbSelectArea("SX3")
+	OpenSxs(,,,,cEmpAnt,"SX3TMP","SX3",,.F.,.T.)
+	SX3TMP->(dbSetOrder(1))
+	SX3TMP->(dbSeek("PB1"))
+	While SX3TMP->(!EOF()) .And. X3_ARQUIVO == "PB1"
 		If X3Uso(X3_USADO) .And. cNivel >= X3_NIVEL
 			AADD( aHeader, { Trim( X3Titulo() ),;
 			X3_CAMPO,;
@@ -575,6 +580,7 @@ Static Function Mod3aHeader()
 	End
 	RestArea(aArea)
 Return
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} Mod3aCOLS

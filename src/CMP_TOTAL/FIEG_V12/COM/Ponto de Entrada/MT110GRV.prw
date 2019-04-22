@@ -13,32 +13,26 @@ Ponto de Entrada apos gravacao da SC.
 @obs Projeto ELO
 @obs Projeto ELO alterado pela FIEG
 
-@history 27/02/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
 @return Lógico, Fixo Verdadeiro.
 
+@history 27/02/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/04/2019, Kley@TOTVS.com.br, Remoção da chamada à função U_SICOMA16().
 /*/
 /*/================================================================================================================================/*/
 
 User Function MT110GRV()
 
-	Local _aArea := GetArea()
+Local _aArea := GetArea()
 
-	//--< Log das Personalizações >-----------------------------
-	U_LogCustom()
+//--< Log das Personalizações >-----------------------------
+U_LogCustom()
 
-	//--< Processamento da Rotina >-----------------------------
+//--< Gravacao da justificativa de compra da SC >-----------
+U_SICOMA30()
 
-	//+==========================================+
-	//|Gravacao da justificativa de compra da SC |
-	//+==========================================+
-	U_SICOMA30()
+//--< Gravacao do campo C1_XCODCOMP para C1_CODCOMP >-------
+//U_SICOMA16()												// Remoção da chamada à função, 08/04/2019, Kley@TOTVS.com.br
 
-	//+===============================================+
-	//|Gravacao do campo C1_XCODCOMP para C1_CODCOMP  |
-	//+===============================================+
-	U_SICOMA16()
-
-	RestArea(_aArea)
+RestArea(_aArea)
 
 Return .T.

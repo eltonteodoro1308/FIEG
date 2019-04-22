@@ -17,66 +17,66 @@ Ponto de Entrada de complemento de gravacao do ativo.
 /*/================================================================================================================================/*/
 
 User Function AT010GRV()
-//	Local _cArea    := GetArea()
-//	Local _cAreaSX6 := SX6->(GetArea())
-//	Local clCodBase	:= ""
-//
-//	//--< Log das Personalizações >-----------------------------
-//	U_LogCustom()
-//
-//	//--< Processamento da Rotina >-----------------------------
-//
-//	IF ALLTRIM(SN1->N1_CBASE) == "00000000"
-//		clCodBase := SuperGetMv()
-//		clCodBase := &(SuperGetMv("MV_CBASEAF",.F.,,LEFT(CFILANT,4)))
-//
-//		dbSelectArea("SX6")
-//		SX6->(dbSetOrder(1))
-//		IF SX6->(dbSeek(LEFT(CFILANT,4)+Space(4)+"MV_CBASEAF"))
-//			RecLock("SX6",.F.)
-//			FieldPut( FieldPos('X6_CONTEUD'), '"'+Soma1(Alltrim(clCodBase))+'"' )
-//			SX6->(MsUnLock())
-//		ENDIF
-//
-//		IF RecLock("SN1", .F.)
-//			SN1->N1_CBASE := clCodBase
-//			SN1->( MsUnLock() )
-//		ENDIF
-//
-//		IF RecLock("SN3", .F.)
-//			SN3->N3_CBASE := clCodBase
-//			SN3->( MsUnLock() )
-//		ENDIF
-//
-//		IF RecLock("SN4", .F.)
-//			SN4->N4_CBASE := clCodBase
-//			SN4->( MsUnLock() )
-//		ENDIF
-//	ENDIF
-//
-//	IF INCLUI
-//		IF RecLock("SN1", .F.)
-//			SN1->N1_VLAQUIS := SN3->N3_VORIG1
-//			SN1->( MsUnLock() )
-//		ENDIF
-//
-//		IF RecLock("SN3", .F.)
-//			SN3->N3_SUBCCON := ""
-//			SN3->N3_CUSTBEM := SN3->N3_CCUSTO
-//			SN3->( MsUnLock() )
-//		ENDIF
-//	ENDIF
-//
-//	IF INCLUI .AND. (!EMPTY(SN3->N3_CUSTBEM) .OR. !EMPTY(SN3->N3_CCUSTO))
-//		IF !EMPTY(SN3->N3_CUSTBEM)
-//			GRAVARESP(SN3->N3_CUSTBEM)
-//		ELSE
-//			GRAVARESP(SN3->N3_CCUSTO)
-//		ENDIF
-//	ENDIF
-//
-//	RestArea(_cAreaSX6)
-//	RestArea(_cArea)
+	Local _cArea    := GetArea()
+	Local _cAreaSX6 := SX6->(GetArea())
+	Local clCodBase	:= ""
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	IF ALLTRIM(SN1->N1_CBASE) == "00000000"
+		clCodBase := SuperGetMv()
+		clCodBase := &(SuperGetMv("MV_CBASEAF",.F.,,LEFT(CFILANT,4)))
+
+		dbSelectArea("SX6")
+		SX6->(dbSetOrder(1))
+		IF SX6->(dbSeek(LEFT(CFILANT,4)+Space(4)+"MV_CBASEAF"))
+			RecLock("SX6",.F.)
+			FieldPut( FieldPos('X6_CONTEUD'), '"'+Soma1(Alltrim(clCodBase))+'"' )
+			SX6->(MsUnLock())
+		ENDIF
+
+		IF RecLock("SN1", .F.)
+			SN1->N1_CBASE := clCodBase
+			SN1->( MsUnLock() )
+		ENDIF
+
+		IF RecLock("SN3", .F.)
+			SN3->N3_CBASE := clCodBase
+			SN3->( MsUnLock() )
+		ENDIF
+
+		IF RecLock("SN4", .F.)
+			SN4->N4_CBASE := clCodBase
+			SN4->( MsUnLock() )
+		ENDIF
+	ENDIF
+
+	IF INCLUI
+		IF RecLock("SN1", .F.)
+			SN1->N1_VLAQUIS := SN3->N3_VORIG1
+			SN1->( MsUnLock() )
+		ENDIF
+
+		IF RecLock("SN3", .F.)
+			SN3->N3_SUBCCON := ""
+			SN3->N3_CUSTBEM := SN3->N3_CCUSTO
+			SN3->( MsUnLock() )
+		ENDIF
+	ENDIF
+
+	IF INCLUI .AND. (!EMPTY(SN3->N3_CUSTBEM) .OR. !EMPTY(SN3->N3_CCUSTO))
+		IF !EMPTY(SN3->N3_CUSTBEM)
+			GRAVARESP(SN3->N3_CUSTBEM)
+		ELSE
+			GRAVARESP(SN3->N3_CCUSTO)
+		ENDIF
+	ENDIF
+
+	RestArea(_cAreaSX6)
+	RestArea(_cArea)
 
 Return()
 

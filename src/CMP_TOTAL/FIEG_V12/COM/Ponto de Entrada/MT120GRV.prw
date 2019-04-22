@@ -13,7 +13,7 @@ Ponto de entrada para gravar o pedido de compra e gerar a medição do contrato de
 
 @history 17/07/2015, Jader Berto, Gravação do campo C7_XMODOC.
 @history 11/08/2015, Sergio Bruno, Acrescentado Comentários.
-@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Variável para não permitir gravação de pedido em caso de compra compartilhada.
 /*/
@@ -71,12 +71,12 @@ User Function MT120GRV()
 			nPosSC 		:= aScan(aHeader, {|x| AllTrim(x[2]) == "C7_NUMSC"})
 			nPosItem 		:= aScan(aHeader, {|x| AllTrim(x[2]) == "C7_ITEMSC"})
 			nPosModo 		:= aScan(aHeader, {|x| AllTrim(x[2]) == "C7_XMODOC"})
-			nPosOri 		:= aScan(aHeader, {|x| AllTrim(x[2]) == "C7_XFILORI"})
+			//nPosOri 		:= aScan(aHeader, {|x| AllTrim(x[2]) == "C7_XFILORI"})
 
 			/*******************************************************************
 			*Grava no aCols modo de compra Modo de Compras:	 					 *
 			*														 		     *
-			*	0=Nao Utilizar													 *	
+			*	0=Nao Utilizar													 *
 			*	1=Participante													 *
 			*	2=Centralizadora												 *
 			* 												 					 *
@@ -87,11 +87,11 @@ User Function MT120GRV()
 			For nI := 1 To Len(aCols)
 				cModoC := Posicione("SC1", 1, xFilial("SC1") + aCols[nI][nPosSC] + aCols[nI][nPosItem], "C1_XMODOC")
 
-				If (Empty(aCols[nI][nPosOri]))
-					aCols[nI][nPosModo] := Iif(cModoC == "2", "1", cModoC)
-				Else
+				//If (Empty(aCols[nI][nPosOri]))
+					//aCols[nI][nPosModo] := Iif(cModoC == "2", "1", cModoC)
+				//Else
 					aCols[nI][nPosModo] := "2"
-				Endif
+				//Endif
 			Next nI
 		Endif
 	Endif
@@ -119,7 +119,7 @@ User Function MT120GRV()
 		//--< Lançamento dos movimentos orçamentarios - GAP091 >--
 		IF lValido .and. l120Deleta //Se é compra normal e é uma deleção.
 			//Envia email avisando deleção.
-			MsgRun("Excluindo Movimentos do PC "+SC7->C7_NUM,"",{|| U_SICOMA11({5,SC7->C7_NUM,1}) }) 
+			MsgRun("Excluindo Movimentos do PC "+SC7->C7_NUM,"",{|| U_SICOMA11({5,SC7->C7_NUM,1}) })
 		Endif
 	Endif
 
@@ -133,16 +133,16 @@ User Function MT120GRV()
 
 	//--<Acha Posição para gravar no aCols com os dados que irão ser posteriormente gravados no SC7 >--
 	nPosCOM := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_COMUNIC"})//Flag do email enviado ao comprador e solicitante
-	nPosHOR := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_HORA"})   //Hora do email
-	nPosAqu := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_TPAQUIS"})//Posição do tipo de aquisição (Jader Berto)
+	//nPosHOR := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_HORA"})   //Hora do email
+	//nPosAqu := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_TPAQUIS"})//Posição do tipo de aquisição (Jader Berto)
 	nPosA30 := aScan(aHeader, {|x| AllTrim(x[2]) == "C7_XART30"})// Sergio Bruno em 12/8/15 para corrigir erro de tela
 
 	//--< Grava no aCols variável escolhida em tela para tipo de aquisição >--
 	For nI := 1 To Len(aCols)
 		aCols[nI][nPosCOM] := CTOD(" ")  			//(a)Gravação do comunicado por email
-		aCols[nI][nPosHOR] := ""					//(a)Gravação do comunicado por email
-		aCols[nI][nPosAqu] := SubStr(_cTpAquis,1,1)  //(b) Gravação do tipo de aquisição
-		aCols[nI][nPosA30] := _cArt30  				//(b) Gravação do tipo de aquisição
+		//aCols[nI][nPosHOR] := ""					//(a)Gravação do comunicado por email
+		//aCols[nI][nPosAqu] := SubStr(_cTpAquis,1,1)  //(b) Gravação do tipo de aquisição
+		//aCols[nI][nPosA30] := _cArt30  				//(b) Gravação do tipo de aquisição
 	Next nI
 
 	//--< Exige gravação do campo caso seja contrato. Redundante, pois a rotina de MT120OK já valida. >--
@@ -150,7 +150,7 @@ User Function MT120GRV()
 		//Aviso("Validação", "Impossível realizar esta " + Iif(l120Altera, "alteração", "inclusão") + "." + CRLF + ;
 		//		"O campo Tp Aquisicao precisa ser preenchido.", {"Ok"}, 3)
 		//	lValido        := .F. //Era falso, transformado em crítica.
-		Alert("Contrato sem tipo de aqusição(RPN/RPU). Tipo de Aquisição no pedido ficará vazio. Verifique.")
+		//Alert("Contrato sem tipo de aqusição(RPN/RPU). Tipo de Aquisição no pedido ficará vazio. Verifique.")
 
 	Endif
 

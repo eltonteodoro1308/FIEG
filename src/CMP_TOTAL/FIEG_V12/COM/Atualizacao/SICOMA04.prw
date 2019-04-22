@@ -18,7 +18,7 @@ Funcao para Liberacao de documentos.
 @obs Projeto ELO alterado pela FIEG
 
 @history 06/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/04/2019, Kley@TOTVS.com.br, Remoçao do tratamento para Edital.
 /*/
 /*/================================================================================================================================/*/
 
@@ -48,8 +48,8 @@ User Function SICOMA04(_nOpcao)
 			ENDIF
 			RestArea(_aAreaCR)
 			RestArea(_aArea)
-		ELSEIF SCR->CR_TIPO == "ED"
-			U_SICOMA03(_nOpcao)
+		//ELSEIF SCR->CR_TIPO == "ED"						// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+		//	U_SICOMA03(_nOpcao)
 		ELSEIF SCR->CR_TIPO == "SA"
 			U_SIESTA05(_nOpcao)
 		ELSE	// visualizacao padrao
@@ -71,8 +71,8 @@ User Function SICOMA04(_nOpcao)
 			IF SCR->CR_TIPO == "SC"
 				MsgRun("Liberando solicitação "+TRIM(SCR->CR_NUM)+", aguarde...","",{|| fLibSC()  })
 				_FVERLOG(aPeds,"Pedidos gerado")
-			ELSEIF SCR->CR_TIPO == "ED"
-				U_SICOMA03(_nOpcao)
+			//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+			//	U_SICOMA03(_nOpcao)
 			ELSEIF SCR->CR_TIPO == "SA"
 				U_SIESTA05(_nOpcao)
 			ELSE
@@ -137,8 +137,8 @@ User Function SICOMA04(_nOpcao)
 
 				EndIf
 
-			ELSEIF SCR->CR_TIPO == "ED"
-				U_SICOMA03(_nOpcao)
+			//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+			//	U_SICOMA03(_nOpcao)
 			ELSEIF SCR->CR_TIPO == "SA"
 				U_SIESTA05(_nOpcao)
 			ELSE

@@ -17,15 +17,17 @@ _nOpcao = 3 / Estornar
 _nOpcao = 4 / Consulta Aprovacao
 
 @obs Projeto ELO
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@deprecated Fonte descontinuado porque foi verificado durante a migração da V12 que Aprovação do Edital não faz parte do processo da FIEG.
 
 @return Nil, Função sem retorno.
 
+@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/04/2019, Kley@TOTVS.com.br, Descontinuidade do fonte por não haver aprovação de Edital.
 /*/
 /*/================================================================================================================================/*/
-User Function SICOMA03(_nOpcao)
 
+User Function SICOMA03(_nOpcao)
+/*
 	// _nOpcao = 1 / Consulta
 	// _nOpcao = 2 / Liberacao
 	// _nOpcao = 3 / Estornar
@@ -70,8 +72,9 @@ User Function SICOMA03(_nOpcao)
 		RestArea(_aArea)
 
 	EndIf
-
+*/
 Return
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} fLibEDT
@@ -87,13 +90,15 @@ Funcao para Liberacao de edital.
 @param nOpcx, Numérico, Opção selecionada.
 
 @obs Projeto ELO
+@deprecated Fonte descontinuado porque foi verificado durante a migração da V12 que Aprovação do Edital não faz parte do processo da FIEG.
 
 @history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/04/2019, Kley@TOTVS.com.br, Descontinuidade do fonte por não haver aprovação de Edital.
 /*/
 /*/================================================================================================================================/*/
-Static Function fLibEDT(cAlias,nReg,nOpcx)
 
+Static Function fLibEDT(cAlias,nReg,nOpcx)
+/*
 	Local _aArea	:= GetArea()
 	Local _aAreaCO1	:= CO1->(GetArea())
 	Local cCodLiber := SCR->CR_APROV
@@ -117,11 +122,7 @@ Static Function fLibEDT(cAlias,nReg,nOpcx)
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
 
-	//--< Processamento da Rotina >-----------------------------
-
-	//+--------------------------------------------------------------+
-	//| Inicializa as variaveis utilizadas no Display.               |
-	//+--------------------------------------------------------------+
+	//--< Inicializa as variaveis utilizadas no Display. >------
 	aRetSaldo 	:= MaSalAlc(cCodLiber,dRefer)
 	nSaldo 	  	:= aRetSaldo[1]
 	CRoeda 	  	:= A097Moeda(aRetSaldo[2])
@@ -184,7 +185,6 @@ Static Function fLibEDT(cAlias,nReg,nOpcx)
 
 	ACTIVATE MSDIALOG oDlg CENTERED
 
-
 	If nOpc == 2 .Or. nOpc == 3
 
 		SCR->(dbClearFilter())
@@ -198,8 +198,8 @@ Static Function fLibEDT(cAlias,nReg,nOpcx)
 
 				lLiberou := MaAlcDoc({cDocto,cTipo,nTotal,cCodLiber,,CO1->CO1_XGRLIB,,,,,cObs},dRefer,If(nOpc==2,4,6))
 
-				If lLiberou
-					// Se liberou total
+				If lLiberou									// Se liberou total
+					
 					CO1->(DbSetOrder(1))
 					CO1->(DbSeek(xFilial("CO1")+_cDoc))
 					RecLock("CO1",.F.)
@@ -209,8 +209,8 @@ Static Function fLibEDT(cAlias,nReg,nOpcx)
 					//COMA080(CO1->CO1_CODEDT,"001","COI_DTHAPR","COI_UAPR", .T.)
 				EndIf
 
-				If nOpc == 3
-					// Se Bloqueou
+				If nOpc == 3								// Se Bloqueou
+					
 					CO1->(DbSetOrder(1))
 					CO1->(DbSeek(xFilial("CO1")+_cDoc))
 					RecLock("CO1",.F.)
@@ -237,7 +237,7 @@ Static Function fLibEDT(cAlias,nReg,nOpcx)
 
 	RestArea(_aAreaCO1)
 	RestArea(_aArea)
-
+*/
 Return
 
 /*/================================================================================================================================/*/
@@ -250,36 +250,32 @@ Funcao de estorno de liberacao.
 @version P12.1.23
 
 @obs Projeto ELO
+@deprecated Fonte descontinuado porque foi verificado durante a migração da V12 que Aprovação do Edital não faz parte do processo da FIEG.
 
 @history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/04/2019, Kley@TOTVS.com.br, Descontinuidade do fonte por não haver aprovação de Edital.
 /*/
 /*/================================================================================================================================/*/
 
 Static Function fEstEDT()
-
+/*
 	Local _cDoc		:= ""
 	local _nTamEdt 	:= TamSx3("CO1_CODEDT")[1]+TamSx3("CO1_NUMPRO")[1]
 
-	//
 	// Testar se o documento nao foi utilizado em licitação, cotação, pedido de compra ou eliminada por resíduo
-	//
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
 
 	//--< Processamento da Rotina >-----------------------------S
-
 	If ApMsgYesNo("Confirma estorno da liberacao ??","Confirmar")
 		_cDoc := Left(SCR->CR_NUM,_nTamEdt)
 
-		/*
 		// se ja foi utilizado em algum processo compras, nao pode ser estornado
-		If ! fVerUso(_cDoc)
-		ApMsgInfo("Este edital já foi utilizado","Aviso")
-		Return
-		EndIf
-		*/
+		//If ! fVerUso(_cDoc)
+		//ApMsgInfo("Este edital já foi utilizado","Aviso")
+		//Return
+		//EndIf
 
 		CO1->(DbSetOrder(1))
 		If CO1->(DbSeek(xFilial("CO1")+_cDoc))
@@ -300,8 +296,9 @@ Static Function fEstEDT()
 			ApMsgStop("Edital " + _cDoc + " nao localizada !!!","Verifique")
 		EndIf
 	EndIf
-
+*/
 Return
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} fPosic
@@ -318,14 +315,15 @@ Consulta do status das Aprovacoes Documentos PC/AE/CP/NF.
 @param cTipoDoc, Caractere, Tipo do Documento
 
 @obs Projeto ELO
+@deprecated Fonte descontinuado porque foi verificado durante a migração da V12 que Aprovação do Edital não faz parte do processo da FIEG.
 
 @history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/04/2019, Kley@TOTVS.com.br, Descontinuidade do fonte por não haver aprovação de Edital.
 /*/
 /*/================================================================================================================================/*/
 
 Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
-
+/*
 	Local aArea		:= GetArea()
 	//Local aSavCols  := aClone(aCols)
 	//Local aSavHead  := aClone(aHeader)
@@ -379,9 +377,7 @@ Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
 		aHeader:= {}
 		aCols  := {}
 
-		//+--------------------------------------------------------------+
-		//| Faz a montagem do aHeader com os campos fixos.               |
-		//+--------------------------------------------------------------+
+		//--< Faz a montagem do aHeader com os campos fixos. >--
 		dbSelectArea("SX3")
 		SX3->(dbSetOrder(1))
 		SX3->(MsSeek("SCR"))
@@ -433,9 +429,8 @@ Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
 			EndIf
 		Next nX
 		#ELSE
-		//+-----------------------------------+
-		//| Abre o arquivo SCR sem filtros    |
-		//+-----------------------------------+
+
+		//--< Abre o arquivo SCR sem filtros >--------------
 		ChkFile("SCR",.F.,"TMP")
 
 		dbSelectArea(cAliasSCR)
@@ -446,9 +441,8 @@ Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
 
 		dbSelectArea(cAliasSCR)
 
-		While !Eof() .And.(cAliasSCR)->CR_FILIAL+(cAliasSCR)->CR_TIPO+Substr((cAliasSCR)->CR_NUM,1,;
-		len(CO1->CO1_CODEDT+CO1->CO1_NUMPRO)) ;
-		== xFilial("SCR") + cTipoDoc + cNumDoc
+		While !Eof() .And. (cAliasSCR)->CR_FILIAL+(cAliasSCR)->CR_TIPO+Substr((cAliasSCR)->CR_NUM,1,;
+						   len(CO1->CO1_CODEDT+CO1->CO1_NUMPRO)) == xFilial("SCR") + cTipoDoc + cNumDoc
 
 			aadd(aCols,Array(Len(aHeader)+1))
 			nY++
@@ -516,5 +510,5 @@ Static Function fPosic(cAlias,nReg,nOpcx,cTipoDoc)
 
 	dbSelectArea(cAlias)
 	RestArea(aArea)
-
+*/
 Return

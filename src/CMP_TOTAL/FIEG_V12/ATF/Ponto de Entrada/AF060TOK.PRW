@@ -1,9 +1,3 @@
-#include "protheus.ch"
-
-// Autor....: Thiago Rasmussen
-// Data.....: 21/07/2014
-// Modulo...: 01 - Ativo
-// Descrição: Validações ao realizar uma transferência de ativo.
 #Include "Protheus.ch"
 
 /*/================================================================================================================================/*/
@@ -26,8 +20,9 @@ Validações ao realizar uma transferência de ativo.
 
 User Function AF060TOK()
 
-	Local _cEmpOri    := SubStr(PARAMIXB[2],1,2)
-	Local _cEmpDest   := SubStr(PARAMIXB[1],1,2)
+	Local oGridFNR    := PARAMIXB[1]:GetDependency()[1,4,1,3]
+	Local _cEmpOri    := SubStr(oGridFNR:GetValue('FNR_FILORI'),1,2)
+	Local _cEmpDest   := SubStr(oGridFNR:GetValue('FNR_FILDES'),1,2)
 	Local _MV_ATFBLQM := SuperGetMV("MV_ATFBLQM")
 	Local lRet        := .T.
 
@@ -38,8 +33,8 @@ User Function AF060TOK()
 
 	IF _cEmpOri <> _cEmpDest
 		MsgAlert("Não é permitido transferência entre empresas diferentes." + CRLF + CRLF +;
-		"Empresa Origem: " + FWCompanyName('01',PARAMIXB[2]) + CRLF +;
-		"Empresa Destino: " + FWCompanyName('01',PARAMIXB[1]),"AF060TOK")
+		"Empresa Origem: " + FWCompanyName('01',oGridFNR:GetValue('FNR_FILORI')) + CRLF +;
+		"Empresa Destino: " + FWCompanyName('01',oGridFNR:GetValue('FNR_FILDES')),"AF060TOK")
 		lRet := .F. //RETURN .F.
 	ENDIF
 

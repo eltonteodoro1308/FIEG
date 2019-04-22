@@ -26,7 +26,7 @@ User Function AfterLogin()
 	Local _NomeUsuario   := ParamIXB[2]
 
 	//--< Log das Personalizações >-----------------------------
-	U_LogCustom()
+	//U_LogCustom()
 
 	//--< Processamento da Rotina >-----------------------------
 
@@ -41,9 +41,11 @@ User Function AfterLogin()
 
 	cMensagem := '<FONT FACE="Courier New" COLOR="RED" SIZE="3">' + cMensagem + '</FONT>'
 
-	IF 'SDBPRD'$GetEnvServer() .AND. GetClientIP() != '10.21.6.123' .AND. _CodigoUsuario == '000000'
-		SendMail('thiagorasmussen@sistemafieg.org.br', 'Login com Administrador', cMensagem)
-	ENDIF
+	//IF 'SDBPRD'$GetEnvServer() .AND. GetClientIP() != '10.21.6.123' .AND. _CodigoUsuario == '000000'
+		//SendMail('thiagorasmussen@sistemafieg.org.br', 'Login com Administrador', cMensagem)
+	//ENDIF
+
+	SetKey ( 26, {|| ShowPilha() } ) //Ctrl-Z 26 K_CTRL_Z
 
 Return .T.
 
@@ -104,5 +106,27 @@ Static Function SendMail(cPara, cAssunto, cMensagem)
 		DISCONNECT SMTP SERVER RESULT lResul
 
 	EndIf
+
+Return
+
+// ------- Exibe pilha de chamadas -----
+Static Function ShowPilha()
+
+	Local nX   := 0
+	Local cPrg := ''
+
+	Do While .T.
+
+		If Empty( cPrg := ProcName( nX++ ) )
+
+			Exit
+
+		End If
+
+		AutoGRLog( cPrg )
+
+	End Do
+
+	MostraErro()
 
 Return

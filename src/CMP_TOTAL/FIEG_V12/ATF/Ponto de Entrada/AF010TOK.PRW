@@ -20,39 +20,39 @@ PE de validacao de inclusao de ativo .
 
 User Function AF010TOK()
 	Local _lRet     := .t.
-//	Local _cBase    := M->N1_CBASE
-//	Local _cItem    := M->N1_ITEM
-//	Local _cArea    := GetArea()
-//	Local _cAreaSX6 := SX6->(GetArea())
-//
-//	//--< Log das Personalizações >-----------------------------
-//	U_LogCustom()
-//
-//	//--< Processamento da Rotina >-----------------------------
-//
-//	SN1->(dbSetOrder(1))
-//	IF INCLUI .and. SN1->(dbSeek(XFilial("SN1")+_cBase+_cItem)) .And. !FunName() == "ATFA240"
-//
-//		While !SN1->(MsSeek(xFilial("SN1")+_cBase))
-//			_cBase := Soma1(_cBase)
-//			SN1->(dbSkip())
-//		EndDo
-//
-//		M->N1_CBASE := _cBase
-//		Aviso("Atenção","O código do bem foi alterado para "+_cBase,{"Continuar"})
-//	ENDIF
-//
-//	If (INCLUI) .And. !FunName() == "ATFA240"
-//		// Atualiza parametro
-//
-//		GetMv("MV_CBASEAF")
-//		RecLock("SX6",.F.)
-//		FieldPut( FieldPos('X6_CONTEUD'), '"'+Soma1(Alltrim(_cBase))+'"' )
-//		FieldPut( FieldPos('X6_CONTSPA'), '"'+Soma1(Alltrim(_cBase))+'"' )
-//		FieldPut( FieldPos('X6_CONTENG'), '"'+Soma1(Alltrim(_cBase))+'"' )
-//		SX6->(MsUnLock())
-//	Endif
-//
-//	RestArea(_cAreaSX6)
-//	RestArea(_cArea)
+	Local _cBase    := M->N1_CBASE
+	Local _cItem    := M->N1_ITEM
+	Local _cArea    := GetArea()
+	Local _cAreaSX6 := SX6->(GetArea())
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	SN1->(dbSetOrder(1))
+	IF INCLUI .and. SN1->(dbSeek(XFilial("SN1")+_cBase+_cItem)) .And. !FunName() == "ATFA240"
+
+		While !SN1->(MsSeek(xFilial("SN1")+_cBase))
+			_cBase := Soma1(_cBase)
+			SN1->(dbSkip())
+		EndDo
+
+		M->N1_CBASE := _cBase
+		Aviso("Atenção","O código do bem foi alterado para "+_cBase,{"Continuar"})
+	ENDIF
+
+	If (INCLUI) .And. !FunName() == "ATFA240"
+		// Atualiza parametro
+
+		GetMv("MV_CBASEAF")
+		RecLock("SX6",.F.)
+		FieldPut( FieldPos('X6_CONTEUD'), '"'+Soma1(Alltrim(_cBase))+'"' )
+		FieldPut( FieldPos('X6_CONTSPA'), '"'+Soma1(Alltrim(_cBase))+'"' )
+		FieldPut( FieldPos('X6_CONTENG'), '"'+Soma1(Alltrim(_cBase))+'"' )
+		SX6->(MsUnLock())
+	Endif
+
+	RestArea(_cAreaSX6)
+	RestArea(_cArea)
 Return(_lRet)

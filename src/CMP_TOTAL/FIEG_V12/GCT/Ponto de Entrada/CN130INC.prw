@@ -11,7 +11,7 @@ Ponto de entrada executado no momeno da inclusao das medicoes de contrato.
 
 @obs Projeto ELO
 
-@history 11/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 11/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Array, Array contendo o aHeader e aCols.
 /*/
@@ -33,7 +33,7 @@ Local nPos
 U_LogCustom()
 
 //--< Filtra os itens da planilha >-------------------------
-cQuery := "SELECT CNB.CNB_ITEM, CNB.CNB_XOBS "
+cQuery := "SELECT CNB.CNB_ITEM " //, CNB.CNB_XOBS "
 cQuery += "FROM "+RetSQLName("CNB")+" CNB WHERE "
 cQuery += "CNB.CNB_FILIAL = '"+xFilial('CNB')+"' AND "
 cQuery += "CNB.CNB_CONTRA = '"+M->CND_CONTRA+"' AND "
@@ -48,7 +48,7 @@ dbUseArea( .T., 'TOPCONN', TcGenQry( ,, cQuery ), cAlias, .F., .T. )
 //--< Replica informacao de campos criados na CNB para os campos criados na CNE >--
 While !(cAlias)->(Eof())
 	If (nPos := aScan(aCols,{|x| x[nPosItm] == (cAlias)->CNB_ITEM})) > 0
-  		aCols[nPos,nPosObs] := (cAlias)->CNB_XOBS //Replica de Campo Observação da Planilha do Contrato para Medição
+  		//aCols[nPos,nPosObs] := (cAlias)->CNB_XOBS //Replica de Campo Observação da Planilha do Contrato para Medição
  	EndIf
  	(cAlias)->(dbSkip())
 EndDo
