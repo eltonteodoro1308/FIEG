@@ -1,7 +1,100 @@
 #Include "Protheus.ch"
 
 /*/================================================================================================================================/*/
-/*/{Protheus.doc} CN120PED
+/*/{Protheus.doc} CN121PED
+Tratamento especifico do array de cabeçalho e itens antes da geração do pedido de compra.
+
+@type function
+@author Elton Alves
+@since 23/04/2019
+@version P12.1.23
+
+@obs Desenvolvimento FIEG
+
+@return Array, Array de dusas posições composto pelo array do Cabeçalho na posição 1 e do array dos itens na posição 2.
+
+/*/
+/*/================================================================================================================================/*/
+
+User Function CN121PED()
+
+	Local aCab  := PARAMIXB[1]
+	Local aItem := PARAMIXB[2]
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	MyCN120IT7( @aItem )
+
+	MyCN120PED( @aCab, @aItem )
+
+	MyCN120AEP()
+
+Return {aCab,aItem}
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} MyCN120IT7
+Ponto de Entrada para acrescentar campo num sc e Item da sc no array de itens.
+
+@type function
+@author Bruna Paola
+@since 03/04/2012
+@version P12.1.23
+
+@param aItem, Array, Array com itens do pedido de compra recebido por referência.
+
+@obs Projeto ELO alterado pela FIEG
+
+@history 11/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function MyCN120IT7( aItem )
+
+	Local aArea := GetArea()
+	//Local aItem := PARAMIXB[2]
+	Local lRet 	:= IsInCallStack("U_CNI109AL")
+	Local nPos	:= 0
+
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	If lRet // Tratamento para geração de pedido na liberação da SC
+		If Type("aXItSC") == "A"
+			If (nPos:= ASCAN(aXItSC,{|x| VAL(x[1])==VAL(CNE->CNE_ITEM) }) ) > 0
+				aAdd(aItem[Len(aItem)],{"C7_NUMSC",  aXItSC[nPos][2], NIL})
+				aAdd(aItem[Len(aItem)],{"C7_ITEMSC", aXItSC[nPos][3], NIL})
+			EndIf
+		EndIf
+		aAdd(aItem[Len(aItem)],{"C7_XESPEC",  CNE->CNE_XESPEC, NIL})
+		aAdd(aItem[Len(aItem)],{"C7_CONTRA",  CN9->CN9_NUMERO, NIL})
+		aAdd(aItem[Len(aItem)],{"C7_XFILCOM", CN9->CN9_FILIAL, NIL})
+		If (nPos:= ASCAN(aItem[Len(aItem)],{|x| UPPER(ALLTRIM(x[1]))=="C7_FISCORI" }) ) > 0
+			aItem[Len(aItem)][nPos][2]:= cFilOri
+		EndIf
+	Else
+		aAdd(aItem[Len(aItem)],{"C7_XESPEC", CNE->CNE_XESPEC, NIL})
+
+		// 20/02/2018 - Thiago Rasmussen - Verificar se existe diferença entre o total do item da medição e o total do pedido
+		If (nPos := aScan(aItem[Len(aItem)],{|x| ALLTRIM(x[1])=="C7_TOTAL"})) > 0
+			If aItem[Len(aItem)][nPos][2] <> CNE->CNE_VLTOT
+				aItem[Len(aItem)][nPos][2] := CNE->CNE_VLTOT
+			EndIf
+		EndIf
+	EndIf
+
+	RestArea(aArea)
+
+Return //aItem
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} MyCN120PED
 Ponto de entrada executado no momento do encerramento da medicao, quando o sistema gera o pedido.
 
 @type function
@@ -9,23 +102,24 @@ Ponto de entrada executado no momento do encerramento da medicao, quando o siste
 @since 03/05/2010
 @version P12.1.23
 
+@param _aCab, Array, Array com cabeçalho do pedido de compra recebido por referência.
+@param _aItem, Array, Array com itens do pedido de compra recebido por referência.
+
 @obs Projeto ELO alterado pela FIEG
 
 @history 11/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
-@return Array, Array com os campos do cabeçalho do pedido + Array com os itens do pedido e seus respectivos campos.
-
 /*/
 /*/================================================================================================================================/*/
 
-User Function CN120PED()
+Static Function MyCN120PED( _aCab, _aItem )
 
 	Local _aArea    := GetArea()
 	Local _aAreaSC1 := {}
 	Local _cTipo	:= ""
-	Local _aCab     := PARAMIXB[1]	//Cabecalho
-	Local _aItem    := PARAMIXB[2]  //Itens
-	Local cAliasCNE := ParamIXB[3]
+	//Local _aCab     := PARAMIXB[1]	//Cabecalho
+	//Local _aItem    := PARAMIXB[2]  //Itens
+	//Local cAliasCNE := ParamIXB[3]
 	Local _nPosItem := 0
 	Local _cItemMed := ""
 	Local _nI       := 0
@@ -264,4 +358,35 @@ User Function CN120PED()
 	/**/
 	RestArea(_aArea)
 
-Return {_aCab,_aItem}
+Return //{_aCab,_aItem}
+
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} MyCN120AEP
+Ponto de entrada para alterar a filial corrente antes do processamento da exclusão do pedido de compra.
+
+@type function
+@author Bruna Paola
+@since 30/01/2012
+@version P12.1.23
+
+@obs Projeto ELO
+
+@history 11/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+
+/*/
+/*/================================================================================================================================/*/
+
+Static Function MyCN120AEP()
+
+
+	//--< Log das Personalizações >-----------------------------
+	U_LogCustom()
+
+	//--< Processamento da Rotina >-----------------------------
+
+	If Type("cFilOri") == "C"
+		cXFil := CFILANT
+		CFILANT := cFilOri
+	EndIf
+
+Return

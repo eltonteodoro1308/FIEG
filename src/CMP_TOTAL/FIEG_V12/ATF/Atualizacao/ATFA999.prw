@@ -206,7 +206,7 @@ User Function AlterarStatus(_STATUS)
 	//--< Processamento da Rotina >-----------------------------
 
 	IF !VerificarPermissao()
-		lSegue := .F. 
+		lSegue := .F.
 	ENDIF
 
 	If lSegue
@@ -214,7 +214,7 @@ User Function AlterarStatus(_STATUS)
 		IF ALLTRIM(ZZX->ZZX_STATUS) == _STATUS
 			MsgInfo("O status atual do inventário posicionado já é " + ALLTRIM(ZZX->ZZX_STATUS) + "!", "ATFA999")
 
-			lSegue := .F. 
+			lSegue := .F.
 		ENDIF
 
 		RecLock("ZZX",.F.)
@@ -275,7 +275,7 @@ User Function ImportarInventario(_INCLUIR)
 	//--< Processamento da Rotina >-----------------------------
 
 	IF !VerificarPermissao()
-		lSegue  := .F. 
+		lSegue  := .F.
 	ENDIF
 
 	IF lSegue .And. !ExistDir("C:\Coletor")
@@ -603,7 +603,7 @@ User Function ImprimirInventario()
 		dbUseArea(.T.,"TOPCONN",TcGenQry(,,_SQL),_ALIAS,.T.,.F.)
 
 		DbSelectArea(_ALIAS)
-		_ALIAS->(dbGotop())
+		(_ALIAS)->(dbGotop())
 
 		ProcessarPlanilha()
 

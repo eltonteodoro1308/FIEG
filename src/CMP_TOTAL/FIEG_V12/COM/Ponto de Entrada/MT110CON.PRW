@@ -51,7 +51,7 @@ User Function MT110CON()
 	U_LogCustom()
 
 	//--< Processamento da Rotina >-----------------------------
-	If IsInCallStack("A110Deleta") .and. !empty(SC1->C1_XCOMPRA) .AND. empty(SC1->C1_FISCORI) //Roda somente se for gravação de deleção, tiver sido distribuído e não for centralizada
+	If IsInCallStack("A110Deleta") /*.and. !empty(SC1->C1_XCOMPRA)*/ .AND. empty(SC1->C1_FISCORI) //Roda somente se for gravação de deleção, tiver sido distribuído e não for centralizada
 
 		PswOrder(2) // Ordem de nome
 
@@ -67,7 +67,7 @@ User Function MT110CON()
 		EndIf
 
 		PswOrder(2)
-		If PswSeek(SC1->C1_CODDIST,.T.)
+		If PswSeek(AllTrim(cUserName)/*SC1->C1_CODDIST*/,.T.)
 
 			// Obtenho o resultado conforme vetor
 			_aRetUser := PswRet(1)
@@ -81,11 +81,13 @@ User Function MT110CON()
 		//Gera arquivo principal					   *
 		*****************************************/
 
-		cQuery := " SELECT C1_FILIAL, C1_NUM, C1_ITEM, C1_DESCRI, C1_UM, C1_PRODUTO, C1_QUANT, C1_VUNIT, C1_XCOMPRA "
+		//cQuery := " SELECT C1_FILIAL, C1_NUM, C1_ITEM, C1_DESCRI, C1_UM, C1_PRODUTO, C1_QUANT, C1_VUNIT, C1_XCOMPRA "
+		cQuery := " SELECT C1_FILIAL, C1_NUM, C1_ITEM, C1_DESCRI, C1_UM, C1_PRODUTO, C1_QUANT, C1_VUNIT "
 		cQuery += " 	FROM SC1010 WHERE C1_FILIAL = '"+SC1->C1_FILIAL+"' "
 		cQuery += "		AND C1_NUM = '"+SC1->C1_NUM+"' "
 		cQuery += " 	AND D_E_L_E_T_ <> '*' "
-		cQuery += " 	ORDER BY C1_XCOMPRA, C1_ITEM "
+		//cQuery += " 	ORDER BY C1_XCOMPRA, C1_ITEM "
+		cQuery += " 	ORDER BY C1_ITEM "
 
 		If Select("TSC1") > 0
 			TSC1->(DbCLoseArea())
@@ -102,14 +104,14 @@ User Function MT110CON()
 		cValorT := 0
 		TSC1->(dbGoTop()) //Posiciona no topo
 
-		cComprad := TSC1->C1_XCOMPRA	//Comprador do registro atual
-		cOldComp := TSC1->C1_XCOMPRA   //Comprador do registro anterior
+		cComprad := ''//TSC1->C1_XCOMPRA	//Comprador do registro atual
+		cOldComp := ''//TSC1->C1_XCOMPRA   //Comprador do registro anterior
 		nX := 0
 
 		While !TSC1->(EOF())
 			nX++
 
-			If nX = 1 .OR. cOldComp != TSC1->C1_XCOMPRA   //Imprime o cabeçalho no início e a cada comprador
+			If nX = 1 //.OR. cOldComp != TSC1->C1_XCOMPRA   //Imprime o cabeçalho no início e a cada comprador
 
 				cTabela := "<table width='100%' border='0' cellspacing='1' cellpadding='1'>" //Rodapé
 				cTabela += 	"<tr class='cabec'>"
@@ -146,16 +148,16 @@ User Function MT110CON()
 			cTabela += "	<td align='center' height='10' valign='middle'   bgcolor='#7A9BDE'>"+cValor+"</td>"
 			cTabela += "</tr>"
 
-			cOldcomp := TSC1->C1_XCOMPRA
+			cOldcomp := ''//TSC1->C1_XCOMPRA
 
 			//cForn	  := POSICIONE("SA2",1,xFilial("SA2")+SC1->C1_FORNECE+SC1->C1_LOJA,"A2_NOME")
-			cMailComp := upper(alltrim(POSICIONE("SY1",1,xFilial("SY1")+TSC1->C1_XCOMPRA,"Y1_EMAIL")))
-			cNomeComp := upper(alltrim(POSICIONE("SY1",1,xFilial("SY1")+TSC1->C1_XCOMPRA,"Y1_NOME")))
+			cMailComp := upper(alltrim(POSICIONE("SY1",1,xFilial("SY1")/*+TSC1->C1_XCOMPRA*/,"Y1_EMAIL")))
+			cNomeComp := upper(alltrim(POSICIONE("SY1",1,xFilial("SY1")/*+TSC1->C1_XCOMPRA*/,"Y1_NOME")))
 			TSC1->(DbSkip())
 
 
 
-			If (cComprad <> TSC1->C1_XCOMPRA) .OR. nQtdReg = nX  //Imprime Rodapé caso mude o comprador
+			If /*(cComprad <> TSC1->C1_XCOMPRA) .OR.*/ nQtdReg = nX  //Imprime Rodapé caso mude o comprador
 
 
 				cTabela += "<tr class='cabec'>"   //Rodapé com totalizadores
@@ -185,7 +187,7 @@ User Function MT110CON()
 
 			EndIf
 			DbSelectArea("TSC1")
-			cComprad := TSC1->C1_XCOMPRA
+			cComprad := ''//TSC1->C1_XCOMPRA
 
 
 		End
@@ -194,7 +196,7 @@ User Function MT110CON()
 		TSC1->( DbCloseArea() )
 
 	Endif
-		
+
 	RestArea(_aArea)
 
 Return _lRet

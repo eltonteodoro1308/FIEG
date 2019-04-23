@@ -70,7 +70,7 @@ User Function _fBloqSC(_lShow,_cNumSC,_cItemSC,_lRetSaldo)
 	Local _aChave      := {}
 	Local _cAreaSC1    := SC1->(GetArea())
 	Local _uRetorno    := .f.
-	Local _lSegue      := .T.
+	Local lSegue      := .T.
 	Private _cNumProc  := "000051"
 	Private _cItProc   := "02"
 	Private oDlg
