@@ -65,12 +65,12 @@ ELSEIF lRet .AND. EMPTY(M->_cItCta) .AND. cTpSC $ '001/005'
 ENDIF
 
 //--< 10/11/2014 - Thiago Rasmussen - Validar Amarração Contábil >--
-IF lRet
-	IF EMPTY(POSICIONE("CTA", 11, xFILIAL("CTA") + M->CCCUSTO + M->_CITCTA, "CTA_DESC"))
-		MsgAlert("Verifique a amarração contábil entre o centro de custo " + ALLTRIM(M->CCUSTO) + " e o item contábil " + ALLTRIM(M->_CITCTA) + ".","MT110TOK")
-		lRet := .F.
-	ENDIF
-ENDIF
+//IF lRet
+//	IF EMPTY(POSICIONE("CTA", 11, xFILIAL("CTA") + M->CCCUSTO + M->_CITCTA, "CTA_DESC"))
+//		MsgAlert("Verifique a amarração contábil entre o centro de custo " + ALLTRIM(M->CCUSTO) + " e o item contábil " + ALLTRIM(M->_CITCTA) + ".","MT110TOK")
+//		lRet := .F.
+//	ENDIF
+//ENDIF
 
 //--< 25/07/2017 - Thiago Rasmussen - Validar solicitações que devem ser encaminhadas para a GEMAT >--
 IF lRet

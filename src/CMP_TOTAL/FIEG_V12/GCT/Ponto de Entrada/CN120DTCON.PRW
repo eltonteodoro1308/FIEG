@@ -1,4 +1,4 @@
-#Include "Protheus.ch"
+#Include "Totvs.ch"
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CN120DTCON
@@ -35,7 +35,7 @@ User Function CN120DTCON()
 	IF SuperGetMV("SI_XCRP") == 'N'
 
 		IF CN9->CN9_XREGP == "1"
-			MsgAlert("Medição não pode ser realizada manualmente para um contrato do tipo registro de preço.","CN120DTCON")
+			Help(,, "CN120DTCON",, "Medição não pode ser realizada manualmente para um contrato do tipo registro de preço.",1,0,,,,,,{""} )//MsgAlert("Medição não pode ser realizada manualmente para um contrato do tipo registro de preço.","CN120DTCON")
 			lRet := .F. //RETURN .F.
 		ENDIF
 
@@ -50,7 +50,7 @@ User Function CN120DTCON()
 			dbUseArea( .T., "TOPCONN", TCGENQRY(,,cQuery),"QRY", .F., .T.)
 
 			If QRY->QUANTIDADE > 0
-				MsgAlert("Medição não pode ser realizada manualmente para um contrato compartilhado entre filiais.","CN120DTCON")
+				Help(,, "CN120DTCON",, "Medição não pode ser realizada manualmente para um contrato compartilhado entre filiais.",1,0,,,,,,{""} )//MsgAlert("Medição não pode ser realizada manualmente para um contrato compartilhado entre filiais.","CN120DTCON")
 				//QRY->(dbCloseArea())
 				lRet := .F. //RETURN .F.
 			EndIf
@@ -61,14 +61,14 @@ User Function CN120DTCON()
 
 				cQuery := "SELECT R_E_C_N_O_ FROM " + RetSqlName('CNN') + " CNN " + CRLF +;
 				"WHERE CNN_FILIAL = '" + xFilial("CNN") + "' AND " + CRLF +;
-				"      CNN_CONTRA = '" + CN9->CN9_NUMERO + "' AND " + CRLF +;
+				"      CNN_CONTRA = '" + SC1->C1_XCONTPR + "' AND " + CRLF +;//"      CNN_CONTRA = '" + CN9->CN9_NUMERO + "' AND " + CRLF +;
 				"      CNN_USRCOD = '" + RetCodUsr() + "' AND " + CRLF +;
 				"      D_E_L_E_T_ = ' ' "
 				cQuery := ChangeQuery(cQuery)
 				dbUseArea( .T., "TOPCONN", TCGENQRY(,,cQuery),"QRY", .F., .T.)
 
 				If QRY->(EOF())
-					MsgAlert("Medição não pode ser realizada por esse usuário devido o mesmo não compor o grupo de gestores do contrato.","CN120DTCON")
+					Help(,, "CN120DTCON",, "Medição não pode ser realizada por esse usuário devido o mesmo não compor o grupo de gestores do contrato.",1,0,,,,,,{""} )//MsgAlert("Medição não pode ser realizada por esse usuário devido o mesmo não compor o grupo de gestores do contrato.","CN120DTCON")
 					//QRY->(dbCloseArea())
 					lRet := .F. //RETURN .F.
 				EndIf

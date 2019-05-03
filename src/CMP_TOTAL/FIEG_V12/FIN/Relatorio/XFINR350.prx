@@ -853,7 +853,7 @@ Static Function ReportPrint(oReport)
 								aValor[I_JUROS]   += (cAliasSE2)->E2_SDACRES
 
 								nTotAbat:=SumAbatPag(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_FORNECE,mv_par10,"V",,SE2->E2_LOJA,If(mv_par18==1,"1","2"),mv_par05,mv_par06,;
-								If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,))
+								If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,0))
 
 								If !((cAliasSE2)->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG) .And. !( MV_PAR14 == 2 .And. nSaldo == 0 ) // nao deve olhar abatimento pois e zerado o saldo na liquidacao final do titulo
 									nSaldo -= nTotAbat
@@ -974,7 +974,7 @@ Static Function ReportPrint(oReport)
 									oTotaisForn:Cell("Multa"   ):SetBlock({||nTotForn5 })  	//"Multa"
 									oTotaisForn:Cell("Corr. Monet"   ):SetBlock({||nTotForn6 })  	//"Corr. Monet"
 									oTotaisForn:Cell("Valor Pago"   ):SetBlock({||nTotForn7 })  	//"Valor Pago"
-									oTotaisForn:Cell("Pagto.Antecipado"   ):SetBlock({||nTotForn8 })  	//"Pagto.Antecip"
+									oTotaisForn:Cell("Pagto.Antecip"   ):SetBlock({||nTotForn8 })  	//"Pagto.Antecip"
 									oTotaisForn:Cell("Saldo Atual"   ):SetBlock({||nTotForn9 })  	//"Saldo Atual"
 
 									oTotaisForn:Cell("Valor Original"	):SetPicture(Tm(nTotForn0,oTitsForn:Cell("Valor Original"	):nSize,nDecs)) //"Valor original"
@@ -985,7 +985,7 @@ Static Function ReportPrint(oReport)
 									oTotaisForn:Cell("Multa"	):SetPicture(Tm(nTotForn5,oTitsForn:Cell("Multa"	):nSize,nDecs)) //"Multa"
 									oTotaisForn:Cell("Corr. Monet"	):SetPicture(Tm(nTotForn6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs)) //"Corr. Monet"
 									oTotaisForn:Cell("Valor Pago" 	):SetPicture(Tm(nTotForn7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs)) //"Valor Pago"
-									oTotaisForn:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotForn8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs)) //"Pagto.Antecip"
+									oTotaisForn:Cell("Pagto.Antecip"	):SetPicture(Tm(nTotForn8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs)) //"Pagto.Antecip"
 									oTotaisForn:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotForn9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs))) //"SAldo atual"
 
 									oTotaisForn:Init()
@@ -1135,7 +1135,7 @@ Static Function ReportPrint(oReport)
 		oTotalGeral:Cell("Multa"   ):SetBlock({||nTotGeral5 })  		//"Multa"
 		oTotalGeral:Cell("Corr. Monet"   ):SetBlock({||nTotGeral6 })  		//"Corr. Monet"
 		oTotalGeral:Cell("Valor Pago"   ):SetBlock({||nTotGeral7 })  		//"Valor Pago"
-		oTotalGeral:Cell("Pagto.Antecipado"   ):SetBlock({||nTotGeral8 })  		//"Pagto.Antecip"
+		oTotalGeral:Cell("Pagto.Antecip"   ):SetBlock({||nTotGeral8 })  		//"Pagto.Antecip"
 		oTotalGeral:Cell("Saldo Atual"   ):SetBlock({||nTotGeral9 })  		//"Saldo Atual"
 
 		oTotalGeral:Cell("Valor Original"	):SetPicture(PictParent(Tm(nTotGeral0,oTitsForn:Cell("Valor Original"	):nSize,nDecs)))		//"Valor original"
@@ -1146,7 +1146,7 @@ Static Function ReportPrint(oReport)
 		oTotalGeral:Cell("Multa"	):SetPicture(Tm(nTotGeral5,oTitsForn:Cell("Multa"	):nSize,nDecs))						//"Multa"
 		oTotalGeral:Cell("Corr. Monet"	):SetPicture(Tm(nTotGeral6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))						//"Corr. Monet"
 		oTotalGeral:Cell("Valor Pago" 	):SetPicture(Tm(nTotGeral7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))						//"Valor Pago"
-		oTotalGeral:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotGeral8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))						//"Pagto.Antecip"
+		oTotalGeral:Cell("Pagto.Antecip"	):SetPicture(Tm(nTotGeral8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))						//"Pagto.Antecip"
 		oTotalGeral:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotGeral9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))		//"SAldo atual"
 
 		oTotalGeral:Init()

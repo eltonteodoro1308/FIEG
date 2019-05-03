@@ -52,7 +52,11 @@ User Function MT140TOK()
 						If aCols[I][ASCAN(aHeader,{|x| TRIM(x[2])=="D1_ITEMMED" })] != '1' .OR. _REGISTRO_DE_PRECO
 							_SQL := "EXEC LK_SESUITE.SE_SUITE.dbo.SP_VALIDACAO_PRE_NOTA '" + _C7_FILIAL + "', '" + _C7_NUM + "', '" + ALLTRIM(STR(VAL(CNFISCAL))) + "', '" + DTOS(dDEmissao) + "'"
 
-							(_ALIAS)->(DbCloseArea())
+							If Select( _ALIAS ) # 0
+
+								(_ALIAS)->(DbCloseArea())
+
+							End If
 							TcQuery _SQL NEW ALIAS (_ALIAS)
 							dbSelectArea(_ALIAS)
 
@@ -68,11 +72,7 @@ User Function MT140TOK()
 		EndIf
 	EndIf
 
-	If Select( _ALIAS ) # 0
 
-		(_ALIAS)->(DbCloseArea())
-
-	End If
 
 	//--< Validar número da nota fiscal >--
 	If lRETORNO

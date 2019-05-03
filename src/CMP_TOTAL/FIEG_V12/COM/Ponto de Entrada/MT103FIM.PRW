@@ -56,7 +56,7 @@ User Function MT103FIM()
 		DbSeek(cE2FILIAL+cE2PREFIXO+cE2NUM) // ---- LEANDRO RIBEIRO ---- 03/11/2016
 
 		While (SE2->(! EOF())).AND. cE2FILIAL == SE2->E2_FILIAL .AND. cE2PREFIXO	== SE2->E2_PREFIXO .AND. cE2NUM == SE2->E2_NUM
-			cModPagA2	:=	Posicione("SA2",1,xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA,"A2_XMODPAG")
+			cModPagA2	:=	''//Posicione("SA2",1,xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA,"A2_XMODPAG")
 			If !(ALLTRIM(SE2->E2_TIPO) $ 'ISS,INS,TX')// titulos de impostos não deve respeitar regra de valor
 				//Regra para variação entre DOC e TED de acordo com valor cadastrado no parametro
 				If cModPagA2 $ '03,41'
@@ -69,9 +69,9 @@ User Function MT103FIM()
 			EndIf
 
 			If ! Empty(cModPagA2)
-				RecLock("SE2",.F.)
-				SE2->E2_XMODPAG := cModPagA2
-				MsUnlock()
+				//RecLock("SE2",.F.)
+				//SE2->E2_XMODPAG := cModPagA2
+				//MsUnlock()
 			EndIf
 			SE2->(dbSkip())
 		EndDo

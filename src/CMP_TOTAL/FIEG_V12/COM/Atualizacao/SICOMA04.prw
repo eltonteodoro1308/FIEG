@@ -48,8 +48,8 @@ User Function SICOMA04(_nOpcao)
 			ENDIF
 			RestArea(_aAreaCR)
 			RestArea(_aArea)
-		//ELSEIF SCR->CR_TIPO == "ED"						// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
-		//	U_SICOMA03(_nOpcao)
+			//ELSEIF SCR->CR_TIPO == "ED"						// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+			//	U_SICOMA03(_nOpcao)
 		ELSEIF SCR->CR_TIPO == "SA"
 			U_SIESTA05(_nOpcao)
 		ELSE	// visualizacao padrao
@@ -66,21 +66,26 @@ User Function SICOMA04(_nOpcao)
 			lSegue := .F.
 		ENDIF
 
-		If lSegue
+		IF lSegue .And. SCR->CR_TIPO == "SC"
 
-			IF SCR->CR_TIPO == "SC"
+			If ! Empty( Posicione( 'SC1', 1, alltrim(SCR->(CR_FILIAL+CR_NUM)), 'C1_XCONTPR' ) )
+
 				MsgRun("Liberando solicitação "+TRIM(SCR->CR_NUM)+", aguarde...","",{|| fLibSC()  })
 				_FVERLOG(aPeds,"Pedidos gerado")
-			//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
-			//	U_SICOMA03(_nOpcao)
-			ELSEIF SCR->CR_TIPO == "SA"
-				U_SIESTA05(_nOpcao)
-			ELSE
-				A097Libera("SCR",recno(),2)
-			ENDIF
+				//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+				//	U_SICOMA03(_nOpcao)
 
-		EndIf
+			Else
 
+				A94ExLiber("SCR",recno(),2)
+
+			End If
+
+		ELSEIF SCR->CR_TIPO == "SA"
+			U_SIESTA05(_nOpcao)
+		ELSE
+			A94ExLiber("SCR",recno(),2)
+		ENDIF
 
 	ELSEIF _nOpcao == 3 // Estornar
 
@@ -137,8 +142,8 @@ User Function SICOMA04(_nOpcao)
 
 				EndIf
 
-			//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
-			//	U_SICOMA03(_nOpcao)
+				//ELSEIF SCR->CR_TIPO == "ED"					// Remoçao do tratamento para Edital, 08/04/2019, Kley@TOTVS.com.br
+				//	U_SICOMA03(_nOpcao)
 			ELSEIF SCR->CR_TIPO == "SA"
 				U_SIESTA05(_nOpcao)
 			ELSE
@@ -278,7 +283,7 @@ Static Function fLibSC()
 				SCR->(dbClearFilter())
 			ENDIF
 
-			lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,ca097User,SC1->C1_XGRPAPR,,,,,cObs},dRefer,If(nOpc==2,4,6))
+			lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,nTotal,cCodLiber,ca097User,SCR->CR_GRUPO/*SC1->C1_XGRPAPR*/,,,,,cObs},dRefer,If(nOpc==2,4,6))
 
 			// Se liberou total, envia e-mail de liberado
 			SCR->(dbSetOrder(1))

@@ -1,7 +1,7 @@
 #Include "Protheus.ch"
 
 /*/================================================================================================================================/*/
-/*/{Protheus.doc} MT130WF
+/*/{Protheus.doc} MT131WF
 P.E. executado ao gerar a cotação, no qual possibilita selecionar a modalidade do processo de compra e gerar uma numeração de identificação do processo.
 
 @type function
@@ -11,17 +11,17 @@ P.E. executado ao gerar a cotação, no qual possibilita selecionar a modalidade d
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
 /*/================================================================================================================================/*/
 
-User Function MT130WF()
+User Function MT131WF()
 
 	Local _cGet := ""
 	Local lNewTpGrv	:= SuperGetMv("SI_XGNPROC",.F.,.T.)
-	
+
 //--< Log das Personalizações >-----------------------------
 U_LogCustom()
 
@@ -34,7 +34,7 @@ U_LogCustom()
 			Else
 				If (Empty(MV_PAR60) .OR. Empty(SC8->C8_NPROC))
 					_cGet := xTelaCoTa()
-					U_SICOMA28(_cGet,"C")				
+					U_SICOMA28(_cGet,"C")
 				Else
 					MV_PAR59 := ''
 					MV_PAR60 := ''
@@ -60,7 +60,7 @@ Função utilizada pelo P.E. MT130WF para informar o Tipo na geração da Cotação.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Caractere, Tipo escolhido pelo usuário.
 /*/
@@ -71,7 +71,7 @@ Static Function xTelaCoTa()
 Local oGet1               := Nil
 Local oSay1               := Nil
 Local oSButton1           := Nil
-Local oDlg                := Nil   
+Local oDlg                := Nil
 Local cQuery              := ''
 
 Private cGet1             := Space(2)
@@ -88,8 +88,8 @@ cQuery := "SELECT R_E_C_N_O_ FROM " + RetSqlName('SC1') + " WITH (NOLOCK) " + CR
           "      D_E_L_E_T_ = ' ' "
 
 dbUseArea( .T., "TOPCONN", TCGENQRY(,,cQuery),"QRY", .F., .T.)
-	                                                                         				
-bContratoParceria := !QRY->(EOF())   
+
+bContratoParceria := !QRY->(EOF())
 dbCloseArea()
 
 DEFINE MSDIALOG oDlg TITLE "Informe" FROM 000, 000  TO 090, 200 COLORS 0, 16777215 PIXEL Style DS_MODALFRAME
@@ -102,8 +102,8 @@ cGet1 := IIF(bContratoParceria, 'CP', '  ')
 DEFINE SBUTTON oSButton1 FROM 030, 040 TYPE 1 OF oDlg ENABLE ACTION(IIF(!ValidarBotao(),'',oDlg:End()))
 ACTIVATE MSDIALOG oDlg CENTERED
 
-Return(cGet1)       
-          
+Return(cGet1)
+
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} ValidarBotao
@@ -116,7 +116,7 @@ Função utilizada pelo P.E. MT130WF para validação do botão ao informar o Tipo na
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 28/02/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Retorna verdadeiro se validações estiverem OK.
 /*/

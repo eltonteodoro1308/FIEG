@@ -663,12 +663,12 @@ User Function CNIGrvMed(aCab,aItens)
 
 	ConOut("CHAMA FUNÇÃO CNTA120 PARA GERAR MEDIÇÃO: ")
 	//-- Gera a medicao
-	MsExecAuto({|a,b,c|,CNTA120(a,b,c)},aCab,aItens,3)
+	MsExecAuto({|a,b,c,d|,CNTA120(a,b,c,d)},aCab,aItens,3,.F.)
 
 	//-- Encerra a medicao
 	If !lMsErroAuto
 		//MsExecAuto({|a,b,c|,CNTA120(a,b,c)},aCab,aItens,6)
-		MsExecAuto({|a,b,c|,CNTA120(a,b,c)},aCab,{},6)
+		MsExecAuto({|a,b,c,d|,CNTA120(a,b,c,d)},aCab,{},6,.F.)
 		If lMsErroAuto
 			ConOut("ERRO NO ENCERRAMENTO DA MEDIÇÃO!")
 			MsgAlert("Não foi possivel encerrar a medição.")

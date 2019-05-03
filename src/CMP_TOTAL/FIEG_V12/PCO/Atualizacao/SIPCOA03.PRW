@@ -13,7 +13,7 @@ Cadastro de layouts de exportacao de dados do PCO.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -58,7 +58,7 @@ Browse de manutencao na tabela.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -171,7 +171,7 @@ If nOpcClick == 1 .And. nOpcBrw <> 2
 	If nOpcBrw == 3
 		ConfirmSX8()
 	EndIf
-	
+
 	//--< Cabecalho do layout >-----------------------------
 	SZ3->(RecLock("SZ3",nOpcBrw == 3))
 	If nOpcBrw <> 5
@@ -186,7 +186,7 @@ If nOpcClick == 1 .And. nOpcBrw <> 2
 		SZ3->(dbDelete())
 	EndIf
 	SZ3->(MsUnlock())
-	
+
 	//--< Itens do Layout >---------------------------------
 	For i := 1 To Len(oGetDad1:aCols)
 		dbSelectArea("SZ4")
@@ -203,7 +203,7 @@ If nOpcClick == 1 .And. nOpcBrw <> 2
 		Else
 			Loop
 		EndIf
-		
+
 		SZ4->Z4_FILIAL	:= xFilial("SZ4")
 		SZ4->Z4_COD		:= M->Z3_COD
 		SZ4->Z4_TIPO	:= "1"
@@ -214,7 +214,7 @@ If nOpcClick == 1 .And. nOpcBrw <> 2
 		Next j
 		SZ4->(MsUnlock())
 	Next i
-	
+
 	For i := 1 To Len(oGetDad2:aCols)
 		dbSelectArea("SZ4")
 		SZ4->(dbSetOrder(1))
@@ -230,7 +230,7 @@ If nOpcClick == 1 .And. nOpcBrw <> 2
 		Else
 			Loop
 		EndIf
-		
+
 		SZ4->Z4_FILIAL	:= xFilial("SZ4")
 		SZ4->Z4_COD		:= M->Z3_COD
 		SZ4->Z4_TIPO	:= "2"
@@ -262,7 +262,7 @@ Validacao do LINHAOK e TUDOOK.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Retorna verdadeiro se validações estiverem OK.
 /*/
@@ -286,7 +286,7 @@ If nTpValid == 1
 			Return(.F.)
 		EndIf
 	Next i
-	
+
 	//Linha OK
 Else
 	If !oGetDados:aCols[oGetDados:nAt,Len(oGetDados:aHeader)+1] .And. Empty(oGetDados:aCols[oGetDados:nAt,nPosCampo]) .And. Empty(oGetDados:aCols[oGetDados:nAt,nPosFormula])
@@ -309,7 +309,7 @@ Validacao dos campos informados nos folders.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Retorna verdadeiro se validações estiverem OK.
 /*/
@@ -358,7 +358,7 @@ Exportador de PLANILHAS.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -448,7 +448,7 @@ Processamento da exportacao da planilha orcamentaria.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -497,9 +497,9 @@ ProcRegua(nTotReg)											//Gera os registros
 dbSelectArea("TMP")
 While TMP->(!Eof())
 	IncProc("Exportando...")
-	
+
 	cLinha := ""
-	
+
 	For i := 1 To Len(aLayout)
 		If !Empty(aLayout[i,1])
 			cLinha += FormataTexto(TMP->&(aLayOut[i,1]))
@@ -508,7 +508,7 @@ While TMP->(!Eof())
 		EndIf
 	Next i
 	FWrite(nHdlArquivo,cLinha+Chr(13)+Chr(10))
-	
+
 	TMP->(dbSkip())
 EndDo
 
@@ -529,7 +529,7 @@ Exportador de MOVIMENTOS.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -589,7 +589,8 @@ ENDIF
 //Processa os itens da planilha x layout indicado
 cQuery := " select AKD.R_E_C_N_O_ AS REGNO "
 cQuery += " from " + RetSQLName("AKD")  + " AKD "
-cQuery += " where AKD_FILIAL = '"       + xFilial("AKD")    + "' AND AKD_STATUS = '1' AND AKD.D_E_L_E_T_ = ' ' "
+//cQuery += " where AKD_FILIAL = '"       + xFilial("AKD")    + "' AND AKD_STATUS = '1' AND AKD.D_E_L_E_T_ = ' ' "
+cQuery += " where AKD_STATUS = '1' AND AKD.D_E_L_E_T_ = ' ' "
 cQuery += "   and AKD_DATA BETWEEN '"   + DToS(aRetorno[1]) + "' AND '" + DToS(aRetorno[2]) + "' "
 cQuery += "   and AKD_CO BETWEEN '"     + aRetorno[3] 		+ "' AND '" + aRetorno[4] + "' "
 cQuery += "   and AKD_CLASSE BETWEEN '" + aRetorno[5] 		+ "' AND '" + aRetorno[6] + "' "
@@ -620,7 +621,7 @@ Processamento da exportacao dos lancamentos.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -668,11 +669,11 @@ EndDo
 ProcRegua(nTotReg)
 While TMP->(!Eof())
 	IncProc("Exportando...")
-	
+
 	dbSelectArea("AKD")
 	AKD->(dbGoTo(TMP->REGNO))
 	cLinha := ""
-	
+
 	For i := 1 To Len(aLayout)
 		If !Empty(aLayout[i,1])
 			cLinha += FormataTexto(AKD->&(aLayOut[i,1]))
@@ -681,7 +682,7 @@ While TMP->(!Eof())
 		EndIf
 	Next i
 	FWrite(nHdlArquivo,cLinha+Chr(13)+Chr(10))
-	
+
 	TMP->(dbSkip())
 EndDo
 
@@ -705,7 +706,7 @@ Funcao de formatacao do conteudo para TEXTO
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return cRetorno, Conteúdo formatado.
 /*/
@@ -740,7 +741,7 @@ Importacao de PLANILHAS ORCAMENTARIAS.
 @version P12.1.23
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -768,7 +769,7 @@ AAdd(aPerguntas,{ 6,"Arquivo"		,Padr("",150),"",,"", 90 ,.T.,"","",GETF_LOCALHAR
 
 If !ParamBox(aPerguntas,"Importação Planilha",@aRetorno)
 	Return(Nil)
-EndIf                                             
+EndIf
 
 SZ3->(dbSetOrder(1))
 IF !SZ3->(dbSeek(XFilial("SZ3")+aRetorno[1]))
@@ -804,7 +805,7 @@ Processamento da importacao de planilhas.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -899,42 +900,42 @@ FT_FGoTop()
 
 While !FT_FEof()
 	IncProc()
-	
+
 	cLinha := FT_FReadLn()
-	
+
 	aDados := {}
 	nUltPos:= 1
 	nTam   := 0
-	
+
 	//--< Faz a inclusao dos dados na tabela AK2 >----------
 	For i := 1 To Len(aLayout)
 		nTam 		  := aLayout[i,3]
 		uConteudo := SubStr(cLinha,nUltPos,aLayout[i,3])
 		nUltPos 	+= nTam
-		
+
 		If aLayout[i,2] == "N"
 			uConteudo := Val(uConteudo)/IIF(aLayout[i,4]==0,1,100)
 		ElseIf aLayout[i,2] == "D"
 			uConteudo := SToD(uConteudo)
 		EndIf
-		
+
 		Aadd(aDados,{aLayout[i,1],uConteudo})
 	Next i
-	
+
 	dbSelectArea("AK2")
 	AK2->(dbOrderNickName("SIAK202"))
-	
+
 	If AK2->(dbSeek(xFilial("AK2")+AK1->(AK1_CODIGO+AK1_VERSAO)+aDados[nPosClasse,2]+aDados[nPosOper,2]+aDados[nPosCO,2]+aDados[nPosItem,2]))
 		_cID := AK2->AK2_ID
 	ENDIF
-	
+
 	PcoIniLan("000252")
-	
+
 	If !AK2->(dbSeek(xFilial("AK2")+AK1->(AK1_CODIGO+AK1_VERSAO)+aDados[nPosClasse,2]+aDados[nPosOper,2]+aDados[nPosCO,2]+aDados[nPosItem,2]+DToS(aDados[nPosPer,2])))
 		AK2->(RecLock("AK2",.T.))
 		AK2->AK2_FILIAL := xFilial("AK2")
 		AK2->AK2_ORCAME := AK1->AK1_CODIGO
-		AK2->AK2_VERSAO := AK1->AK1_VERSAO   
+		AK2->AK2_VERSAO := AK1->AK1_VERSAO
 		AK2->AK2_XSTS	:= "0" 								// status da UO
 		IF Empty(_cID)
 			AK2->AK2_ID := _PCO03ID(AK1->AK1_CODIGO,AK1->AK1_VERSAO,aDados[nPosClasse,2],aDados[nPosOper,2],aDados[nPosCO,2],aDados[nPosItem,2],aDados[nPosPer,2]) //_cNextID
@@ -944,21 +945,21 @@ While !FT_FEof()
 	Else
 		AK2->(RecLock("AK2",.F.))
 	EndIf
-	
+
 	//--< dados do arquivo de importacao >------------------
 	AK2->AK2_XFILE	:= Upper(_cFile)
 	AK2->AK2_XDTIMP	:= dDataBase
 	AK2->AK2_XUSER	:= __CUSERID
-	
+
 	For i := 1 To Len(aDados)
 		AK2->&(aDados[i,1]) := aDados[i,2]
 	Next i
 	AK2->(MsUnlock())
-	
+
 	PcoDetLan("000252","01","PCOA100")
-	
+
 	PcoFinLan("000252")
-	
+
 	//Valida se existe o registro para essa conta orcamentaria na tabela AK3
 	dbSelectArea("AK3")
 	AK3->(dbSetOrder(1))
@@ -984,9 +985,9 @@ While !FT_FEof()
 			ENDIF
 		Next
 	EndIf
-	
+
 	_cID := ""
-	
+
 	FT_FSkip()
 EndDo
 
@@ -1010,7 +1011,7 @@ Importacao de LANCAMENTOS ORCAMENTARIOS.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -1066,7 +1067,7 @@ Processamento da importacao de lancamentos.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Nil, Função sem retorno.
 /*/
@@ -1118,7 +1119,7 @@ While SZ4->(!Eof()) .And. SZ4->Z4_FILIAL + SZ4->Z4_COD == xFilial("SZ4")+aRetorn
 		Posicione("SX3",2,Upper(AllTrim(SZ4->Z4_CAMPO)),"SX3->X3_TAMANHO"),;
 		Posicione("SX3",2,Upper(AllTrim(SZ4->Z4_CAMPO)),"SX3->X3_DECIMAL")})
 		_nTamLin += Posicione("SX3",2,Upper(AllTrim(SZ4->Z4_CAMPO)),"SX3->X3_TAMANHO")
-		
+
 	EndIf
 	SZ4->(dbSkip())
 EndDo
@@ -1191,7 +1192,7 @@ If AKD->(dbSeek(xFilial("AKD")+AllTrim(Upper(_cFile)) ))
 			Aadd(_aRecno,AKD->(RecNo()))
 			AKD->(dbSkip())
 		EndDo
-		
+
 		For _nI := 1 To Len(_aRecno)
 			AKD->(DbGoto(_aRecno[_nI]))
 			If AKD->AKD_STATUS=="1"
@@ -1201,7 +1202,7 @@ If AKD->(dbSeek(xFilial("AKD")+AllTrim(Upper(_cFile)) ))
 			AKD->(DbDelete())
 			AKD->(MsUnLock())
 		Next
-		
+
 	EndIf
 EndIf
 
@@ -1211,20 +1212,20 @@ FT_FGoTop()
 
 While !FT_FEof()
 	IncProc()
-	
+
 	cLinha := FT_FReadLn()
-	
+
 	aDados := {}
 	nUltPos:= 1
 	nTam   := 0
-	
+
 	//--< Faz a inclusao dos dados na tabela AK2 >----------
 	TMPPCO->(RecLock("TMPPCO",.T.))
 	For i := 1 To Len(aLayout)
 		nTam 	  := aLayout[i,3]
 		uConteudo := SubStr(cLinha,nUltPos,aLayout[i,3])
 		nUltPos   += nTam
-		
+
 		If aLayout[i,2] == "N"
 			uConteudo := Val(uConteudo)/IIF(aLayout[i,4]==0,1,100) //Val(uConteudo)
 		ElseIf aLayout[i,2] == "D"
@@ -1234,9 +1235,9 @@ While !FT_FEof()
 	Next i
 	TMPPCO->AKD_CHAVE := "IMP"+_cNumLote+StrZero(_nLinha,TamSX3("AKD_ID")[1])
 	TMPPCO->(MsUnlock())
-	
+
 	_nLinha++
-	
+
 	FT_FSkip()
 EndDo
 
@@ -1255,7 +1256,7 @@ End Transaction
 _cAreaAKD := AKD->(GetArea())
 TMPPCO->(dbGoTop())
 While TMPPCO->(!Eof())
-	
+
 	AKD->(dbSetOrder(10))
 	IF AKD->(dbSeek(XFilial("AKD")+TMPPCO->AKD_CHAVE))
 		RecLock("AKD",.f.)
@@ -1265,7 +1266,7 @@ While TMPPCO->(!Eof())
 		AKD->AKD_XUSER	:= __CUSERID
 		AKD->(msUnlock())
 	ENDIF
-	
+
 	TMPPCO->(dbSkip())
 EndDo
 RestArea(_cAreaAKD)
@@ -1291,7 +1292,7 @@ Processamento da importacao de lancamentos.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Caractere, Retorna a campo pesquisado.
 /*/
@@ -1327,7 +1328,7 @@ Processamento da importacao de lancamentos.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Caractere, Retorna o AK2_ID da Planilha.
 /*/
@@ -1376,7 +1377,7 @@ Processamento da importacao de lancamentos.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Array, Chave da AK5.
 /*/
@@ -1429,7 +1430,7 @@ Retorna o nome do arquivo.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Caractere, Nome do arquivo.
 /*/
@@ -1473,7 +1474,7 @@ Retorna o nome do arquivo.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
 
 @return Lógico, Retorna verdadeiro se validações estiverem OK.
 /*/
@@ -1494,58 +1495,58 @@ FT_FGoTop()
 
 While !FT_FEof()
 	IncProc("Validando registros...")
-	
+
 	IF Len(cLinha := FT_FReadLn()) <> _nTamLin
 		MsgAlert("A estrutura do arquivo não é compatível com o layout cadastrado. Verifique!")
 		FT_FUSE()
 		Return .f.
 	ENDIF
-	
+
 	aDados := {}
 	nUltPos:= 1
 	nTam   := 0
-	
+
 	//--< Faz a inclusao dos dados na tabela AK2 >----------
 	For i := 1 To Len(aLayout)
 		nTam 		  := aLayout[i,3]
 		uConteudo := SubStr(cLinha,nUltPos,aLayout[i,3])
 		nUltPos 	+= nTam
-		
+
 		If aLayout[i,2] == "N"
 			uConteudo := Val(uConteudo)/IIF(aLayout[i,4]==0,1,100)
 		ElseIf aLayout[i,2] == "D"
 			uConteudo := SToD(uConteudo)
 		EndIf
-		
+
 		Aadd(aDados,{aLayout[i,1],uConteudo})
 	Next i
-	
+
 	//--< Criticas - Classe Orcamentaria >------------------
 	AK6->(dbSetOrder(1))
 	IF !Empty(aDados[nPosClasse,2]) .and. !AK6->(dbSeek(XFilial("AK6")+aDados[nPosClasse,2]))
 		Aadd(_aCritica,{_nLinha,IIF(_lTipo==1,"AK2_CLASSE","AKD_CLASSE"),aDados[nPosClasse,2],"Classe não localizada"})
 	ENDIF
-	
+
 	//--< Criticas - Operacao >-----------------------------
 	AKF->(dbSetOrder(1))
 	IF !Empty(aDados[nPosOper,2]) .and. !AKF->(dbSeek(XFilial("AKF")+aDados[nPosOper,2]))
 		Aadd(_aCritica,{_nLinha,IIF(_lTipo==1,"AK2_OPER","AKD_OPER"),aDados[nPosOper,2],"Operação não localizada"})
 	ENDIF
-	
+
 	//--< Criticas - Conta Orcamentaria >-------------------
 	AK5->(dbSetOrder(1))
 	IF !Empty(aDados[nPosCO,2]) .and. !AK5->(dbSeek(XFilial("AK5")+aDados[nPosCO,2]))
 		Aadd(_aCritica,{_nLinha,IIF(_lTipo==1,"AK2_CO","AKD_CO"),aDados[nPosCO,2],"Conta Orçamentária não localizada"})
 	ENDIF
-	
+
 	//--< Criticas - Conta Orcamentaria >-------------------
 	CTD->(dbSetOrder(1))
 	IF !Empty(aDados[nPosItem,2]) .and. !CTD->(dbSeek(XFilial("CTD")+aDados[nPosItem,2]))
 		Aadd(_aCritica,{_nLinha,IIF(_lTipo==1,"AK2_ITCTB","AKD_ITCTB"),aDados[nPosItem,2],"Item Contábil não localizado"})
 	ENDIF
-	
+
 	_nLinha++
-	
+
 	FT_FSkip()
 EndDo
 
