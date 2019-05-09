@@ -377,7 +377,7 @@ Retorno da Solicitação.
 @obs Projeto ELO alterado pela FIEG
 
 @history 08/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -385,12 +385,16 @@ User Function _fWFRetPC(oProcess,aParam)
 	Local lWFlow   := (Valtype(oProcess) == 'O')
 	Local cWFEMTST := AllTrim(SuperGetMV("SI_WFEMTST",.F.))
 	Local lSegue   := .T.
+	Local _cBody   := ""
+	Local cAccon   := SuperGetMv("MV_RELACNT")
+	Local cPassw   := SuperGetMv("MV_RELAPSW")
+	Local cServer  := SuperGetMv("MV_RELSERV")
+	Local cFrom	   := SuperGetMv("MV_RELFROM")
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
 
 	//--< Processamento da Rotina >-----------------------------
-
 	If lWFlow
 		_cFilial  := AllTrim(oProcess:oHtml:RetByName("FILIAL"))
 		_cFilial  := IIF(AllTrim(_cFilial)=="",Xfilial("SC7"),_cFilial)
@@ -419,16 +423,18 @@ User Function _fWFRetPC(oProcess,aParam)
 			IF SCR->CR_STATUS != "02" // SOLICITAÇÃO APROVADA NO SISTEMA
 				ConOut(FunName() + " | " + ProcName() + ' - Aprovação efetuada anteriormente')
 				_cEMail := AllTrim(UsrRetMail(SCR->CR_USER))
-				_cBody  := "Prezado(a) " + UsrFullName(SCR->CR_USER) + Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				_cBody  := "Prezado(a) " + UsrFullName(SCR->CR_USER) + CRLF+CRLF
 				_cBody  += "Informamos que o Pedido de Compra: " + _cFilial + " / " + _cNumPC + " já tinha sido aprovado/reprovado anteriormente!"
-				_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				_cBody  += CRLF+CRLF
 				_cBody  += "Observação: " + _cObs
 
 				IF !EMPTY(cWFEMTST)
 					_cEMail := cWFEMTST
 				ENDIF
 
-				ACSendMail( ,,,,_cEMail,"Pedido Aprovado/Reprovado Anteriormente - " + _cFilial + " / " + _cNumPC,_cBody)
+				//ACSendMail( ,,,,_cEMail,"Pedido Aprovado/Reprovado Anteriormente - " + _cFilial + " / " + _cNumPC,_cBody)
+				TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Pedido Aprovado/Reprovado Anteriormente - " + _cFilial + " / " + _cNumPC,_cBody)
+
 				lSegue := .F. //Return()
 			ELSE
 				lLiberou := MaAlcDoc({SCR->CR_NUM,SCR->CR_TIPO,SCR->CR_TOTAL,SCR->CR_APROV,,SC7->C7_APROV,,,,,_cObs},dDataBase,IIF(cOpc == "APROVAR",4,6))
@@ -436,16 +442,17 @@ User Function _fWFRetPC(oProcess,aParam)
 		ELSE
 			ConOut(FunName() + " | " + ProcName() + ' - Alçada não encontrada: ' + XFilial("SCR") + ' / ' + _cNumPC + ' / ' + _cAprov)
 			_cEMail := AllTrim(UsrRetMail(_cAprov)) + ';thiagorasmussen@sistemafieg.org.br'
-			_cBody  := "Prezado(a) " + UsrFullName(_cAprov) + Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  := "Prezado(a) " + UsrFullName(_cAprov) + CRLF+CRLF
 			_cBody  += "Informamos que o Pedido de Compra: " + _cFilial + " / " + _cNumPC + " não foi aprovado/reprovado devido a alçada do mesmo não ter sido encontrada!"
-			_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += CRLF+CRLF
 			_cBody  += "Observação: " + _cObs
 
 			IF !EMPTY(cWFEMTST)
 				_cEMail := cWFEMTST
 			ENDIF
 
-			ACSendMail( ,,,,_cEMail,"Pedido nao Aprovado/Reprovado - " + _cFilial + " / " + _cNumPC,_cBody)
+			//ACSendMail( ,,,,_cEMail,"Pedido nao Aprovado/Reprovado - " + _cFilial + " / " + _cNumPC,_cBody)
+			TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Pedido Aprovado/Reprovado Anteriormente - " + _cFilial + " / " + _cNumPC,_cBody)
 			lSegue := .F. //Return()
 		ENDIF
 	ENDIF
@@ -456,16 +463,17 @@ User Function _fWFRetPC(oProcess,aParam)
 			_fVerifPC(_cFilial,_cNumPC,_cObs,,_cAprov)
 		ELSE
 			_cEMail := AllTrim(UsrRetMail( SC7->C7_USER ))
-			_cBody  := "Prezado(a) " + UsrFullName(SC7->C7_USER) + Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  := "Prezado(a) " + UsrFullName(SC7->C7_USER) + CRLF+CRLF
 			_cBody  += "Informamos que seu Pedido de Compra: " + _cFilial + " / " + _cNumPC + " foi reprovado por " + UsrFullName(_cAprov) + ", verifique o motivo abaixo e providencie a correção."
-			_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += CRLF+CRLF
 			_cBody  += "Observação: " + _cObs
 
 			IF !EMPTY(cWFEMTST)
 				_cEMail := cWFEMTST
 			ENDIF
 
-			ACSendMail( ,,,,_cEMail,"Pedido Reprovado - " + _cFilial + " / " + _cNumPC,_cBody)
+			//ACSendMail( ,,,,_cEMail,"Pedido Reprovado - " + _cFilial + " / " + _cNumPC,_cBody)
+			TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Pedido Reprovado - " + _cFilial + " / " + _cNumPC,_cBody)
 
 			While !SC7->(Eof()) .and. SC7->C7_FILIAL == XFilial("SC7") .and. SC7->C7_NUM == Alltrim(_cNumPC)
 				WFSalvaID('SC7','SC7->C7_WFE', .F.)
@@ -512,7 +520,7 @@ Verifica liberação do pedido.
 @obs Projeto ELO alterado pela FIEG
 
 @history 08/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -521,6 +529,11 @@ Static Function _fVerifPC(_cFil,_cNumPC,_cObs,_cNiv,_cAprov)
 	Local _cArqSCR := CriaTrab(nil,.f.)
 	Local aArea    := {}
 	Local cWFEMTST := AllTrim(SuperGetMV("SI_WFEMTST",.F.))
+	Local _cBody   := ""
+	Local cAccon   := SuperGetMv("MV_RELACNT")
+	Local cPassw   := SuperGetMv("MV_RELAPSW")
+	Local cServer  := SuperGetMv("MV_RELSERV")
+	Local cFrom	   := SuperGetMv("MV_RELFROM")
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
@@ -541,16 +554,17 @@ Static Function _fVerifPC(_cFil,_cNumPC,_cObs,_cNiv,_cAprov)
 
 		// envia email ao solicitante
 		_cEMail := AllTrim(UsrRetMail( SC7->C7_USER ))
-		_cBody  := "Prezado(a) " + UsrFullName(SC7->C7_USER) + Chr(13)+Chr(10)+Chr(13)+Chr(10)
+		_cBody  := "Prezado(a) " + UsrFullName(SC7->C7_USER) + CRLF+CRLF
 		_cBody  += "Informamos que seu Pedido de Compra: " + _cFil + " / " + _cNumPC + " foi aprovado por " + UsrFullName(_cAprov) + "."
-		_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+		_cBody  += CRLF+CRLF
 		_cBody  += "Observação: " + _cObs
 
 		IF !EMPTY(cWFEMTST)
 			_cEMail := cWFEMTST
 		ENDIF
 
-		ACSendMail( ,,,,_cEMail,"Pedido Aprovado - " + _cFil + " / " + _cNumPC,_cBody)
+		//ACSendMail( ,,,,_cEMail,"Pedido Aprovado - " + _cFil + " / " + _cNumPC,_cBody)
+		TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Pedido Aprovado - " + _cFil + " / " + _cNumPC,_cBody)
 
 		While SC7->(!Eof()) .and. SC7->(C7_FILIAL+C7_NUM) == _cFil+_cNumPC
 			RecLock("SC7",.F.)

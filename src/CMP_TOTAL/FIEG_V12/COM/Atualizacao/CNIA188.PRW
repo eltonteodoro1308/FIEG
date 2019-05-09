@@ -1,7 +1,7 @@
 #Include "Protheus.ch"
 #Include "TopConn.Ch"
 
-#DEFINE ENTER	Chr(13)+Chr(10)
+#DEFINE ENTER	CRLF
 
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} CNIA188CA
@@ -603,11 +603,13 @@ Inclui/Altera/Exclui registro de avaliacao de fornecedores.
 
 @obs Projeto ELO alterado pela FIEG
 
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
 @return Lógico, Fixo Verdadeiro.
 
+@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
+/*/================================================================================================================================/*/
+
 Static Function C188AFGrava(cAlias, nRecno, nOpc)
 
 	Local lRet 		:= .T.
@@ -616,8 +618,13 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 	Local lFinal	:= .F.
 	Local cStatus   := ""
 	Local _cEMail 	:= ""
-	Local _cBody  	:= ""
 	Local lSegue    := .T.
+	Local _cBody  := ""
+	Local cAccon  := SuperGetMv("MV_RELACNT")
+	Local cPassw  := SuperGetMv("MV_RELAPSW")
+	Local cServer := SuperGetMv("MV_RELSERV")
+	Local cFrom	  := SuperGetMv("MV_RELFROM")
+
 	Private cNomeUser := Alltrim(UsrRetName(__cUserID))
 
 	//--< Log das Personalizações >-----------------------------
@@ -769,40 +776,43 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 
 				//Envia email ao comprador
 				_cEMail := Alltrim(UsrRetMail( M->DBI_CODCOM ) )
-				_cBody  := "Prezado(a) Comprador(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				_cBody  := "Prezado(a) Comprador(a),"+CRLF+CRLF
 				_cBody  += "Informamos que o solicitante finalizou sua etapa do processo de avaliação de fornecedor "
-				_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-				_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-				_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
-				_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
-				ACSendMail( ,,,,_cEMail,"Conclusão de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+				_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF+CRLF
+				_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
+				_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
+				_cBody  += CRLF+CRLF
+				//ACSendMail( ,,,,_cEMail,"Conclusão de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+				TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Conclusão de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
 
 			Else
 				If lFinal .And. cStatus = "4" .And. M->DBI_ORIGEM <> "1" .And. nOpc <> 8
 
 					//Envia email ao SUPERVISOR
 					_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) )
-					_cBody  := "Prezado(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+					_cBody  := "Prezado(a),"+CRLF+CRLF
 					_cBody  += "Informamos que o processo de avaliação de fornecedor "
-					_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)
+					_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF
 					_cBody  += "foi finalizado."
-					_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-					_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
-					_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
-					ACSendMail( ,,,,_cEMail,"Conclusão do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+					_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
+					_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
+					_cBody  += CRLF+CRLF
+					//ACSendMail( ,,,,_cEMail,"Conclusão do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+					TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Conclusão do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
 				Else
 					If lFinal .And. nOpc == 8
 
 						//Envia email ao SUPERVISOR
 						_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) )
-						_cBody  := "Prezado(a)"+Alltrim(UsrRetName( SuperGetMV("MV_XAVALIA")))+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+						_cBody  := "Prezado(a)"+Alltrim(UsrRetName( SuperGetMV("MV_XAVALIA")))+CRLF+CRLF
 						_cBody  += "Informamos que o processo de avaliação de fornecedor  "
-						_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)
-						_cBody  += "que encontrava-se Finalizado, foi ESTORNADO pelo usuario "+cNomeUser+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-						_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-						_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
-						_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
-						ACSendMail( ,,,,_cEMail,"Estorno do Processo de Avaliação de Fornecedor já Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+						_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF
+						_cBody  += "que encontrava-se Finalizado, foi ESTORNADO pelo usuario "+cNomeUser+CRLF+CRLF
+						_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
+						_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
+						_cBody  += CRLF+CRLF
+						//ACSendMail( ,,,,_cEMail,"Estorno do Processo de Avaliação de Fornecedor já Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+						TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Estorno do Processo de Avaliação de Fornecedor já Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
 					EndIf
 				EndIf
 			EndIf
@@ -1058,21 +1068,25 @@ Rotina para inclusao automatica de avaliacoes.
 
 @obs Projeto ELO alterado pela FIEG
 
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
 @return Lógico, Retorna Falso quando: Se houver produtos criticos, se ja existe avaliacao para o dcto, caso docto nao esteja vinculado a S.C.
 
+@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
 User Function CA188IncA(aDados)
 
-	Local aArea 	:= GetArea()
-	Local lRet		:= .T.
-	Local nX		:= 0
-	Local lCrit 	:= .F.
-	Local _cEMail 	:= ""
-	Local _cBody  	:= ""
+	Local aArea   := GetArea()
+	Local lRet	  := .T.
+	Local nX	  := 0
+	Local lCrit   := .F.
+	Local _cEMail := ""
+	Local _cBody  := ""
+	Local cAccon  := SuperGetMv("MV_RELACNT")
+	Local cPassw  := SuperGetMv("MV_RELAPSW")
+	Local cServer := SuperGetMv("MV_RELSERV")
+	Local cFrom	  := SuperGetMv("MV_RELFROM")
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
@@ -1143,12 +1157,13 @@ User Function CA188IncA(aDados)
 
 		//Envia email ao solicitante
 		_cEMail := Alltrim(UsrRetMail( M->DBI_CODSOL ) )
-		_cBody  := "Prezado(a) Solicitante(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-		_cBody  += "Informamos que foi aberto o processo de avaliação de fornecedor referente a Nota Fiscal de Entrada Nr. "+aDados[1]+"/"+aDados[2]+"."+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-		_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-		_cBody  += "Fornecedor:"+aDados[3]+"\"+aDados[4]+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-		_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)+Chr(13)+Chr(10)
-		ACSendMail( ,,,,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
+		_cBody  := "Prezado(a) Solicitante(a),"+CRLF+CRLF
+		_cBody  += "Informamos que foi aberto o processo de avaliação de fornecedor referente a Nota Fiscal de Entrada Nr. "+aDados[1]+"/"+aDados[2]+"."+CRLF+CRLF
+		_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
+		_cBody  += "Fornecedor:"+aDados[3]+"\"+aDados[4]+CRLF+CRLF
+		_cBody  += CRLF+CRLF+CRLF
+		//ACSendMail( ,,,,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
+		TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
 
 		Aviso("Avaliação de Fornecedores", " Foi gerado registro de avaliação de fornecedor para esta nota fiscal. ",{"Ok"})
 

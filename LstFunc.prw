@@ -2,8 +2,7 @@
 
 user function LstFunc()
 
-
-	Local cMascara := '*'//'pco???lan'
+	Local cMascara := 'CNTA120'
 	Local aTipo	   := {}
 	Local aArquivo := {}
 	Local aLinha   := {}
@@ -18,5 +17,9 @@ user function LstFunc()
 		aAdd( aRet, { aFuncao[ nX ], aTipo[ nX ], aArquivo[ nX ], aLinha[ nX ], aData[ nX ] } )
 
 	Next nX
+
+	AutoGrLog( VarInfo( '', aRet,, .F., .F. ) )
+
+	MostraErro()
 
 return aRet

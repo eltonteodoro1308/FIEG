@@ -13,9 +13,10 @@ Funcao para Liberar a Solicitação de Contingencia.
 
 @obs Projeto ELO
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
-
 @return Nil, Função sem retorno.
+
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -26,6 +27,11 @@ Local _cNumCt   := ALI->ALI_CDCNTG
 Local _aResult  := {}
 Local _aAreaAtu := GetArea()
 Local _aAreaALI := ALI->(GetArea())
+Local _cBody   := ""
+Local cAccon   := SuperGetMv("MV_RELACNT")
+Local cPassw   := SuperGetMv("MV_RELAPSW")
+Local cServer  := SuperGetMv("MV_RELSERV")
+Local cFrom	   := SuperGetMv("MV_RELFROM")
 
 //--< Log das Personalizações >-----------------------------
 U_LogCustom()
@@ -53,7 +59,8 @@ If Len(_aResult) == 0 										// liberado
 	_cBody := "Prezado  " +ALI->ALI_NOMSOL + CRLF + CRLF
 	_cBody += "Sua contigência Nr. " + ALI->ALI_CDCNTG + " foi aprovada." + CRLF + CRLF
 	_cBody += "Data da Aprovação : " + Dtoc(dDataBase)+"  -  Hora : " + Time() + CRLF + CRLF
-	ACSendMail( ,,,,_cMail,"Contig. " + ALI->ALI_CDCNTG+" (APROVADA)",_cBody)
+	//ACSendMail( ,,,,_cMail,"Contig. " + ALI->ALI_CDCNTG+" (APROVADA)",_cBody)
+	TKSendMail(cAccon,cPassw,cServer,cFrom,_cMail,"Contig. " + ALI->ALI_CDCNTG+" (APROVADA)",_cBody)
 	
 	dbSelectArea("ALJ")
 	ALJ->(dbSetOrder(1))

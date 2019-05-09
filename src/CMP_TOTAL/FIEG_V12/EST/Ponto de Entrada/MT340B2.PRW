@@ -12,48 +12,62 @@ Ponto de entrada para atualizar status do inventário para 3 após geração do ajus
 @obs Projeto ELO
 
 @history 20/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/05/2019, kley@TOTVS.com.br       , Inclusão de query para pesquisa do registro da SB7; antes fazia referência a um ALIAS padrão que foi descontinuado na V12.
 /*/
 /*/================================================================================================================================/*/
 
 User Function MT340B2
 
-	//+---------------------------------------------------------------------+
-	//| Declaracao de Variaveis                                             |
-	//+---------------------------------------------------------------------+
-	Local aArea := GetArea()
+//--< Declaracao de Variaveis >-----------------------------
+Local aArea 	:= GetArea()
+Local cAliasSQL	:= GetNextAlias()							// "SB7SQL"
+Local cQuery	:= ""
+Local cOrigem	:= "SIESTA01"
 
-	//--< Log das Personalizações >-----------------------------
-	U_LogCustom()
+//--< Log das Personalizações >-----------------------------
+U_LogCustom()
 
-	//--< Processamento da Rotina >-----------------------------
+//--< Processamento da Rotina >-----------------------------
+cQuery := "select SB7.B7_COD, SB7.B7_LOCAL, SB7.B7_DOC"
+cQuery +=  " from "+RetSqlName("SB7")+" SB7"
+cQuery += " inner join "+RetSqlName("SB1")+" SB1"
+cQuery +=    " on SB1.B1_FILIAL = '"+xFilial("SB1")+"'"
+cQuery +=   " and SB7.B7_FILIAL = '"+xFilial("SB7")+"'" 	// Junta a filial que está no relacionamento para melhora de desempenho do select
+cQuery +=   " and SB1.B1_COD    = SB7.B7_COD"
+cQuery +=   " and SB1.B1_GRUPO >= '"+mv_par09+"' and SB1.B1_GRUPO <= '"+mv_par10+"'"
+cQuery +=   " and SB1.D_E_L_E_T_= ' '"
+cQuery += " where SB7.B7_FILIAL = '"+xFilial("SB7")+"'"
+cQuery +=   " and SB7.B7_DATA   = '"+DTOS(mv_par01)+"'"
+cQuery +=   " and SB7.B7_COD   >= '"+mv_par05+"' and SB7.B7_COD   <= '"+mv_par06+"'"
+cQuery +=   " and SB7.B7_LOCAL >= '"+mv_par07+"' and SB7.B7_LOCAL <= '"+mv_par08+"'"
+cQuery +=   " and SB7.B7_DOC   >= '"+mv_par11+"' and SB7.B7_DOC   <= '"+mv_par12+"'"
+cQuery +=   " and SB7.D_E_L_E_T_= ' '"
+cQuery +=   " and SB7.B7_XORIGEM = '" + cOrigem + "'"
+cQuery := ChangeQuery(cQuery)
+dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSQL,.F.,.T.)
 
-	SB7SQL->(DBGOTOP())  //Incluído por Ana
-	dbSelectArea("SB7")
-	SB7->(dbSetOrder(1))
-	//MsSeek(xFilial("SB7")+dtos(SB7SQL->B7_DATA)+SB7SQL->B7_COD+SB7SQL->B7_LOCAL+SB7SQL->B7_LOCALIZ+SB7SQL->B7_NUMSERI+SB7SQL->B7_LOTECTL+SB7SQL->B7_NUMLOTE)
-	SB7->(MsSeek(xFilial("SB7")+dtos(SB7SQL->B7_DATA)))
+(cAliasSQL)->(DbGoTop())
 
-	While  SB7->( ! Eof() ) .AND. (SB7->B7_FILIAL+Dtos(SB7->B7_DATA))== ;//+SB7->B7_COD+SB7->B7_LOCAL+SB7->B7_LOCALIZ+SB7->B7_NUMSERI+SB7->B7_LOTECTL+SB7->B7_NUMLOTE)== ;
-	(xFilial("SB7")+dtos(SB7SQL->B7_DATA))//+SB7SQL->B7_COD+SB7SQL->B7_LOCAL+SB7SQL->B7_LOCALIZ+SB7SQL->B7_NUMSERI+SB7SQL->B7_LOTECTL+SB7SQL->B7_NUMLOTE)
+While !(cAliasSQL)->(Eof())
 
-		If SB7->B7_XORIGEM $ 'SIESTA01' .and. SB7->B7_COD >= MV_PAR05 .AND. SB7->B7_COD <= MV_PAR06 .And. ;
-		SB7->B7_LOCAL >= MV_PAR07 .AND. SB7->B7_LOCAL <= MV_PAR08 .And. ;
-		SB7->B7_DOC >= MV_PAR11 .AND. SB7->B7_DOC <= MV_PAR12
-			dbSelectArea("SZK")
-			SZK->(dbSetORder(1))
-			If SZK->(dbSeek(xFilial("SZK")+SB7->B7_DOC))
-				If SZK->ZK_STATUS <> '3'
-					RecLock("SZK",.F.)
-					SZK->ZK_STATUS := "3"
-					SZK->(MsUnLock())
-				Endif
-			Endif
+	dbSelectArea("SZK")
+	dbSetOrder(1)
+	If dbSeek(xFilial("SZK")+(cAliasSQL)->B7_DOC)
+		If SZK->ZK_STATUS <> '3'
+			RecLock("SZK",.F.)
+				SZK->ZK_STATUS := "3"
+			SZK->(MsUnLock())
 		Endif
+	Endif
 
-		dbSelectArea("SB7")
-		SB7->(dbSkip())
-	Enddo
+	(cAliasSQL)->(dbSkip())
 
-	RestArea(aArea)
+Enddo
+
+If Select(cAliasSQL) > 0
+	(cAliasSQL)->(dbCloseArea())
+EndIf
+
+RestArea(aArea)      
+
 Return

@@ -433,7 +433,7 @@ Static Function fEstSC()
 		// se ja foi utilizado em algum processo compras, nao pode ser estornado
 		IF ! fVerUso(_cDoc)
 			ApMsgInfo("Esta solicitação já foi utilizada!","Aviso")
-			lSegue := .T.
+			lSegue := .F.
 		ENDIF
 
 		If lSegue

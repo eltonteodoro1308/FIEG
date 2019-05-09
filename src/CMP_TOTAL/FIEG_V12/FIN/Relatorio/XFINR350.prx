@@ -853,7 +853,7 @@ Static Function ReportPrint(oReport)
 								aValor[I_JUROS]   += (cAliasSE2)->E2_SDACRES
 
 								nTotAbat:=SumAbatPag(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_FORNECE,mv_par10,"V",,SE2->E2_LOJA,If(mv_par18==1,"1","2"),mv_par05,mv_par06,;
-								If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,0))
+								If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase)/*,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,0)*/)
 
 								If !((cAliasSE2)->E2_TIPO $ MVPAGANT+"/"+MV_CPNEG) .And. !( MV_PAR14 == 2 .And. nSaldo == 0 ) // nao deve olhar abatimento pois e zerado o saldo na liquidacao final do titulo
 									nSaldo -= nTotAbat
@@ -1607,7 +1607,7 @@ Static Function FA350Imp(lEnd,wnRel,cString)
 						Endif
 
 						nTotAbat:=SumAbatPag(SE2->E2_PREFIXO,SE2->E2_NUM,SE2->E2_PARCELA,SE2->E2_FORNECE,mv_par10,"V",,SE2->E2_LOJA,If(mv_par18==1,"1","2"),mv_par05,mv_par06,;
-						If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,1,))
+						If(mv_par17 == 1,If(mv_par18 == 1,SE2->E2_EMISSAO,SE2->E2_EMIS1),dDataBase)/*,If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,SE2->E2_TXMOEDA,),If(mv_par17 == 1 .and. SE2->E2_TXMOEDA>0,1,)*/)
 
 						aValor[I_JUROS] += SE2->E2_SDACRES
 						aValor[I_DESCONTO] += SE2->E2_SDDECRE

@@ -71,10 +71,10 @@ Função para o processo para atualizacao de bens desmembrados.
 
 @obs Desenvolvimento FIEG
 
-@history 14/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
 @return Lógico, Retorno da Função.
 
+@history 14/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/05/2019, elton.alves@TOTVS.com.br, Seek na tabela SN1 comentado pois na versão 12.1.23 a mesma já fica posicionada.
 /*/
 /*/================================================================================================================================/*/
 Static Function f_ClassAll( alParam )
@@ -115,10 +115,10 @@ Static Function f_ClassAll( alParam )
 
 	dbSelectArea("SN1")
 	alAreaSN1 := SN1->( GetArea() )
-	SN1->(dbSetOrder(1))
-	IF SN1->(dbSeek(M->N1_FILIAL + M->N1_CBASE + M->N1_ITEM))
+	//SN1->(dbSetOrder(1))
+	//IF SN1->(dbSeek(M->N1_FILIAL + M->N1_CBASE + M->N1_ITEM))
 		nlRecnoAtu := SN1->(Recno())
-	ENDIF
+	//ENDIF
 
 	dbSelectArea("SN3")
 	alAreaSN3 := SN3->(GetArea())

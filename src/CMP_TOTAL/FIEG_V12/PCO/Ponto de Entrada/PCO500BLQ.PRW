@@ -11,9 +11,10 @@ Funcao para Cancelar a Solicitação de Contingencia.
 
 @obs Projeto ELO
 
-@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
-
 @return Nil, Função sem retorno.
+
+@history 21/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -23,6 +24,11 @@ Local _cNumCt   := ALJ->ALJ_CDCNTG
 Local _aResult  := {}
 Local _aAreaAtu := GetArea()
 Local _aAreaALI := ALI->(GetArea())
+Local _cBody    := ""
+Local cAccon    := SuperGetMv("MV_RELACNT")
+Local cPassw    := SuperGetMv("MV_RELAPSW")
+Local cServer   := SuperGetMv("MV_RELSERV")
+Local cFrom	    := SuperGetMv("MV_RELFROM")
 
 //--< Log das Personalizações >-----------------------------
 U_LogCustom()
@@ -52,7 +58,8 @@ _cBody += "Sua contigência Nr. " + ALI->ALI_CDCNTG + " foi reprovada." + CRLF + 
 _cBody += "Data da Reprovação : " + Dtoc(dDataBase) + "  -  Hora :" + Time() + CRLF + CRLF
 _cBody += "Motivo:" + CRLF
 _cBody += _cMot
-ACSendMail( ,,,,_cMail,"Contig. "+ALI->ALI_CDCNTG+" (REPROVADA)",_cBody)
+//ACSendMail( ,,,,_cMail,"Contig. "+ALI->ALI_CDCNTG+" (REPROVADA)",_cBody)
+TKSendMail(cAccon,cPassw,cServer,cFrom,_cMail,"Contig. "+ALI->ALI_CDCNTG+" (REPROVADA)",_cBody)
 
 //--< Estorno das contingencias >---------------------------
 dbSelectArea("ALJ")

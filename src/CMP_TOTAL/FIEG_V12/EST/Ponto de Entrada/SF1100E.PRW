@@ -17,13 +17,15 @@ Ponto de Entrada após exclusao de Documento de Entrada.
 /*/================================================================================================================================/*/
 
 User Function SF1100E()
-	Local aArea := GetArea()
+	Local aArea     := GetArea()
 	Local _cAreaSD1 := SD1->(GetArea())
 	Local _cAreaSF1 := SF1->(GetArea())
-	Local nX	  := 0
-	Local cNumSC  := ""
-	Local cItemSC := ""
-	Local lPrjCni    := FindFunction("PRJCNI") .Or. GetRpoRelease("R6")
+	Local nX	    := 0
+	Local cNumSC    := ""
+	Local cItemSC   := ""
+	Local lPrjCni   := FindFunction("PRJCNI") .Or. GetRpoRelease("R6")
+	Local nPos01    := GDFieldPos( 'D1_PEDIDO',  aHeader )
+	Local nPos02    := GDFieldPos( 'D1_ITEMPC', aHeader  )
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
@@ -33,9 +35,12 @@ User Function SF1100E()
 	If lPrjCni
 		//Exclui Log do Processo -> Inclusao Pre Nota
 		For nX := 1 to Len(aCols)
+			//C7_FILIAL+C7_NUM+C7_ITEM
+			//cNumSC  := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][27]+aCols[nX][28], "C7_NUMSC"  )
+			//cItemSC := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][27]+aCols[nX][28], "C7_ITEMSC" )
 
-			cNumSC  := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][27]+aCols[nX][28], "C7_NUMSC"  )
-			cItemSC := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][27]+aCols[nX][28], "C7_ITEMSC" )
+			cNumSC  := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][nPos01]+aCols[nX][nPos02], "C7_NUMSC"  )
+			cItemSC := Posicione( "SC7", 1, xFilial("SC7")+aCols[nX][nPos01]+aCols[nX][nPos02], "C7_ITEMSC" )
 
 			//COMA080(cNumSC,cItemSC,"COI_PNCHAV","COI_UCLS", .T.,/*cUser*/,"COI_PNCHAV")
 			//COMA080(cNumSC,cItemSC,"COI_DTHLPN","COI_ULPN", .T.,/*cUser*/,"COI_PNCHAV")

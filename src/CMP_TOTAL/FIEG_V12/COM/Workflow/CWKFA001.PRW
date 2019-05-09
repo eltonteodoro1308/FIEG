@@ -298,7 +298,7 @@ Retorno da Solicitação.
 @obs Projeto ELO alterado pela FIEG
 
 @history 08/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -311,6 +311,11 @@ User Function _fWFRetSC(oProcess)
 	Local aAreaSCR  := SCR->(GetArea())
 	Local cWFEMTST  := AllTrim(SuperGetMV("SI_WFEMTST",.F.))
 	Local lSegue    := .T.
+	Local _cBody    := ""
+	Local cAccon    := SuperGetMv("MV_RELACNT")
+	Local cPassw    := SuperGetMv("MV_RELAPSW")
+	Local cServer   := SuperGetMv("MV_RELSERV")
+	Local cFrom	    := SuperGetMv("MV_RELFROM")
 
 	//--< Log das Personalizações >-----------------------------
 	U_LogCustom()
@@ -419,7 +424,9 @@ User Function _fWFRetSC(oProcess)
 						_cEMail := cWFEMTST
 					ENDIF
 
-					ACSendMail(,,,,_cEMail,"Solicitacao Reprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+					//ACSendMail(,,,,_cEMail,"Solicitacao Reprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+					TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Solicitacao Reprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+
 				ENDIF
 
 			End If
@@ -454,7 +461,7 @@ Verifica liberação da solicitação.
 @obs Projeto ELO alterado pela FIEG
 
 @history 08/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
-
+@history 08/05/2019, Kley@TOTVS.com.br, Troca da função ACSendMail() por TkSendMail().
 /*/
 /*/================================================================================================================================/*/
 
@@ -470,6 +477,11 @@ Static Function _fVerifSC(_cFil,_cSolicit,_cObs,_cNiv,_cAprov)
 	Local _lGeraBlq := .f.
 	Local aAreaSC1  := SC1->(GetArea())
 	Local cWFEMTST  := AllTrim(SuperGetMV("SI_WFEMTST",.F.))
+	Local _cBody  := ""
+	Local cAccon  := SuperGetMv("MV_RELACNT")
+	Local cPassw  := SuperGetMv("MV_RELAPSW")
+	Local cServer := SuperGetMv("MV_RELSERV")
+	Local cFrom	  := SuperGetMv("MV_RELFROM")
 
 	Default _cAprov := "" //Caio.Santos - FSW - 10/02/2012 - Correcao na gravacao usuario workflow
 
@@ -507,7 +519,8 @@ Static Function _fVerifSC(_cFil,_cSolicit,_cObs,_cNiv,_cAprov)
 				_cEMail := cWFEMTST
 			ENDIF
 
-			ACSendMail(,,,,_cEMail,"Solicitacao Bloqueada Por Orcamento - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+			//ACSendMail(,,,,_cEMail,"Solicitacao Bloqueada Por Orcamento - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+			TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Solicitacao Bloqueada Por Orcamento - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
 		ELSE
 			_cEMail := Alltrim(UsrRetMail(SC1->C1_USER))
 			_cBody  := "Prezado(a) " + Alltrim(UsrFullName(SC1->C1_USER)) + Chr(13)+Chr(10)+Chr(13)+Chr(10)
@@ -519,7 +532,8 @@ Static Function _fVerifSC(_cFil,_cSolicit,_cObs,_cNiv,_cAprov)
 				_cEMail := cWFEMTST
 			ENDIF
 
-			ACSendMail(,,,,_cEMail,"Solicitacao Aprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+			//ACSendMail(,,,,_cEMail,"Solicitacao Aprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
+			TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Solicitacao Aprovada - " + SC1->C1_FILIAL + " / " + SC1->C1_NUM,_cBody)
 		ENDIF
 
 		While SC1->(!Eof()) .and. SC1->(C1_FILIAL+C1_NUM) == _cFil+_cSolicit

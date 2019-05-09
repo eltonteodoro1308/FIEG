@@ -12,6 +12,7 @@ Validacao para quando o usuario digitar o contrato no campo contrato de preco da
 @obs Projeto ELO alterado pela FIEG
 
 @history 08/03/2019, elton.alves@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 08/05/2019, eduardo.dias@TOTVS.com.br, Correcao para realizar o Encerramento da Medicao - Protheus 12.1.23.
 
 @return Lógico, Verdadeiro ou Falso para validação do campo contrato.
 
@@ -667,8 +668,8 @@ User Function CNIGrvMed(aCab,aItens)
 
 	//-- Encerra a medicao
 	If !lMsErroAuto
-		//MsExecAuto({|a,b,c|,CNTA120(a,b,c)},aCab,aItens,6)
-		MsExecAuto({|a,b,c,d|,CNTA120(a,b,c,d)},aCab,{},6,.F.)
+		MsExecAuto({|a,b,c|,CNTA120(a,b,c)},aCab,aItens,6) 
+		//MsExecAuto({|a,b,c,d|,CNTA120(a,b,c,d)},aCab,aItens,6,.F.)
 		If lMsErroAuto
 			ConOut("ERRO NO ENCERRAMENTO DA MEDIÇÃO!")
 			MsgAlert("Não foi possivel encerrar a medição.")
