@@ -30,6 +30,9 @@ U_LogCustom()
 //--< Gravacao da justificativa de compra da SC >-----------
 U_SICOMA30()
 
+//--< Gravação do mútuo nas SC's. >-------
+U_SICOMA55()
+
 //--< Gravacao do campo C1_XCODCOMP para C1_CODCOMP >-------
 //U_SICOMA16()												// Remoção da chamada à função, 08/04/2019, Kley@TOTVS.com.br
 

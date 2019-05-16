@@ -443,7 +443,7 @@ Static Function fEstSC()
 			IF SC1->(DbSeek(xFilial("SC1")+_cDoc))
 
 				_nTotSC := fTotSC(_cDoc)
-				MaAlcDoc({SC1->C1_NUM,"SC",_nTotSC,,,,,1,1,},SC1->C1_EMISSAO,3)
+				MaAlcDoc({SC1->C1_NUM,"SC",_nTotSC,,,,,1,1,},SC1->C1_EMISSAO,5)
 				SC1->(DbSetOrder(1))
 				IF SC1->(dbSeek(XFilial("SC1")+_cDoc)) .and. !Empty(SC1->C1_XGRPAPR)
 					MaAlcDoc({_cDoc,"SC",_nTotSC,,,SC1->C1_XGRPAPR,,1,1,SC1->C1_EMISSAO},,1)

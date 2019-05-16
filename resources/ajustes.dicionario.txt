@@ -1,0 +1,166 @@
+============================
+
+N1_CODBAR
+
+X3_RELACAO = FwFldGet('N1_CBASE')+FwFldGet('N1_ITEM')
+
+============================
+
+N3_XTPBEM
+
+X3_OBRIGAT = ''
+X3_VLDUSER = 'Pertence("1234").and. Iif( !IsBlind() , NaoVazio() , .T. )'
+
+============================
+
+N3_XCTAMUT
+
+X3_RESERV  = 'þÀ'
+X3_OBRIGAT = ''
+X3_VLDUSER = 'ExistCpo("CT1").and. Iif( !IsBlind() , NaoVazio() , .T. )'
+
+============================
+
+N1_LOCAL
+
+X3_OBRIGAT = ''
+X3_VLDUSER = 'U_DTATFV01().AND.POSICIONE("SNL",1,XFILIAL("SNL")+M->N1_LOCAL,"NL_BLOQ")!="1".and. Iif( !IsBlind() , NaoVazio() , .T. )'
+
+============================
+
+REDMINE = 1999
+
+Alterar o compartilhamento da tabela WF7 para Compartilhado por Empresa:
+   > X2_MODO: C
+   > X2_MODOUN: E
+   > X2_MODOEMP: E
+   
+=============================
+
+RedMine -> 2118
+
+ C1_ITEMCTA
+ 
+ X3_F3 = 'XCTA'
+ 
+=======================
+ 
+RedMine -> 2105
+
+Cadastrar gatilho
+
+X7_CAMPO = 'Y1_USER'
+X7_SEQUENC = '002'
+X7_REGRA = 'M->Y1_EMAIL := UsrRetMail(M->Y1_USER)'
+X7_CDOMIN = 'Y1_EMAIL'
+X7_TIPO = 'P'
+X7_SEEK = 'N'
+X7_ORDEM = 0
+X7_PROPRI = 'U'
+
+no campo Y1_USER
+
+X3_WHEN = INCLUI
+
+=======================
+
+RedMine -> 2165
+
+AK_COD 
+
+X3_RELACAO = ''
+
+X3_WHEN = INCLUIR
+
+=========================
+
+REDMINE = 2214
+
+Foram alteradas as perguntas abaixo (Do Item Contábil?/ Até o Item Contábil?).
+
+Alterado campo X1_TAMANHO de "9" para "20" posições, de acordo com o tamanho do campo CTD_ITEM. Ambiente P12_DESENV
+
+Grupo de
+Pergunta
+AFA171 - Ordens: 12 e 13
+AFA230 - Ordens: 12 e 13
+AFR072 - Ordens: 16 e 17
+AFR073 - Ordens: 16 e 17
+AFR074 - Ordens: 16 e 17
+AFR090 - Ordens: 12 e 13
+ATR270 - Ordens: 01 e 02
+ATR280 - Ordens: 03 e 04
+CTB210 - Ordens: 24 e 25
+CTB211 - Ordens: 18, 24 e 25
+CTBPGL030 - Ordens: 07 e 08
+CTBPGL060 - Ordens: 07 e 08
+CTBR357 - Ordem: 7
+CTC020 - Ordens: 10 e 11
+CTC400 - Ordens: 10 e 11
+CTC440 - Ordens: 09 e 10
+CTC490 - Ordens: 12 e 13
+CTR100 - Ordens: 05 e 06
+CTR120 - Ordens: 03 e 04
+CTR130 - Ordens: 05 e 06
+CTR140 - Ordens: 05 e 06
+CTR185 - Ordens: 07 e 08
+CTR195 - Ordens: 07 e 08
+CTR220 - Ordens: 03 e 04
+CTR230 - Ordens: 05 e 06
+CTR270 - Ordens: 05 e 06
+CTR275 - Ordens: 07 e 08
+CTR290 - Ordens: 03 e 04
+CTR295 - Ordens: 07 e 08
+CTR300 - Ordens: 03 e 04
+CTR310 - Ordens: 05 e 06
+CTR330 - Ordens: 03 e 04
+CTR400 - Ordens: 16 e 17
+CTR410 - Ordens: 17 e 18
+CTR440 - Ordens: 15 e 16
+CTR480 - Ordens: 01 e 02
+CTR490 - Ordens: 18 e 09
+CTR550 - Ordens: 16 e 17
+FIN195 - Ordens: 18 e 19
+MNA650 - Ordem: 15
+PCOR200 - Ordens: 13 e 14
+
+========================================
+
+REDMINE = 2176
+
+Incluso o gatilho para que ao confirmar a S.A, o sistema grave o C.C informado no cabeçalho no campo CP_CC dos itens. 
+X7_CAMPO = CP_PRODUTO
+X7_SEQUENC = 003
+X7_REGRA = U_cCodGRUP(_c105CCusto) 
+X7_CDOMIN = CP_XAPROV 
+X7_TIPO = P
+X7_SEEK = N
+X7_PROPRI = U
+
+==========================================
+
+REDMINE = 2215
+
+Campo B1_LOCPAD
+
+X3_RELACAO = "'01'"
+X3_VISUAL = 'V'
+
+============================================
+
+REDMINE = 2184
+
+Campo = CP_PRODUTO
+
+X3_F3 = SB1SA
+
+============================================
+
+REDMINE = 2234
+
+Criar Gatilho 
+
+X7_CAMPO = CP_QUANT 
+X7_SEQUENC = o proximo disponivel.
+X7_REGRA = _c105CCusto 
+X7_CDOMIN = CP_CC

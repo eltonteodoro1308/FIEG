@@ -105,7 +105,7 @@ Static Function ReportDef()
 	//|ExpC5 : Descricao                                                       |
 	//|                                                                        |
 	//+------------------------------------------------------------------------+
-	oReport := TReport():New("FINR350","Movimento Financeiro Diario","FIN350", {|oReport| ReportPrint(oReport)},"Este programa ir  emitir o resumo da Movimentação"+" "+"Bancaria de um determinado dia.") //"Movimento Financeiro Diario"##"Este programa ir  emitir o resumo da Movimenta‡„o"##"Bancaria de um determinado dia."
+	oReport := TReport():New("FINR350","Pos. Fornecedores Fieg","FIN350", {|oReport| ReportPrint(oReport)},"Este programa ir  emitir o resumo da Movimentação"+" "+"Bancaria de um determinado dia.") //"Pos. Fornecedores Fieg"##"Este programa ir  emitir o resumo da Movimenta‡„o"##"Bancaria de um determinado dia."
 	oReport:SetTotalInLine(.F.)
 	/*
 	GESTAO - inicio */
@@ -1048,7 +1048,7 @@ Static Function ReportPrint(oReport)
 						oTotaisFilial:Cell("Multa"   ):SetBlock({||nTotFil5 })  	//"Multa"
 						oTotaisFilial:Cell("Corr. Monet"   ):SetBlock({||nTotFil6 })  	//"Corr. Monet"
 						oTotaisFilial:Cell("Valor Pago"   ):SetBlock({||nTotFil7 })  	//"Valor Pago"
-						oTotaisFilial:Cell("Pagto.Antecipado"   ):SetBlock({||nTotFil8 })  	//"Pagto.Antecip"
+						oTotaisFilial:Cell("Pagto.Antecip"   ):SetBlock({||nTotFil8 })  	//"Pagto.Antecip"
 						oTotaisFilial:Cell("Saldo Atual"   ):SetBlock({||nTotFil9 })  	//"Saldo Atual"
 
 						oTotaisFilial:Cell("Valor Original"	):SetPicture(Tm(nTotFil0,oTitsForn:Cell("Valor Original"	):nSize,nDecs))					//"Valor original"
@@ -1059,7 +1059,7 @@ Static Function ReportPrint(oReport)
 						oTotaisFilial:Cell("Multa"	):SetPicture(Tm(nTotFil5,oTitsForn:Cell("Multa"	):nSize,nDecs))					//"Multa"
 						oTotaisFilial:Cell("Corr. Monet"	):SetPicture(Tm(nTotFil6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))					//"Corr. Monet"
 						oTotaisFilial:Cell("Valor Pago"	):SetPicture(Tm(nTotFil7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))					//"Valor Pago"
-						oTotaisFilial:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotFil8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))					//"Pagto.Antecip"
+						oTotaisFilial:Cell("Pagto.Antecip"	):SetPicture(Tm(nTotFil8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))					//"Pagto.Antecip"
 						oTotaisFilial:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotFil9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))	//"SAldo atual"
 
 						oTotaisFilial:Init()
@@ -1090,7 +1090,7 @@ Static Function ReportPrint(oReport)
 									oTotaisEmp:Cell("Multa"   ):SetBlock({||nTotEmp5 })  	//"Multa"
 									oTotaisEmp:Cell("Corr. Monet"   ):SetBlock({||nTotEmp6 })  	//"Corr. Monet"
 									oTotaisEmp:Cell("Valor Pago"   ):SetBlock({||nTotEmp7 })  	//"Valor Pago"
-									oTotaisEmp:Cell("Pagto.Antecipado"   ):SetBlock({||nTotEmp8 })  	//"Pagto.Antecip"
+									oTotaisEmp:Cell("Pagto.Antecip"   ):SetBlock({||nTotEmp8 })  	//"Pagto.Antecip"
 									oTotaisEmp:Cell("Saldo Atual"   ):SetBlock({||nTotEmp9 })  	//"Saldo Atual"
 
 									oTotaisEmp:Cell("Valor Original"	):SetPicture(Tm(nTotEmp0,oTitsForn:Cell("Valor Original"	):nSize,nDecs))					//"Valor original"
@@ -1101,7 +1101,7 @@ Static Function ReportPrint(oReport)
 									oTotaisEmp:Cell("Multa"	):SetPicture(Tm(nTotEmp5,oTitsForn:Cell("Multa"	):nSize,nDecs))					//"Multa"
 									oTotaisEmp:Cell("Corr. Monet"	):SetPicture(Tm(nTotEmp6,oTitsForn:Cell("Corr. Monet"	):nSize,nDecs))					//"Corr. Monet"
 									oTotaisEmp:Cell("Valor Pago"	):SetPicture(Tm(nTotEmp7,oTitsForn:Cell("Valor Pago"	):nSize,nDecs))					//"Valor Pago"
-									oTotaisEmp:Cell("Pagto.Antecipado"	):SetPicture(Tm(nTotEmp8,oTitsForn:Cell("Pagto.Antecipado"	):nSize,nDecs))					//"Pagto.Antecip"
+									oTotaisEmp:Cell("Pagto.Antecip"	):SetPicture(Tm(nTotEmp8,oTitsForn:Cell("Pagto.Antecip"	):nSize,nDecs))					//"Pagto.Antecip"
 									oTotaisEmp:Cell("Saldo Atual"	):SetPicture(PictParent(Tm(nTotEmp9,oTitsForn:Cell("Saldo Atual"	):nSize,nDecs)))	//"SAldo atual"
 
 									oTotaisEmp:Init()

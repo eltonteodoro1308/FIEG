@@ -240,7 +240,7 @@ Static Function Itenstopo(oSize,oDlg)
 	cAtivoDe := u ) },oDlg,;
 	oSize:GetDimension("CABECALHO","XSIZE")/7,009,;
 	"@!",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,;
-	"SN1FIL(1)", cAtivoDe,,,,.T.,.F.,,)
+	"U_ZATFC001(1)", cAtivoDe,,,,.T.,.F.,,)
 
 	oTexto4:= TSay():New(oSize:GetDimension("CABECALHO","LININI") + 9,;
 	oSize:GetDimension("CABECALHO","XSIZE") /2.6 +;
@@ -254,7 +254,7 @@ Static Function Itenstopo(oSize,oDlg)
 	cAtivoAt := u ) },oDlg,;
 	oSize:GetDimension("CABECALHO","XSIZE")/7,;
 	009,"@!",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,;
-	"SN1FIL(2)",cAtivoAt,,,,.T.,.F.,,)
+	"U_ZATFC001(2)",cAtivoAt,,,,.T.,.F.,,)
 
 	oTexto5:= TSay():New(oSize:GetDimension("CABECALHO","LININI") + 9,;
 	oSize:GetDimension("CABECALHO","XSIZE") /1.4 + 10,;

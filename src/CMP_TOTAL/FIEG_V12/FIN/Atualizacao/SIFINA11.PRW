@@ -9,7 +9,7 @@ Rotina de tratamento de mutuo a pagar/receber.
 @since   09/04/2012
 @version MP 12.1.17
 @type	 function
-@obs 	 P11 - SISTEMA INDUSTRIA 
+@obs 	 P11 - SISTEMA INDUSTRIA
 /*/
 //-------------------------------------------------------------------
 
@@ -60,64 +60,64 @@ ELSE
 		MsgAlert("Não existe rateio cadastrado para este título.","Atenção")
 		Return()
 	EndIf
-	
+
 	Do Case
-		
+
 		Case _nOpc == 2 							// Alteração
-			
+
 			If _cStatus == "2"
 				MsgAlert("Rateio Finalizado.","Atenção")
 				Return()
 			EndIf
-			
+
 		Case _nOpc == 3 							// Exclusão
-			
+
 			If _cStatus == "2"
 				MsgAlert("Rateio Finalizado! Utilize opção de estorno.","Atenção")
 				Return()
 			ElseIf MsgYesNo("Confirma exclusão do Rateio do Mútuo "+_cMutuo+" ?","Rateio do Mútuo")
 				MsgRun("Excluindo regra de rateio. Aguarde...",cRotinaNom, {|| SIFIN11Del() } )
 			EndIf
-			
+
 			Return()
-			
+
 		Case _nOpc == 5 							// Efetivação
-			
+
 			If _cStatus == "2"
 				MsgAlert("Este rateio já foi efetivado.","Atenção")
 				Return()
 			Else
 				If !lMotExist
 					MsgStop("O Motivo de Baixa código " +cCodMotBx+ " não está cadastrado." +CRLF+CRLF+ ;
-							"Cadastre o Motivo de Baixa para prosseguir.","Atenção")			
+							"Cadastre o Motivo de Baixa para prosseguir.","Atenção")
 					Return()
 				ElseIf lMotBxMov
 					MsgStop("O Motivo de Baixa código " +cCodMotBx+ " não pode Movimentar Banco." +CRLF+CRLF+ ;
-							"Altere o campo 'Mov.Bancária' para Não no cadastro do Motivo de Baixa para prosseguir.","Atenção")			
+							"Altere o campo 'Mov.Bancária' para Não no cadastro do Motivo de Baixa para prosseguir.","Atenção")
 					Return()
 				ElseIf SIFIN11Par() .and. MsgYesNo("Confirma efetivação do Rateio do Mútuo "+_cMutuo+" ?","Rateio do Mútuo")
 					//MsgRun("Efetivando Rateio. Aguarde...",cRotinaNom, {|| SIFIN11Run() } )
 					FWMsgRun(, {|oSay| SIFIN11Run(oSay) }, "Efetivando o Rateio do Mútuo", "Rateio sendo efetivado. Por favor, aguarde." )
-				EndIf			 
+				EndIf
 			EndIf
-			
+
 			Return()
-			
+
 		Case _nOpc == 6 							// Estornar Efetivação
-			
+
 			IF _cStatus <> "2"
 				MsgAlert("Este rateio não foi efetivado.","Atenção")
 				Return()
 			ElseIf MsgYesNo("Confirma estornar do Rateio do Mútuo "+_cMutuo+" ?","Rateio do Mútuo")
 				//MsgRun("Estornado Rateio. Aguarde...",cRotinaNom, {|| SIFIN11Est() } )
 				FWMsgRun(, {|oSay| SIFIN11Est(oSay) }, "Estornando o Rateio sendo executado", "Por favor, aguarde o final do processamento" )
-				
+
 				EndIf
-			
+
 			Return()
-			
+
 	EndCase
-	
+
 EndIf
 
 SIFIN11Man(_nOpc)
@@ -165,10 +165,10 @@ Private _nTotal  := 0
 Private _nRateio := 0
 
 IF _cTpMutuo == "1" // contas a pagar
-	
+
 	// Carrega grupo de perguntas quando acessado via FINA750
 	pergunte("FIN050",.F.)
-	
+
 	IF SE2->E2_SALDO == 0
 		MsgAlert("Este título já foi totalmente baixado.","Atenção")
 		Return()
@@ -176,43 +176,43 @@ IF _cTpMutuo == "1" // contas a pagar
 	 //ANA
 	_nTipoRat := mv_par06 // 1 = Bruto; 2 = Liquido
 	_nInss    := SE2->E2_INSS
-	
+
 	SED->(dbSetOrder(1))
 	IF SED->(dbSeek(XFilial("SED")+SE2->E2_NATUREZ)) .and. SED->(FieldPos("ED_DEDINSS")) > 0
 		IF SED->ED_DEDINSS == "2"  //Nao desconta o INSS do principal
 			_nInss := 0
 		Endif
 	ENDIF
-	
+
 	SA2->(dbSetOrder(1))
 	SA2->(dbSeek(XFilial("SA2")+SE2->(E2_FORNECE+E2_LOJA)))
-	
+
 	//Controla o Pis Cofins e Csll na baixa
 	lPCCBaixa := SuperGetMv("MV_BX10925",.T.,"2") == "1"  .and. (!Empty( SE5->( FieldPos( "E5_VRETPIS" ) ) ) .And. !Empty( SE5->( FieldPos( "E5_VRETCOF" ) ) ) .And. ;
 	!Empty( SE5->( FieldPos( "E5_VRETCSL" ) ) ) .And. !Empty( SE5->( FieldPos( "E5_PRETPIS" ) ) ) .And. ;
 	!Empty( SE5->( FieldPos( "E5_PRETCOF" ) ) ) .And. !Empty( SE5->( FieldPos( "E5_PRETCSL" ) ) ) .And. ;
 	!Empty( SE2->( FieldPos( "E2_SEQBX"   ) ) ) .And. !Empty( SFQ->( FieldPos( "FQ_SEQDES"  ) ) ) )
-	
+
 	// Controla IRPF na Baixa
 	lIRPFBaixa := IIf( ! Empty( SA2->( FieldPos( "A2_CALCIRF" ) ) ), SA2->A2_CALCIRF == "2", .F.) .And. ;
 	!Empty( SE2->( FieldPos( "E2_VRETIRF" ) ) ) .And. !Empty( SE2->( FieldPos( "E2_PRETIRF" ) ) ) .And. ;
 	!Empty( SE5->( FieldPos( "E5_VRETIRF" ) ) ) .And. !Empty( SE5->( FieldPos( "E5_PRETIRF" ) ) )
-	
+
 	lCalcIssBx :=	!Empty( SE5->( FieldPos( "E5_VRETISS" ) ) ) .and. !Empty( SE2->( FieldPos( "E2_SEQBX"   ) ) ) .and. ;
 	!Empty( SE2->( FieldPos( "E2_TRETISS" ) ) ) .and. GetNewPar("MV_MRETISS","1") == "2"  //Retencao do ISS pela emissao (1) ou baixa (2)
-	
+
 	_nTotal   := Iif(_nTipoRat == 1,SE2->E2_VALOR+If(lIRPFBaixa,0,SE2->E2_IRRF)+If(!lCalcIssBx,SE2->E2_ISS,0)+_nInss+SE2->(E2_RETENC+E2_SEST)+Iif(lPccBaixa,0,SE2->(E2_PIS+E2_COFINS+E2_CSLL)),SE2->E2_VALOR)
-	
+
 ELSE
-	
+
 	// Carrega grupo de perguntas quando acessado via FINA750
 	pergunte("FIN040",.F.)
-	
+
 	IF SE1->E1_SALDO == 0
 		MsgAlert("Este título já foi totalmente baixado.","Atenção")
 		Return()
 	ENDIF
-	
+
 	_nTipoRat := mv_par04 // 1 = Bruto; 2 = Liquido
 	IF _nTipoRat == 1 .or. SE1->E1_TIPO $ MVABATIM // Bruto
 		_nTotal := SE1->E1_VALOR
@@ -271,46 +271,46 @@ aEval( aCols, {|Linha| _nRateio += Linha[GDFieldPos("ZX_VALOR")]  } )
 @ 008,065 MSGET oTotal 	VAR _nTotal Picture X3Picture(Iif(_cTpMutuo=="1","E2_VLCRUZ","E1_VLCRUZ")) Of oPanel READONLY SIZE 60,10 PIXEL
                                                                                                                                                      //Edu
 @ 010,150 SAY OemToAnsi("Total do Rateio: ") Of oPanel PIXEL	FONT oFnt
-@ 008,200 MSGET oRateio 	VAR Round(_nRateio,2) Picture X3Picture(Iif(_cTpMutuo=="1","E2_VLCRUZ","E1_VLCRUZ")) Of oPanel READONLY SIZE 60,10 PIXEL 
+@ 008,200 MSGET oRateio 	VAR Round(_nRateio,2) Picture X3Picture(Iif(_cTpMutuo=="1","E2_VLCRUZ","E1_VLCRUZ")) Of oPanel READONLY SIZE 60,10 PIXEL
 
 ACTIVATE MSDIALOG oDlg CENTERED ON INIT EnchoiceBar(oDlg,{|| Iif(oGet:TudoOk() .and. SIFIN11TOK(1,_nOpc),(nOpcA:=1,oDlg:End()),(nOpcA:=0))},{||oDlg:End()},,aButtons)
 
 SetKey( VK_F7, NIL )
 
 IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
-	
+
 	// Backup do TTS
 	lSavTTsInUse := __TTSInUse
-	
+
 	// Ativa TTS
 	__TTSInUse := .T.
-	
+
 	// Atualiza rateios antes da gravacao
 	For i := 1 to Len(aBkpCols)
-		
+
 		IF GdDeleted(i,aBkpHead,aBkpCols) .or. Empty(_cItemRT := GdFieldGet("ZY_ITEMRAT",i,,aBkpHead,aBkpCols))
 			Loop
 		ENDIF
-		
+
 		_nValor := oGet:aCols[Ascan(oGet:aCols,{|x| x[ GDFieldPos("ZX_ITEM",oGet:aHeader) ] == _cItemRT }),GDFieldPos("ZX_VALOR",oGet:aHeader)]
-		
+
 		GDFieldPut("ZY_VALOR", _nValor * ( GdFieldGet("ZY_PERCEN",i,,aBkpHead,aBkpCols)/100 ) ,i,aBkpHead,aBkpCols)
-		
+
 	Next
-	
+
 	Begin Transaction
-	
+
 	IF _nOpc == 1 // inclusao
-		
+
 		_cNumRat := U_SIFIN11Num()
-		
+
 		// Gravacao dos dados do Mutuo - Regra
 		For i := 1 to Len(oGet:aCols)
-			
+
 			IF GdDeleted(i,oGet:aHeader,oGet:aCols)
 				Loop
 			ENDIF
-			
+
 			RecLock("SZX",.t.)
 			SZX->ZX_FILIAL  := XFilial("SZX")
 			SZX->ZX_RATEIO  := _cNumRat
@@ -319,17 +319,17 @@ IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
 					SZX->(FieldPut(FieldPos(oGet:aHeader[x,2]),oGet:aCols[i,x]))
 				EndIf
 			Next
-			
+
 			SZX->(msUnlock())
 		Next
-		
+
 		// Gravacao do rateio CTB
 		For i := 1 to Len(aBkpCols)
-			
+
 			IF GdDeleted(i,aBkpHead,aBkpCols)
 				Loop
 			ENDIF
-			
+
 			RecLock("SZY",.t.)
 			SZY->ZY_FILIAL  := XFilial("SZY")
 			SZY->ZY_RATEIO  := _cNumRat
@@ -340,7 +340,7 @@ IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
 			Next
 			SZY->(msUnlock())
 		Next
-		
+
 		// Atualiza campos do título
 		IF _cTpMutuo == "1"
 			RecLock("SE2",.f.)
@@ -355,12 +355,12 @@ IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
 			SE1->E1_XORIGEM := _cTpMutuo
 			SE1->(msUnlock())
 		ENDIF
-		
+
 	ELSE // alteracao
-		
+
 		// Gravacao dos dados do Mutuo - Rateio
 		For i := 1 to Len(oGet:aCols)
-			
+
 			SZX->(dbSetOrder(1))
 			IF !SZX->(dbSeek(XFilial("SZX")+_cMutuo+GdFieldGet("ZX_ITEM",i,,oGet:aHeader,oGet:aCols)))
 				IF GdDeleted(i,oGet:aHeader,oGet:aCols)
@@ -377,24 +377,24 @@ IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
 					Loop
 				ENDIF
 			ENDIF
-			
+
 			For x := 1 to Len(oGet:aHeader)
 				If ( oGet:aHeader[x,10] <> "V" )
 					SZX->(FieldPut(FieldPos(oGet:aHeader[x,2]),oGet:aCols[i,x]))
 				EndIf
 			Next
-			
+
 			SZX->(msUnlock())
 		Next
-		
+
 		// Gravacao do Rateio CTB
 		For i := 1 to Len(aBkpCols)
-			
+
 			_cItemRT := GdFieldGet("ZY_ITEMRAT",i,,aBkpHead,aBkpCols)
 			_cItemCC := GdFieldGet("ZY_ITEM",i,,aBkpHead,aBkpCols)
-			
+
 			Eval( {|| SZX->(dbSetOrder(1)) , _lDeleta := !SZX->(dbSeek(XFilial("SZX")+_cMutuo+_cItemRT)) } )
-			
+
 			SZY->(dbSetOrder(1))
 			IF !SZY->(dbSeek(XFilial("SZY")+_cMutuo+_cItemRT+_cItemCC))
 				IF GdDeleted(i,aBkpHead,aBkpCols) .or. _lDeleta
@@ -411,23 +411,23 @@ IF nOpcA == 1 .and. (_nOpc == 1 .or. _nOpc == 2) // confirmou
 					Loop
 				ENDIF
 			ENDIF
-			
+
 			For x := 1 to Len(aBkpHead)
 				If ( aBkpHead[x,10] <> "V" )
 					SZY->(FieldPut(FieldPos(aBkpHead[x,2]),aBkpCols[i,x]))
 				EndIf
 			Next
-			
+
 			SZY->(msUnlock())
 		Next
-		
+
 	ENDIF
-	
+
 	End Transaction
-	
+
 	// Restaura TTS
 	__TTSInUse := lSavTTsInUse
-	
+
 ENDIF
 
 Return()
@@ -482,10 +482,10 @@ For i := 1 to Len(_aRegra)
 			aCols[Len(aCols),Len(aHeader)+1] := .F.
 			aCols[Len(aCols),1]  := StrZero(Len(aCols),TamSX3("ZX_ITEM")[1])
 		ENDIF
-		
+
 		GDFieldPut("ZX_CODEMP",_aRegra[i,1],Len(aCols),aHeader,aCols)
 		GDFieldPut("ZX_PERC",_aRegra[i,2],Len(aCols),aHeader,aCols)
-		
+
 		// Executa gatilhos nos percentual
 		SX3->(dbSetOrder(2))
 		SX3->(dbSeek("ZX_PERC"))
@@ -493,16 +493,16 @@ For i := 1 to Len(_aRegra)
 			M->ZX_PERC := _aRegra[i,2]
 			RunTrigger(2,Len(aCols))
 		ENDIF
-		
+
 		// Executa gatilho da empresa
 		SX3->(dbSetOrder(2))
 		SX3->(dbSeek("ZX_CODEMP"))
 		IF ExistTrigger("ZX_CODEMP")
 			RunTrigger(2,Len(aCols))
 		ENDIF
-		
+
 		_nRateio += NoRound(GDFieldGet("ZX_VALOR",Len(aCols),,aHeader,aCols),2)
-		
+
 	//ENDIF
 Next
 
@@ -539,78 +539,78 @@ IF !( _nOpc == 1 .or. _nOpc == 2 )
 ENDIF
 
 IF _nOrig == 1 // Mutuo
-	
+
 	// Consiste ultima linha
 	IF !U_SIFIN11LOK(1)
 		Return .f.
 	ENDIF
-	
+
 	For i := 1 to Len(oGet:aCols)
 		IF !GdDeleted(i,oGet:aHeader,oGet:aCols)
 			_nTotRat += GdFieldGet("ZX_VALOR",i,,oGet:aHeader,oGet:aCols)
 		ENDIF
 	Next
-	
+
 	IF _nTotRat <> _nTotal
 		MsgStop("O total do rateio não deve ser menor/maior que o total do documento.")
 		_lRet := .F.
 	ENDIF
-	
+
 	IF _nTotRat == 0
 		MsgStop("O total do rateio deve ser maior que zero.")
 		_lRet := .F.
 	ENDIF
-	
+
 	IF _lRet
 		IF Aviso("Confirmação","Confirma "+Iif(_nOpc==1,"inclusão","alteração")+" da regra de rateio ?",{"Sim","Não"}) <> 1
 			_lRet := .F.
 		ENDIF
 	ENDIF
-	
+
 ELSE // Rateio CC
-	
+
 	For i := 1 to Len(oRat:aCols)
 		IF !GdDeleted(i,oRat:aHeader,oRat:aCols)
 			_nTotRat += GdFieldGet("ZY_VALOR",i,,oRat:aHeader,oRat:aCols)
 		ENDIF
 	Next
-	
+
 	IF _nTotRat > _nVrCC
 		MsgStop("O total do rateio deve ser menor que o total do valor a ser rateado.")
 		_lRet := .F.
 	ENDIF
-	
+
 	IF _nTotRat <> 0 .and. _nTotRat < _nVrCC
 		MsgStop("Existe o saldo de "+Alltrim(Transform(_nVrCC-_nTotRat,"@E 999,999,999.99"))+" para ser rateado.")
 		_lRet := .F.
 	ENDIF
-	
+
 	IF _lRet
 		IF Aviso("Confirmação","Confirma atualização de rateio contábil ?",{"Sim","Não"}) <> 1
 			_lRet := .F.
 		ELSE
-			
+
 			_nPosItem := GdFieldPos("ZY_ITEMRAT",oRat:aHeader)
 			_aVetCols := aClone(aBkpCols)
 			aBkpCols  := {}
-			
+
 			// Refaz o acols1 sem os deletados e sem o item posicionado
 			For i := 1 to Len(_aVetCols)
 				IF _aVetCols[i,_nPosItem] <> GdFieldGet("ZY_ITEMRAT",oRat:oBrowse:nAt,,oRat:aHeader,oRat:aCols)
 					Aadd(aBkpCols,_aVetCols[i])
 				ENDIF
 			Next
-			
+
 			// Inclui o item posicionado
 			For i := 1 to Len(oRat:aCols)
 				IF GdFieldGet("ZY_PERCEN",i,,oRat:aHeader,oRat:aCols) > 0
 					Aadd(aBkpCols,oRat:aCols[i])
 				ENDIF
 			Next
-			
+
 		ENDIF
 	ENDIF
-	
+
 ENDIF
 
 Return(_lRet)
@@ -644,17 +644,17 @@ SZX->( dbSetOrder(1), dbSeek(xFilial("SZX")+_cMutuo) )
 Begin Transaction
 
 	While SZX->(!Eof()) .and. SZX->ZX_FILIAL ==xFilial("SZX") .and. SZX->ZX_RATEIO == _cMutuo
-		
+
 		SIFIN11Tit( "R" , _cParcela     , oSay)		// Gera título a Receber
-		
+
 		SIFIN11Tit( "P" , /*_cParcela*/ , oSay)		// Gera título a Pagar
-		
+
 		_cParcela := Soma1(_cParcela)
-		
+
 		SZX->(dbSkip())
-		
+
 	Enddo
-	
+
 	IF _cTpMutuo == "1"								// A Pagar
 		RecLock("SE2",.F.)
 		SE2->E2_XSTATUS := "2"
@@ -747,28 +747,28 @@ While ((cTab)->(!Eof()))
 	lMsErroAuto := .F.
 	aStru := {}
 	cFilAnt := (cTab)->(FILIAL)
-	
+
 	If ((cTab)->(CART) == "SE1")
 		SE1->(DbGoTo((cTab)->(NUMREG)))
-		
+
 		aAdd(aStru, {"E1_FILIAL",  SE1->E1_FILIAL,  Nil})
 		aAdd(aStru, {"E1_PREFIXO", SE1->E1_PREFIXO, Nil})
 		aAdd(aStru, {"E1_NUM",     SE1->E1_NUM,     Nil})
 		aAdd(aStru, {"E1_PARCELA", SE1->E1_PARCELA, Nil})
 		aAdd(aStru, {"E1_TIPO",    SE1->E1_TIPO,    Nil})
-		
+
 		If (!Empty(SE1->(E1_BAIXA)))
 			oSay:cCaption := ( "Estornando da Baixa a Receber (Pref/Núm/Parc/Tp): " + RTrim(SE1->E1_PREFIXO) + "/" + RTrim(SE1->E1_NUM) + "/" + RTrim(SE1->E1_PARCELA) + "/" + RTrim(SE1->E1_TIPO) )
 			ProcessMessages()
 			MsExecAuto({|x,y| FINA070(x,y)}, aStru, 6)
 		Endif
-		
+
 		oSay:cCaption := ( "Excluindo Título à Receber (Pref/Núm/Parc/Tp): " + RTrim(SE1->E1_PREFIXO) + "/" + RTrim(SE1->E1_NUM)  + "/"  + RTrim(SE1->E1_PARCELA) + "/" + RTrim(SE1->E1_TIPO) )
 		ProcessMessages()
 		MsExecAuto({|x,y| FINA040(x,y)}, aStru, 5)
 	Else
 		SE2->(DbGoTo((cTab)->(NUMREG)))
-		
+
 		aAdd(aStru, {"E2_FILIAL",  SE2->E2_FILIAL,  Nil})
 		aAdd(aStru, {"E2_PREFIXO", SE2->E2_PREFIXO, Nil})
 		aAdd(aStru, {"E2_NUM",     SE2->E2_NUM,     Nil})
@@ -776,34 +776,34 @@ While ((cTab)->(!Eof()))
 		aAdd(aStru, {"E2_TIPO",    SE2->E2_TIPO,    Nil})
 		aAdd(aStru, {"E2_FORNECE", SE2->E2_FORNECE, Nil})
 		aAdd(aStru, {"E2_LOJA",    SE2->E2_LOJA,    Nil})
-		
+
 		DbSelectArea("SE2")
 		SE2->(DbSetOrder(1))
 		SE2->(DbSeek(aStru[1, 2] + aStru[2, 2] + aStru[3, 2] + aStru[4, 2] + aStru[5, 2] + aStru[6, 2] + aStru[7, 2]))
-		
+
 		If (!Empty(SE2->(E2_BAIXA)))
 			oSay:cCaption := ( "Estornando da Baixa a Pagar (Pref/Núm/Parc/Tp): " + RTrim(SE2->E2_PREFIXO) + "/" + RTrim(SE2->E2_NUM) + "/" + RTrim(SE2->E2_PARCELA) + "/" + RTrim(SE2->E2_TIPO) )
 			ProcessMessages()
 			MsExecAuto({|x,y,z| FINA080(x,y,z)}, aStru, 5)
 		Endif
-		
+
 		oSay:cCaption := ( "Excluindo Título a Pagar: (Pref/Núm/Parc/Tp): " + RTrim(SE2->E2_PREFIXO) + "/" + RTrim(SE2->E2_NUM) + "/" + RTrim(SE2->E2_PARCELA) + "/" + RTrim(SE2->E2_TIPO) )
 		MsExecAuto({|x,y,z| FINA050(x,y,z)}, aStru, , 5)
-		
+
 		//SZX->(DbSkip())
 	Endif
-	
+
 	If (lMsErroAuto)
 		If (__lSX8)
 			RollBackSX8()
 		Endif
-		
+
 		DisarmTransaction()
-		
+
 		MostraErro()
-		
+
 		cFilAnt := cFilBkp
-		
+
 		Break
 	Else
 		If (__lSX8)
@@ -860,31 +860,31 @@ ELSE
 ENDIF
 
 While (_cArqTRB)->(!Eof())
-	
+
 	lMsErroAuto := .f.
 	aStru       := {}
 	cFilAnt     := (_cArqTRB)->FILIAL
-	
+
 	IF (_cArqTRB)->CART == "SE1" // titulos a receber
-		
+
 		SE1->(dbGoTo((_cArqTRB)->NUMREG))
-		
+
 		aAdd( aStru, { 'E1_FILIAL ', SE1->E1_FILIAL  , NIL } )
 		aAdd( aStru, { 'E1_PREFIXO', SE1->E1_PREFIXO , NIL } )
 		aAdd( aStru, { 'E1_NUM    ', SE1->E1_NUM	 , NIL } )
 		aAdd( aStru, { 'E1_PARCELA', SE1->E1_PARCELA , NIL } )
 		aAdd( aStru, { 'E1_TIPO   ', SE1->E1_TIPO    , NIL } )
-		
+
 		If !Empty(SE1->E1_BAIXA)	// Estorna a Baixa do Contas a Receber
 			MSExecAuto({|x, y | FINA070(x, y )}, aStru, 6 )
 		EndIf
-		
+
 		MSExecAuto( { | x, y | Fina040( x, y ) }, aStru, 5 )
-		
+
 	ELSE // titulos a pagar
-		
+
 		SE2->(dbGoTo((_cArqTRB)->NUMREG))
-		
+
 		aAdd( aStru, { 'E2_FILIAL ', SE2->E2_FILIAL  , NIL } )
 		aAdd( aStru, { 'E2_PREFIXO', SE2->E2_PREFIXO , NIL } )
 		aAdd( aStru, { 'E2_NUM    ', SE2->E2_NUM	 , NIL } )
@@ -894,35 +894,35 @@ While (_cArqTRB)->(!Eof())
 		aAdd( aStru, { 'E2_FORNECE', SE2->E2_FORNECE , NIL } )
 		aAdd( aStru, { 'E2_LOJA   ', SE2->E2_LOJA    , NIL } )
 		aAdd( aStru, { 'E2_MOEDA  ', SE2->E2_MOEDA   , NIL } )
-		
+
 		If !Empty(SE2->E2_BAIXA)	// Estorna a Baixa do Contas a Pagar
-			MSExecAuto({|x,y,z| FINA080(x,y,z)},aStru,5)                                          
+			MSExecAuto({|x,y,z| FINA080(x,y,z)},aStru,5)
 		EndIf
-		
+
 		SE2->(dbGoTo((_cArqTRB)->NUMREG))
-		
+
 		MsExecAuto({|x,y,z| FINA050(x,y,z)}, aStru, , 5)
 
 	ENDIF
-	
+
 	If lMsErroAuto
 		If (__lSX8)
 			RollBackSX8()
 		EndIf
-		
+
 		DisarmTransaction()
-		
+
 		MostraErro()
-		
+
 		cFilAnt := cFilBak
-		
+
 		Break
 	Else
 		If (__lSX8)
 			ConfirmSX8()
 		EndIf
 	EndIf
-	
+
 	(_cArqTRB)->(dbSkip())
 Enddo
 
@@ -960,12 +960,12 @@ SZX->(dbSetOrder(1))
 SZX->(dbSeek(XFilial("SZX")+_cMutuo))
 
 While SZX->(!Eof()) .and. SZX->ZX_FILIAL == XFilial("SZX") .and. SZX->ZX_RATEIO == _cMutuo
-	
+
 	// Exclui registros da tabela de mutuo
 	RecLock("SZX",.F.)
 	SZX->(dbDelete())
 	SZX->(msUnlock())
-	
+
 	SZX->(dbSkip())
 Enddo
 
@@ -973,12 +973,12 @@ SZY->(dbSetOrder(1))
 SZY->(dbSeek(XFilial("SZY")+_cMutuo))
 
 While SZY->(!Eof()) .and. SZY->ZY_FILIAL == XFilial("SZY") .and. SZY->ZY_RATEIO == _cMutuo
-	
+
 	// Exclui registros do rateio contabil
 	RecLock("SZY",.F.)
 	SZY->(dbDelete())
 	SZY->(msUnlock())
-	
+
 	SZY->(dbSkip())
 Enddo
 
@@ -1016,48 +1016,48 @@ Return()
 */
 
 User Function SIFIN11LOK(_nOrig)
-Local _lRet := .t.    
+Local _lRet := .t.
 
 
 IF _nOrig == 1 // Mutuo
-	
+
 	IF GDDeleted(oGet:oBrowse:nAt,oGet:aHeader,oGet:aCols)
 		Return .t.
 	ENDIF
-	
+
 	IF Ascan(aCols,{|x| !x[Len(aHeader)+1] .and. x[GDFieldPos("ZX_CODEMP",oGet:aHeader)] == GDFieldGet("ZX_CODEMP",oGet:oBrowse:nAt,,oGet:aHeader,oGet:aCols) .and. x[GDFieldPos("ZX_ITEM",oGet:aHeader)] <> GDFieldGet("ZX_ITEM",oGet:oBrowse:nAt,,oGet:aHeader,oGet:aCols) }) > 0
 		MsgInfo("A empresa "+GDFieldGet("ZX_CODEMP",oGet:oBrowse:nAt,,oGet:aHeader,oGet:aCols)+" já foi informada!")
 		_lRet := .f.
 	ENDIF
-	
+
 	IF _lRet
 		_nRateio := 0 //25009.36
-		
+
 		For i := 1 to Len(oGet:aCols)
 			IF !GDDeleted(i,oGet:aHeader,oGet:aCols)
 				_nRateio += GDFieldGet("ZX_VALOR",i,,oGet:aHeader,oGet:aCols) //Edu
 			ENDIF
-		Next     
-		        
+		Next
+
 		_nRateio := Round(_nRateio,2) //Edu
-		
+
 		oRateio:Refresh()
 	ENDIF
-	
+
 ELSE // Rateio CC
-	
+
 	IF GDDeleted(oRat:oBrowse:nAt,oRat:aHeader,oRat:aCols)
 		Return .t.
 	ENDIF
-	
+
 	_nRatCC := 0
-	
+
 	For i := 1 to Len(oRat:aCols)
 		IF !GDDeleted(i,oRat:aHeader,oRat:aCols)
 			_nRatCC += NoRound(GDFieldGet("ZY_VALOR",i,,oRat:aHeader,oRat:aCols),2)
 		ENDIF
 	Next
-	
+
 	oRatCC:Refresh()
 ENDIF
 
@@ -1086,7 +1086,7 @@ Local _cArqTRB := CriaTrab(nil,.f.)
 Local _cArea   := GetArea()
 
 //_cQuery := "SELECT MAX(ZX_RATEIO) RATEIO FROM "+RetSqlName("SZX")+" WHERE D_E_L_E_T_ = ' ' AND ZX_FILIAL = '"+XFilial("SZX")+"'"
-_cQuery := "SELECT MAX(E2_XMUTUO) RATEIO FROM "+RetSqlName("SE2")+" WHERE D_E_L_E_T_ = ' ' 
+_cQuery := "SELECT MAX(E2_XMUTUO) RATEIO FROM "+RetSqlName("SE2")+" WHERE D_E_L_E_T_ = ' '
 _cQuery := ChangeQuery(_cQuery)
 
 dbUseArea(.T.,"TOPCONN",TCGenQry(,,_cQuery),_cArqTRB,.t.,.t.)
@@ -1141,7 +1141,7 @@ _dVencSE2 := dDataBase
 
 DEFINE MSDIALOG oDlg FROM 22,9 TO 180,540 TITLE OemToAnsi("Configuração dos Títulos") PIXEL
 oDlg:lMaximized := .F.
-oPanel := TPanel():New(0,0,'',oDlg,,.T.,.T.,,,20,20,.F.,.F.)                      
+oPanel := TPanel():New(0,0,'',oDlg,,.T.,.T.,,,20,20,.F.,.F.)
 oPanel:Align := CONTROL_ALIGN_ALLCLIENT
 
 @ 003,005 TO 038, 223 LABEL "Titulo(s) a Receber" OF oPanel PIXEL
@@ -1149,29 +1149,29 @@ oPanel:Align := CONTROL_ALIGN_ALLCLIENT
 
 // Contas a Receber
 @ 012, 015 SAY OemToAnsi("Prefixo")		SIZE 20, 7 OF oPanel PIXEL
-@ 012, 041 SAY OemToAnsi("Tp") 			SIZE 12, 7 OF oPanel PIXEL
-@ 012, 076 SAY OemToAnsi("Nr. Título") 	SIZE 49, 7 OF oPanel PIXEL
-@ 012, 121 SAY OemToAnsi("Natureza") 	SIZE 25, 7 OF oPanel PIXEL
-@ 012, 176 SAY OemToAnsi("Vencimento") 	SIZE 50, 7 OF oPanel PIXEL
+@ 012, 051 SAY OemToAnsi("Tp") 			SIZE 12, 7 OF oPanel PIXEL
+@ 012, 081 SAY OemToAnsi("Nr. Título") 	SIZE 49, 7 OF oPanel PIXEL
+@ 012, 126 SAY OemToAnsi("Natureza") 	SIZE 25, 7 OF oPanel PIXEL
+@ 012, 181 SAY OemToAnsi("Vencimento") 	SIZE 50, 7 OF oPanel PIXEL
 
-@ 022, 015 MSGET _cPrefSE1 Picture "@!"	SIZE 10, 11 OF oPanel PIXEL
-@ 022, 041 MSGET oTpSE1   VAR _cTipoSE1	F3 "05" Valid ExistCpo("SX5","05"+_cTipoSE1) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
-@ 022, 076 MSGET oTitSE1  VAR _cNumSE1	SIZE 42, 11 OF oPanel PIXEL
-@ 022, 121 MSGET oNatSE1  VAR _cNatSE1	F3 "SED" Valid ExistCPO("SED",_cNatSE1) SIZE 55, 11 OF oPanel PIXEL HASBUTTON
-@ 022, 176 MSGET oVencSE1 VAR _dVencSE1	VALID _dVencSE1 >= dDataBase SIZE 42, 11 OF oPanel PIXEL
+@ 022, 015 MSGET oPrefSE  VAR _cPrefSE1 F3 "Z1" Valid ExistCpo("SX5","Z1"+_cPrefSE1) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
+@ 022, 051 MSGET oTpSE1   VAR _cTipoSE1	F3 "05" Valid ExistCpo("SX5","05"+_cTipoSE1) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
+@ 022, 081 MSGET oTitSE1  VAR _cNumSE1	SIZE 42, 11 OF oPanel PIXEL
+@ 022, 126 MSGET oNatSE1  VAR _cNatSE1	F3 "SED" Valid ExistCPO("SED",_cNatSE1) SIZE 55, 11 OF oPanel PIXEL HASBUTTON
+@ 022, 181 MSGET oVencSE1 VAR _dVencSE1	VALID _dVencSE1 >= dDataBase SIZE 42, 11 OF oPanel PIXEL HASBUTTON
 
 // Contas a Pagar
 @ 047, 015 SAY OemToAnsi("Prefixo")		SIZE 20, 7 OF oPanel PIXEL
-@ 047, 041 SAY OemToAnsi("Tp") 			SIZE 12, 7 OF oPanel PIXEL
-@ 047, 076 SAY OemToAnsi("Nr. Título") 	SIZE 49, 7 OF oPanel PIXEL
-@ 047, 121 SAY OemToAnsi("Natureza") 	SIZE 25, 7 OF oPanel PIXEL
-@ 047, 176 SAY OemToAnsi("Vencimento") 	SIZE 50, 7 OF oPanel PIXEL
+@ 047, 051 SAY OemToAnsi("Tp") 			SIZE 12, 7 OF oPanel PIXEL
+@ 047, 081 SAY OemToAnsi("Nr. Título") 	SIZE 49, 7 OF oPanel PIXEL
+@ 047, 126 SAY OemToAnsi("Natureza") 	SIZE 25, 7 OF oPanel PIXEL
+@ 047, 181 SAY OemToAnsi("Vencimento") 	SIZE 50, 7 OF oPanel PIXEL
 
-@ 057, 015 MSGET _cPrefSE2 Picture "@!"	SIZE 10, 11 OF oPanel PIXEL
-@ 057, 041 MSGET oTpSE2   VAR _cTipoSE2	F3 "05" Valid ExistCpo("SX5","05"+_cTipoSE2) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
-@ 057, 076 MSGET oTitSE2  VAR _cNumSE2	SIZE 42, 11 OF oPanel PIXEL
-@ 057, 121 MSGET oNatSE2  VAR _cNatSE2	F3 "SED" Valid ExistCPO("SED",_cNatSE2) SIZE 55, 11 OF oPanel PIXEL HASBUTTON
-@ 057, 176 MSGET oVencSE2 VAR _dVencSE2	VALID _dVencSE2 >= dDataBase SIZE 42, 11 OF oPanel PIXEL
+@ 057, 015 MSGET oPrefSE2 VAR _cPrefSE2 F3 'Z1' Valid ExistCpo("SX5","Z1"+_cPrefSE2) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
+@ 057, 051 MSGET oTpSE2   VAR _cTipoSE2	F3 "05" Valid ExistCpo("SX5","05"+_cTipoSE2) Picture "@!"  SIZE 10, 11 OF oPanel PIXEL HASBUTTON
+@ 057, 081 MSGET oTitSE2  VAR _cNumSE2	SIZE 42, 11 OF oPanel PIXEL
+@ 057, 126 MSGET oNatSE2  VAR _cNatSE2	F3 "SED" Valid ExistCPO("SED",_cNatSE2) SIZE 55, 11 OF oPanel PIXEL HASBUTTON
+@ 057, 181 MSGET oVencSE2 VAR _dVencSE2	VALID _dVencSE2 >= dDataBase SIZE 42, 11 OF oPanel PIXEL HASBUTTON
 
 DEFINE SBUTTON FROM 07, 230 TYPE 1 ACTION ( Eval(_bValid),;
 		If( nOk==1,Eval({|| _nOpca:=1,oDlg:End() }), If(nOk==2,MsgAlert(cOkMsg2),MsgAlert(cOkMsg3)) ) ) ENABLE OF oDlg
@@ -1212,14 +1212,14 @@ Local lBxTitOrig := .F.
 lMsErroAuto    := .F.
 
 IF _cCat == "R"
-	
+
 	IF _cTpMutuo == "2" 							// Mutuo - CR
 		cFilAnt := SZX->ZX_CODEMP
 	ENDIF
-	
+
 	SA1->( dbSetOrder(1) )
 	SA1->( dbSeek(xFilial("SA1")+SZX->(ZX_CODCLI+ZX_LOJCLI)) )
-	
+
 	aAdd( aStru, { 'E1_PREFIXO', _cPrefSE1        	   , NIL } )
 	aAdd( aStru, { 'E1_NUM    ', _cNumSE1         	   , NIL } )
 	aAdd( aStru, { 'E1_PARCELA', _cParcela			   , NIL } ) // Necessario inserir parcela devido PK => E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO
@@ -1244,7 +1244,7 @@ IF _cCat == "R"
 	aAdd( aStru, { 'E1_XSTATUS', "2"               	   , NIL } )
 	aAdd( aStru, { 'E1_XORIGEM', "3"             	   , NIL } )
 	aAdd( aStru, { 'E1_XMANUAL', Iif(_lManual,"1","2") , NIL } )
-	
+
 	oSay:cCaption := ( "Incluindo Título a Receber (Pref/Núm/Parc/Tp): " + RTrim(_cPrefSE1) + "/" + RTrim(_cNumSE1) + "/" + RTrim(_cParcela) + "/" + RTrim(_cTipoSE1) )
 	ProcessMessages()
 
@@ -1252,7 +1252,7 @@ IF _cCat == "R"
 
 	DbSelectArea("SZE")
 	SZE->(DbSetOrder(2), DbGoTop())
-	
+
 	If SZE->(DbSeek(xFilial("SZE")+cFilAnt)) .and. SZE->ZE_CODCLI == SZX->ZX_CODCLI .and. SZE->ZE_LOJCLI == SZX->ZX_LOJCLI
 		lBxTitOrig := .T.
 	ElseIf SZX->ZX_CODEMP == _cFilOrig
@@ -1270,7 +1270,7 @@ Else
 	If _cTpMutuo == "1" 								// Mutuo  CP
 		cFilAnt := SZX->ZX_CODEMP
 	EndIf
-	
+
 	aAdd( aStru, { 'E2_PREFIXO', _cPrefSE2             , NIL } )
 	aAdd( aStru, { 'E2_NUM    ', _cNumSE2              , NIL } )
 	aAdd( aStru, { 'E2_TIPO   ', _cTipoSE2             , NIL } )
@@ -1294,12 +1294,12 @@ Else
 	aAdd( aStru, { 'E2_XSTATUS', "2"               	   , NIL } )
 	aAdd( aStru, { 'E2_XORIGEM', "3"             	   , NIL } )
 	aAdd( aStru, { 'E2_XMANUAL', Iif(_lManual,"1","2") , NIL } )
-	
+
 	SZY->(dbSetOrder(1))
 	If SZY->(dbSeek(XFilial("SZY")+SZX->(ZX_RATEIO+ZX_ITEM)))
 		aAdd( aStru, { 'E2_RATEIO' , "S"             	   , NIL } )
 	EndIf
-	
+
 	oSay:cCaption := ( "Incluindo Título a Pagar (Pref/Núm/Tipo): " + RTrim(_cPrefSE2) + "/" + RTrim(_cNumSE2) + "/" + RTrim(_cTipoSE2) )
 	ProcessMessages()
 
@@ -1307,7 +1307,7 @@ Else
 
 	DbSelectArea("SZE")
 	SZE->(DbSetOrder(2), DbGoTop())
-	
+
 	If SZE->(DbSeek(xFilial("SZE")+cFilAnt)) .and. SZE->ZE_CODFOR == SZX->ZX_CODFOR .and. SZE->ZE_LOJFOR == SZX->ZX_LOJFOR
 		lBxTitOrig := .T.
 	ElseIf SZX->ZX_CODEMP == _cFilOrig
@@ -1327,11 +1327,11 @@ If lMsErroAuto
 	If (__lSX8)
 		RollBackSX8()
 	EndIf
-	
+
 	DisarmTransaction()
-	
+
 	MostraErro()
-	
+
 	cFilAnt := cFilBak 							// Restaura
 	Break
 Else
@@ -1368,11 +1368,11 @@ Local lHelp       := .T.
 Local lBaixou     := .T.
 Local aAreaAlias  := (cAlias)->(GetArea())
 Local lNoBrowse   := .F.
-Local nOpcBaixa	  := 0                                                           
+Local nOpcBaixa	  := 0
 
 lMSHelpAuto := .F.
 lMsErroAuto := .F.
-	
+
 If _cCat == "P"
 
 	Begin Transaction		// Faz a liberacao do titulo para Baixa
@@ -1382,7 +1382,7 @@ If _cCat == "P"
 			SE2->E2_USUALIB := cUsername
 		MsUnlock()
 	End Transaction
-	
+
 	// Monta array a ser utilizado para baixa
 	aBaixa	:= {	{"E2_PREFIXO",	_cPrefSE2,					Nil},;
 					{"E2_NUM",		_cNumSE2,					Nil},;
@@ -1391,9 +1391,9 @@ If _cCat == "P"
 					{"E2_SALDO",	SZX->ZX_VALOR,				Nil},;
 					{"E2_VALLIQ",	0,							Nil},;
 					{"ATUCHEQUE",	" ",						Nil},;
-					{"AUTBANCO",	" ",						Nil},;             			
-					{"AUTAGENCIA",	" ",						Nil},;             			             	   
-					{"AUTCONTA",	" ",						Nil},;             			             	   
+					{"AUTBANCO",	" ",						Nil},;
+					{"AUTAGENCIA",	" ",						Nil},;
+					{"AUTCONTA",	" ",						Nil},;
 					{"AUTMOTBX",	cCodMotBx,					Nil},;
 					{"AUTDTBAIXA",	dDataBase,					Nil},;
 					{"AUTHIST",		"Baixa do Mutuo por Dacao", Nil},;
@@ -1401,7 +1401,7 @@ If _cCat == "P"
 					{"AUTDESCONT",	0,							Nil},;
 					{"AUTMULTA",	0,							Nil},;
 					{"AUTJUROS",	0,							Nil}}
-	                  	
+
 	MSExecAuto({|x,y,z| FINA080(x,y,z)}, aBaixa, 3)		// Execução da Baixa Automática de Título a Pagar
 
 
@@ -1423,7 +1423,7 @@ ElseIf _cCat == "R"
 					{"AUTDTCREDITO",dDataBase,					Nil}}
 
 	MSExecAuto({|x, y , z, w| FINA070(x, y , z, w)}, aBaixa, 3, lNoBrowse, nOpcBaixa)
-	                      
+
 EndIf
 
 If lMsErroAuto
@@ -1431,7 +1431,7 @@ If lMsErroAuto
 		MsgAlert("Verifique a baixa referente ao título da Empresa Centralizadora pois não foi gerado.","Baixa do Mútuo por Dação")
 		lBaixou	:= .F.
 	EndIf
-Endif		
+Endif
 
 RestArea(aAreaAlias)
 

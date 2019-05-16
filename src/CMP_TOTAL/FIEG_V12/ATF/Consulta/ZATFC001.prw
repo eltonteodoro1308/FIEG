@@ -114,11 +114,11 @@ Static Function MostJane(oSize)
 
 
 	DbSelectArea(cAlias)
-	cAlias->(DbSetOrder(1))
+	(cAlias)->(DbSetOrder(1))
 
 
 	// posiciona no topo
-	cAlias->(DBGOTOP())
+	(cAlias)->(DBGOTOP())
 
 	// Filtra pelo intervalo informado e que o usuário tenha acesso
 	SET FILTER TO  (cAlias)->N1_FILIAL >= M->cFiliaDe .AND. (cAlias)->N1_FILIAL <= M->cFiliaAt .AND. (cAlias)->N1_FILIAL$cListFil .AND. (cAlias)->N1_QUANTD > 0 .AND. (cAlias)->N1_STATUS <> '0'

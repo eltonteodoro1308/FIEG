@@ -43,17 +43,17 @@ ELSE
 	IF MV_PAR08 = 1 
 		_FORNECEDOR := Posicione("SC7", 1, cFILANT+MV_PAR04, "C7_FORNECE") 
 	
-		_QUERY  = " select d1_filial, d1_doc, d1_serie, d1_emissao, d1_fornece, a2_nome"
-		_QUERY += " from SD1010 as SD1 with (nolock)"
-		_QUERY += " left join SA2010 as SA2 with (nolock) on SA2.D_E_L_E_T_ = ' '"
-		_QUERY += "   and A2_FILIAL = '" + xFilial("SA2") + "'"
-		_QUERY += "   and A2_COD    = D1_FORNECE "
-		_QUERY += " where SD1.D_E_L_E_T_ = ' '"
-		_QUERY += "   and SD1.D1_FILIAL  = '" + cFILANT + "'"
-		_QUERY += "   and SD1.D1_PEDIDO  = '" + MV_PAR04 + "'"
-		_QUERY += "   and SD1.D1_FORNECE = '" + _FORNECEDOR + "'"
-		_QUERY += "   and SD1.D1_LOJA    = '0001'"  
-		_QUERY += "   and SD1.D1_TES     = '' " 
+		_QUERY  = " SELECT D1_FILIAL, D1_DOC, D1_SERIE, D1_EMISSAO, D1_FORNECE, A2_NOME"
+		_QUERY += " FROM SD1010 AS SD1 WITH (NOLOCK)"
+		_QUERY += " LEFT JOIN SA2010 AS SA2 WITH (NOLOCK) ON SA2.D_E_L_E_T_ = ' '"
+		_QUERY += "   AND A2_FILIAL = '" + xFilial("SA2") + "'"
+		_QUERY += "   AND A2_COD    = D1_FORNECE "
+		_QUERY += " WHERE SD1.D_E_L_E_T_ = ' '"
+		_QUERY += "   AND SD1.D1_FILIAL  = '" + cFILANT + "'"
+		_QUERY += "   AND SD1.D1_PEDIDO  = '" + MV_PAR04 + "'"
+		_QUERY += "   AND SD1.D1_FORNECE = '" + _FORNECEDOR + "'"
+		_QUERY += "   AND SD1.D1_LOJA    = '0001'"  
+		_QUERY += "   AND SD1.D1_TES     = '' " 
 		
 		If Select(_ALIAS) > 0
 			(_ALIAS)->(dbCloseArea())
