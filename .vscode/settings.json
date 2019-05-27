@@ -1,3 +1,4 @@
 {
-    "advpl.selectedEnvironment": "FIEG_P12_DESENV"
+    "advpl.selectedEnvironment": "FIEG_P12_DESENV",
+    "totvsLanguageServer.welcomePage": false
 }

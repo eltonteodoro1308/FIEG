@@ -56,12 +56,12 @@ User Function CN120DTCON()
 			EndIf
 
 			QRY->(dbCloseArea())
-
+			/** 21/05/2019 Trecho comentado por que na versão 12.1.23 já há tratamento no padrão para bloquear quando
 			If lRet
 
 				cQuery := "SELECT R_E_C_N_O_ FROM " + RetSqlName('CNN') + " CNN " + CRLF +;
 				"WHERE CNN_FILIAL = '" + xFilial("CNN") + "' AND " + CRLF +;
-				"      CNN_CONTRA = '" + SC1->C1_XCONTPR + "' AND " + CRLF +;//"      CNN_CONTRA = '" + CN9->CN9_NUMERO + "' AND " + CRLF +;
+				"      CNN_CONTRA = '" + CN9->CN9_NUMERO + "' AND " + CRLF +;
 				"      CNN_USRCOD = '" + RetCodUsr() + "' AND " + CRLF +;
 				"      D_E_L_E_T_ = ' ' "
 				cQuery := ChangeQuery(cQuery)
@@ -76,7 +76,7 @@ User Function CN120DTCON()
 				QRY->(dbCloseArea())
 
 			EndIf
-
+			*/
 		EndIf
 
 	EndIf

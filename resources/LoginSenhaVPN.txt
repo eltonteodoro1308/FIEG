@@ -4,9 +4,23 @@ VPN
 Usuário: suportetotvs
 Senha: D|x*tDMlcmpM
 
+|F13g@2019
+
 
 PROTHUES
 =========
 
 Usuário: sistemafieg\suportetotvs
 Senha: D|x*tDMlcmpM
+
+IIF(
+IIF(FUNNAME()=="PCOA310",SC1->C1_APROV=="L",.T.) .AND. SUBSTR(SC1->C1_CONTA,1,1)$"3/4",
+IIF(ExistBlock("SIPCOE02"),U_SIPCOE02(),SC1->(C1_QUANT*C1_VUNIT))
+,0)                                                                                           
+
+SELECT * FROM SC1010 WHERE D_E_L_E_T_ = ''
+AND C1_FILIAL = '02GO0001' 
+AND C1_NUM  = '190173'
+
+
+"01DN0000"                                                                                                                                                                                                                                                

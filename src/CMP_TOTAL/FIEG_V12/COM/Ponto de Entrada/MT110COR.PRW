@@ -32,9 +32,9 @@ User Function MT110COR()
 
 	_aRet[03][1] := 'C1_COMPRAC == "1"'                                          //Solicitacao em Compra Centralizada
 	_aRet[03][2] := 'METAS_CIMA_16'                                              //Solicitacao em Compra Centralizada
-	_aRet[07][1] := 'C1_FLAGGCT == "1"'                                          //Integração Modulo Gestão de Contratos
-	_aRet[07][2] := 'BR_VIOLETA'                                                 //Integração Modulo Gestão de Contratos
-	_aRet[09][2] := 'BR_PINK'                                                    //Eliminação por Resíduo
+	_aRet[05][1] := 'C1_FLAGGCT == "1"'                                          //Integração Modulo Gestão de Contratos
+	_aRet[05][2] := 'BR_VIOLETA'                                                 //Integração Modulo Gestão de Contratos
+	_aRet[07][2] := 'BR_PINK'                                                    //Eliminação por Resíduo
 	_aRet[10][1] := _aRet[10][1] + ' .AND. C1_QUANT > 0 .AND. C1_FLAGGCT != "1"' //Solicitacao Totalmente Atendida
 	_aRet[15][1] := _aRet[15][1] + ' .AND. C1_FLAGGCT != "1"'                    //Solicitacao Parcialmente Atendida
 

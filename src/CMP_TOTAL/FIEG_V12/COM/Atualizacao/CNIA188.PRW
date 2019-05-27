@@ -26,7 +26,7 @@ User Function CNIA188CA(nOpc)
 
 	Local cTitle 	:= "Criterios de Avaliação" //Ler do SX2
 	Local aCoord 	:= {}
-	Local oDlg
+	Local oSize     := FwDefSize():New(.T.) //Local oDlg
 	Local oFld
 	Local aCampos 	:= {}
 	Local nX, nY  	:= 0
@@ -59,7 +59,13 @@ User Function CNIA188CA(nOpc)
 	//Faz calculo automatico das dimensoes
 	aSize := MsAdvSize(,.F.,400)
 
+	//Dimensionamento da tela
+	oSize:AddObject( "LISTA", 000, 000, .T., .T. )
+	oSize:Process()
+
 	//Cria tela de cadastro
+	DEFINE MSDIALOG oDlg TITLE cTitle FROM;
+	oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
 
 	oTPane2 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,16,.T.,.F.)
 	oTPane2:Align := CONTROL_ALIGN_ALLCLIENT
@@ -234,9 +240,9 @@ Static Function CarregaCols(aCols1, aCols2, nOpc, cAlias)
 			If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
 				nUsado++
 				cVarTemp := cAlias+"->"+(SX3MDI->X3_CAMPO)
-				If X3_CONTEXT # "V"
+				If SX3MDI->X3_CONTEXT # "V"
 					aCols1[Len(aCols1),nUsado] := &cVarTemp
-				ElseIf X3_CONTEXT == "V"
+				ElseIf SX3MDI->X3_CONTEXT == "V"
 					aCols1[Len(aCols1),nUsado] := CriaVar(AllTrim(SX3MDI->X3_CAMPO))
 				Endif
 
@@ -263,9 +269,9 @@ Static Function CarregaCols(aCols1, aCols2, nOpc, cAlias)
 			If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
 				nUsado++
 				cVarTemp := cAlias+"->"+(SX3MDI->X3_CAMPO)
-				If X3_CONTEXT # "V"
+				If SX3MDI->X3_CONTEXT # "V"
 					aCOLS2[Len(aCOLS2),nUsado] := &cVarTemp
-				ElseIf X3_CONTEXT == "V"
+				ElseIf SX3MDI->X3_CONTEXT == "V"
 					aCOLS2[Len(aCOLS2),nUsado] := CriaVar(AllTrim(SX3MDI->X3_CAMPO))
 				Endif
 
@@ -314,7 +320,7 @@ Static Function MontaHeader(aHeader, nOpc, cAlias)
 	While !EOF() .And. SX3MDI->X3_ARQUIVO == cAlias
 		If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
 			nUsado++
-			AADD(aHeader,{ TRIM(X3Titulo()) ,;
+			AADD(aHeader,{ TRIM(SX3MDI->X3_TITULO) ,;
 			SX3MDI->X3_CAMPO        ,;
 			SX3MDI->X3_PICTURE      ,;
 			SX3MDI->X3_TAMANHO      ,;

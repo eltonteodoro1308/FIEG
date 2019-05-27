@@ -2,6 +2,12 @@
 
 User Function PopulaSc1()
 
+	MsAguarde( { | lFim | Processa( @lFim ) }, "Aguarde...", "Populando SC1.", .T. )
+
+Return
+
+Static Function Processa( lFim )
+
 	Local cStrFile := cGetFile( ,'Selecione o arquivo de estrutura.' )
 	Local aStrFile := StrTokArr2( MemoRead( cStrFile ), CRLF, .F. )
 	Local aStrSc1  := {}
@@ -10,6 +16,7 @@ User Function PopulaSc1()
 	Local oTxtFile := FWFileReader():New( cTxtFile )
 
 	Local aLinha := Nil
+	Local nLinha := 0
 
 	RpcSetEnv( '01', '01GO0001')
 
@@ -21,11 +28,21 @@ User Function PopulaSc1()
 
 	oTxtFile:Open()
 
-	Do While oTxtFile:hasLine()
+	Do While oTxtFile:hasLine() .And. ! lFim
 
 		aLinha := LeDados( oTxtFile:GetLine(), aStrSc1 )
 
+		//AutoGrLog( VarInfo( 'aLinha', aLinha,, .F., .F. ) )
+
+		//MostraErro()
+
+		//MemoWrite( 'C:\Temp\fieg\log\' + GetNextAlias() + '.txt', VarInfo( 'aLinha', aLinha,, .F., .F. ) )
+
 		GravaLinha( aLinha )
+
+		MsProcTxt( cValtoChar( ++nLinha ) + ' linhas lidas...' )
+
+		ProcessMessage()
 
 	End Do
 
@@ -55,15 +72,11 @@ Static Function LeDados( cLinha, aStrSc1 )
 		nPosInic := Val( aStrSc1[ nX, 5 ] )
 		nTamanho := Val( aStrSc1[ nX, 3 ] )
 
-		If cTipo # 'M'
+		cAux := SubStr( cLinha, nPosInic, nTamanho )
 
-			cAux := SubStr( cLinha, nPosInic, nTamanho )
+		xValor := TrataTipo( cAux, cTipo )
 
-			xValor := TrataTipo( cAux, cTipo )
-
-			aAdd( aRet, { cNome, xValor } )
-
-		End If
+		aAdd( aRet, { cNome, xValor } )
 
 	Next nX
 
@@ -99,9 +112,23 @@ Return xRet
 
 Static Function GravaLinha( aLinha )
 
-	Local nX := 0
+	Local nX    := 0
+	Local cFil  := aLinha[ aScan( aLinha, {|X| Upper( AllTrim( X[ 1 ] ) ) = 'C1_FILIAL' } ) ][ 2 ]
+	Local cNum  := aLinha[ aScan( aLinha, {|X| Upper( AllTrim( X[ 1 ] ) ) = 'C1_NUM'    } ) ][ 2 ]
+	Local cItem := aLinha[ aScan( aLinha, {|X| Upper( AllTrim( X[ 1 ] ) ) = 'C1_ITEM'   } ) ][ 2 ]
 
-	DbSelectAre( 'SC1' )
+	DbSelectArea( 'SC1' )
+	DbSetOrder(1)
+
+	If DbSeek( cFil + cNum + cItem )
+
+		RecLock( 'SC1', .F. )
+
+		DbDelete()
+
+		MsUnlock()
+
+	End If
 
 	RecLock( 'SC1', .T. )
 

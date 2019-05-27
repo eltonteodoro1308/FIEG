@@ -1,19 +1,62 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Passe o mouse para ver as descrições dos atributos existentes.
-    // Para obter mais informações, visite: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Advpl Debug",
-            "type": "advpl",
-            "request": "launch",
-            "args": [],
-            "cwd": "${workspaceRoot}",
-            "programRun": "${command:AskForProgramName}",
-            "stopOnEntry": false,
-            "enviromentInfo": "${command:GetEnvInfos}",
-            "workspace": "${workspaceRoot}/"
-        }
-    ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "SIGAMDI",
+			"program": "SIGAMDI",
+			"isMultiSession": true,
+			"language": "",
+			"smartclientBin": "C:\\TOTVS\\Microsiga\\smartclient\\smartclient.exe",
+			"enableMultiThread": true,
+			"enableProfile": true,
+			"isAccessibilityMode": false,
+			"doNotShowSplash": true,
+			"ignoreFiles": true
+		},
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "SIGACFG",
+			"program": "SIGACFG",
+			"isMultiSession": true,
+			"language": "",
+			"smartclientBin": "C:\\TOTVS\\Microsiga\\smartclient\\smartclient.exe",
+			"enableMultiThread": true,
+			"enableProfile": true,
+			"isAccessibilityMode": false,
+			"doNotShowSplash": true,
+			"ignoreFiles": true
+		},
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "APSDU",
+			"program": "APSDU",
+			"isMultiSession": true,
+			"language": "",
+			"smartclientBin": "C:\\TOTVS\\Microsiga\\smartclient\\smartclient.exe",
+			"enableMultiThread": true,
+			"enableProfile": true,
+			"isAccessibilityMode": false,
+			"doNotShowSplash": true,
+			"ignoreFiles": true
+		},
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "PROGRAMA",
+			"program": "${command:AskForProgramName}",
+			"isMultiSession": true,
+			"language": "",
+			"smartclientBin": "C:\\TOTVS\\Microsiga\\smartclient\\smartclient.exe",
+			"enableMultiThread": true,
+			"enableProfile": true,
+			"isAccessibilityMode": false,
+			"doNotShowSplash": true,
+			"ignoreFiles": true
+		}
+	],
+	"lastProgramExecuted": "SIGAMDI"
 }

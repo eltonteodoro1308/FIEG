@@ -1,30 +1,10 @@
 ============================
 
+REDMINE = 2191
+
 N1_CODBAR
 
 X3_RELACAO = FwFldGet('N1_CBASE')+FwFldGet('N1_ITEM')
-
-============================
-
-N3_XTPBEM
-
-X3_OBRIGAT = ''
-X3_VLDUSER = 'Pertence("1234").and. Iif( !IsBlind() , NaoVazio() , .T. )'
-
-============================
-
-N3_XCTAMUT
-
-X3_RESERV  = 'þÀ'
-X3_OBRIGAT = ''
-X3_VLDUSER = 'ExistCpo("CT1").and. Iif( !IsBlind() , NaoVazio() , .T. )'
-
-============================
-
-N1_LOCAL
-
-X3_OBRIGAT = ''
-X3_VLDUSER = 'U_DTATFV01().AND.POSICIONE("SNL",1,XFILIAL("SNL")+M->N1_LOCAL,"NL_BLOQ")!="1".and. Iif( !IsBlind() , NaoVazio() , .T. )'
 
 ============================
 
@@ -164,3 +144,64 @@ X7_CAMPO = CP_QUANT
 X7_SEQUENC = o proximo disponivel.
 X7_REGRA = _c105CCusto 
 X7_CDOMIN = CP_CC
+
+===================================================
+
+REDMINE = 2233
+
+XB_ALIAS = SA2
+XB_TIPO = 5
+SB_SEQ = 02
+DE
+XB_CONTEM = SA2->A2_LOJA
+
+PARA
+
+XB_CONTEM = IIF .or. IsInCallStack("U_XFINR350"),"",SA2->A2_LOJA)
+XB_CONTEM = IIF .or. IsInCallStack("U_XFINR350"),"",SA2->A2_LOJA)
+
+===================================================
+
+REDMINE = 2257
+
+Criar Gatilho
+
+X7_CAMPO = C1_QUANT
+X7_SEQUENC = 004
+X7_REGRA = CCODCOMPR
+X7_CDOMIN = C1_XCODCOM
+X7_TIPO = P
+X7_SEEK = N
+X7_ORDEM = 0
+X7_PROPRI = U
+
+====================================================
+
+REDMINE = 2258
+
+O campo x3_F3 dos campos C1_ITEMCTA e CP_ITEMCTA devem conter a pesquisa SCPCTD.
+
+====================================================
+
+REDMINE = 2263
+
+Alteração do 'Modo Edição' (X3_WHEN) no campo 'Código do Aprovador' (AK_COD), conforme abaixo.
+
+De: INCLUIR
+Para: INCLUI   --> remoção da letra 'R' no final
+
+====================================================
+
+REDMINE = 2269
+
+Campo C1_ITEMCTA
+
+X3_F3 = SCPCTD
+
+para
+
+X3_F3 = CTACTD
+
+Observar que este campo na versão já está com esta consulta padrão.
+
+=====================================================
