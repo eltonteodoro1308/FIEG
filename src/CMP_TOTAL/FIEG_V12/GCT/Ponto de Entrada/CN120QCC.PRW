@@ -11,7 +11,8 @@ Ponto de entrada para refazer a query retirando os contratos compartilhados.
 
 @obs Projeto ELO Alterado pela FIEG
 
-@history 11/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23. 
+@history 11/03/2019, Kley@TOTVS.com.br, Compatibilização para o Protheus 12.1.23.
+@history 28/05/2019, elton.alves@TOTVS.com.br, Retirada do campo CN9_VLDCTR das condições de pesquisa da query.
 
 @return Caractere, String com query para ser adicionada ao Filtro.
 /*/
@@ -20,14 +21,14 @@ Ponto de entrada para refazer a query retirando os contratos compartilhados.
 User Function CN120QCC()
 
 Local cQuery1 := PARAMIXB[1]
-Local cQuery2 := PARAMIXB[2]
+//Local cQuery2 := PARAMIXB[2]
 //Local cQuery3 := PARAMIXB[3]
 Local cQuery4 := PARAMIXB[4]
-Local cQuery5 := PARAMIXB[5] 
+Local cQuery5 := PARAMIXB[5]
 
-Local cQuery  := ""  
+Local cQuery  := ""
 Local cQuery6 := ""
-Local cParam  := GetMV("SI_XCRP")  
+Local cParam  := GetMV("SI_XCRP")
 
 //--< Log das Personalizações >-----------------------------
 U_LogCustom()
@@ -37,7 +38,7 @@ If (cParam == 'N')
 	// Filtrar contratos de registro de preço
 	// Filtrar contratos do gestor do contrato
 	// Filtrar contratos compartilhados
-	cQuery6 := " and CN9.CN9_XREGP <> '1' "
+	cQuery6 := " CN9.CN9_XREGP <> '1' " //" and CN9.CN9_XREGP <> '1' "
 	cQuery6 += " and CNN.CNN_USRCOD = '" + RetCodUsr() + "'"
 	cQuery6 += " and not exists (select PB1.* from " + RetSqlName("PB1") + " PB1 "
 	cQuery6 += "                 where PB1.PB1_NUMERO = CN9.CN9_NUMERO "
@@ -47,17 +48,17 @@ If (cParam == 'N')
 EndIf
 
 cQuery := cQuery1
-cQuery += cQuery2+" "+cQuery6+" "+cQuery4+" "+cQuery5
+cQuery +=/* cQuery2+*/" "+cQuery6+" "+cQuery4+" "+cQuery5
 
 //IF CN9->(FieldPos("CN9_VLDCTR"))> 0
 //	cQuery := cQuery1
 //	cQuery += cQuery2+" "+cQuery6+" "+cQuery4
 //	cQuery += " UNION "
-//	cQuery += cQuery1            
+//	cQuery += cQuery1
 //	cQuery += cQuery3+" "+cQuery6+" "+cQuery4+" "+cQuery5
-//ELSE                 
+//ELSE
 //	cQuery := cQuery1
 //	cQuery += cQuery3+" "+cQuery6+" "+cQuery4+" "+cQuery5
-//ENDIF  
-	
+//ENDIF
+
 Return cQuery

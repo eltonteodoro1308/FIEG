@@ -1,49 +1,40 @@
-#Include "Protheus.ch"
+#Include "Protheus.Ch"
 #Include "TopConn.Ch"
 
-#DEFINE ENTER	CRLF
+#DEFINE ENTER	Chr(13)+Chr(10)
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CNIA188CA
-Cadastro de Criterios de Avaliacao.
-Monta Tela com dois folders (solicitante, comprador) dos campos da tabela DBH.
-
-@type function
-@author Fabricio Romera
-@since 21/07/2011
-@version P12.1.23
-
-@param nOpc, Num้rico, Op็ใo selecionada 3 = Inclusใo / 4 = Altera็ใo / 5 = Exclusใo.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
-
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCNIA188CA บAutor  ณFabricio Romera     บ Data ณ  07/21/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณCadastro de Criterios de Avaliacao -               		  บฑฑ
+ฑฑบ          ณMonta Tela com dois folders (solicitante, comprador) dos    บฑฑ
+ฑฑบ          ณcampos da tabela DBH.                                       บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CNIA188CA(nOpc)
+Local cTitle 	:= "Criterios de Avalia็ใo" //Ler do SX2
+Local aCoord 	:= {}
+Local oDlg
+Local oFld
+Local aCampos 	:= {}
+Local nX, nY  	:= 0
+Local lOk	  	:= .F.
+Local aSize	  	:= {}
+Default nOpc	:= 4
+Private aHeader := {}
+Private aCols	:= {}
+Private aCols1	:= {}
+Private aCols2	:= {}
+Private oGet1, oGet2, oTPane1, oTPane2
+Private aRotina	:= {}
 
-	Local cTitle 	:= "Criterios de Avalia็ใo" //Ler do SX2
-	Local aCoord 	:= {}
-	Local oSize     := FwDefSize():New(.T.) //Local oDlg
-	Local oFld
-	Local aCampos 	:= {}
-	Local nX, nY  	:= 0
-	Local lOk	  	:= .F.
-	Local aSize	  	:= {}
-	Default nOpc	:= 4
-	Private aHeader := {}
-	Private aCols	:= {}
-	Private aCols1	:= {}
-	Private aCols2	:= {}
-	Private oGet1, oGet2, oTPane1, oTPane2
-	Private aRotina	:= {}
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 	aAdd( aRotina, {"Pesquisar" ,"AxPesqui"									  	,0,1} )
 	aAdd( aRotina, {"Visualizar","AxVisual"									  	,0,2} )
 	aAdd( aRotina, {"Incluir"   ,"U_CNIA188CA(3)"								,0,3} )
@@ -59,36 +50,35 @@ User Function CNIA188CA(nOpc)
 	//Faz calculo automatico das dimensoes
 	aSize := MsAdvSize(,.F.,400)
 
-	//Dimensionamento da tela
-	oSize:AddObject( "LISTA", 000, 000, .T., .T. )
-	oSize:Process()
-
 	//Cria tela de cadastro
-	DEFINE MSDIALOG oDlg TITLE cTitle FROM;
-	oSize:aWindSize[1],oSize:aWindSize[2] TO oSize:aWindSize[3],oSize:aWindSize[4] PIXEL
+	DEFINE MSDIALOG oDlg TITLE cTitle From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
 
-	oTPane2 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,16,.T.,.F.)
-	oTPane2:Align := CONTROL_ALIGN_ALLCLIENT
-	oTPane2:NCLRPANE := 14803406
+	  //oTPane1 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,16,.T.,.F.)
+	  //oTPane1:Align := CONTROL_ALIGN_TOP
+	  //oTPane1:NCLRPANE := 14803406
 
-	//Cria folder | Solicitante | Comprador |
-	@ 000, 000 FOLDER oFld OF oTPane2 PROMPT "Solicitante", "Comprador" PIXEL SIZE 400, 400
-	oFld:Align := CONTROL_ALIGN_ALLCLIENT
-	oFld:bSetOption:={|nFolder| A188SetOption(nFolder,oFld:nOption) }
+		oTPane2 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,16,.T.,.F.)
+		oTPane2:Align := CONTROL_ALIGN_ALLCLIENT
+		oTPane2:NCLRPANE := 14803406
 
-	//Folder 1
-	aCols := aCols1
-	oGet1 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBH_CODIGO",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[1])
-	oGet1:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
-	oGet1:oBrowse:bDrawSelect	:= {|| U_A188Cols(1)}
+		//Cria folder | Solicitante | Comprador |
+		@ 000, 000 FOLDER oFld OF oTPane2 PROMPT "Solicitante", "Comprador" PIXEL SIZE 400, 400
+	    oFld:Align := CONTROL_ALIGN_ALLCLIENT
+		oFld:bSetOption:={|nFolder| A188SetOption(nFolder,oFld:nOption) }
 
-	//Folder 2
-	aCols := aCols2
-	oGet2 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBH_CODIGO",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[2])
-	oGet2:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
-	oGet2:oBrowse:bDrawSelect	:= {|| U_A188Cols(2)}
+	    //Folder 1
+	    aCols := aCols1
+		oGet1 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBH_CODIGO",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[1])
+		oGet1:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+		oGet1:oBrowse:bDrawSelect	:= {|| U_A188Cols(1)}
 
-	aCols		:= aClone(aCols1)
+	    //Folder 2
+	    aCols := aCols2
+		oGet2 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBH_CODIGO",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[2])
+		oGet2:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+		oGet2:oBrowse:bDrawSelect	:= {|| U_A188Cols(2)}
+
+		aCols		:= aClone(aCols1)
 
 	ACTIVATE MSDIALOG oDlg CENTER ON INIT EnchoiceBar(oDlg,{|| lOk := .T., oDlg:End()},{||oDlg:End()})
 
@@ -101,89 +91,81 @@ User Function CNIA188CA(nOpc)
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} GravaDBH
-Grava os dados da Tabela DBH.
-
-@type function
-@author Fabricio Romera
-@since 25/07/2011
-@version P12.1.23
-
-@param nOpc, Num้rico, Op็ใo selecionada 3 = Inclusใo / 4 = Altera็ใo / 5 = Exclusใo.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณGravaDBH  บAutor  ณFabricio Romera     บ Data ณ  07/25/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 Static Function GravaDBH(nOpc)
+Local nX	:= 0
+Local lSeek := .F.
 
-	Local nX	:= 0
-	Local lSeek := .F.
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 	DbSelectArea("DBH")
-	DBH->( DbSetOrder(1) )
+	DbSetOrder(1)
 
 	//Grava aba de solicitantes
 	For nX := 1 to Len(aCols1)
 
-		lSeek := DBH->( DbSeek( xFilial("DBH") + aCols1[nX][1] + aCols1[nX][2] ) )
+		lSeek := DbSeek( xFilial("DBH") + aCols1[nX][1] + aCols1[nX][2] )
 
-		//Alteracao e Inclusao
+        //Alteracao e Inclusao
 		If !aCols1[nX][Len(aCols1[nX])] .And. !Empty(aCols1[nX][2])
 
 			RecLock("DBH", !lSeek)
-			DBH->DBH_FILIAL		:= xFilial("DBH")
-			DBH->DBH_CODIGO		:= aCols1[nX][1]
-			DBH->DBH_TIPO		:= aCols1[nX][2]
-			DBH->DBH_DESCR		:= aCols1[nX][3]
-			DBH->DBH_PESO		:= aCols1[nX][4]
-			DBH->DBH_ATIVO		:= aCols1[nX][5]
-			DBH->( MsUnlock() )
+				DBH->DBH_FILIAL		:= xFilial("DBH")
+				DBH->DBH_CODIGO		:= aCols1[nX][1]
+				DBH->DBH_TIPO		:= aCols1[nX][2]
+				DBH->DBH_DESCR		:= aCols1[nX][3]
+				DBH->DBH_PESO		:= aCols1[nX][4]
+				DBH->DBH_ATIVO		:= aCols1[nX][5]
+			MsUnlock()
 
-			//Exclusao
+		//Exclusao
 		ElseIf lSeek .And. !Empty(aCols1[nX][2])
 
 			RecLock("DBH", .F., .T.)
-			DBH->( DbDelete() )
-			DBH->( MsUnlock() )
+				DbDelete()
+			MsUnlock()
 
 		End If
 
 	Next
 
 	DbSelectArea("DBH")
-	DBH->( DbSetOrder(1) )
+	DbSetOrder(1)
 
 	//Grava aba de solicitantes
 	For nX := 1 to Len(aCols2)
 
-		lSeek := DBH->( DbSeek( xFilial("DBH") + aCols2[nX][1] + aCols2[nX][2] ) )
+		lSeek := DbSeek( xFilial("DBH") + aCols2[nX][1] + aCols2[nX][2] )
 
-		//Alteracao e Inclusao
+        //Alteracao e Inclusao
 		If !aCols2[nX][Len(aCols2[nX])] .And. !Empty(aCols2[nX][2])
 
 			RecLock("DBH", !lSeek)
-			DBH->DBH_FILIAL		:= xFilial("DBH")
-			DBH->DBH_CODIGO		:= aCols2[nX][1]
-			DBH->DBH_TIPO		:= aCols2[nX][2]
-			DBH->DBH_DESCR		:= aCols2[nX][3]
-			DBH->DBH_PESO		:= aCols2[nX][4]
-			DBH->DBH_ATIVO		:= aCols2[nX][5]
-			DBH->( MsUnlock() )
+				DBH->DBH_FILIAL		:= xFilial("DBH")
+				DBH->DBH_CODIGO		:= aCols2[nX][1]
+				DBH->DBH_TIPO		:= aCols2[nX][2]
+				DBH->DBH_DESCR		:= aCols2[nX][3]
+				DBH->DBH_PESO		:= aCols2[nX][4]
+				DBH->DBH_ATIVO		:= aCols2[nX][5]
+			MsUnlock()
 
-			//Exclusao
+		//Exclusao
 		ElseIf lSeek .And. !Empty(aCols2[nX][2])
 
 			RecLock("DBH", .F., .T.)
-			DBH->( DbDelete() )
-			DBH->( MsUnlock() )
+				DbDelete()
+			MsUnlock()
 
 		End If
 
@@ -191,176 +173,142 @@ Static Function GravaDBH(nOpc)
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CarregaCols
-Carrega os aCols dos folders de Solicitantes e de Compradores.
-
-@type function
-@author Fabricio Romera
-@since 25/07/2011
-@version P12.1.23
-
-@param aCols1, Array, aCols do folder de Solicitantes.
-@param aCols2, Array, aCols do folder de Compradores.
-@param nOpc, Num้rico, Op็ใo selecionada 3 = Inclusใo / 4 = Altera็ใo / 5 = Exclusใo.
-@param cAlias, Caractere, Alias da tabela correspondentes aos GetDados dos folders Solictante e Comprador.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออหออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCarregaColsบAutor ณFabricio Romera     บ Data ณ  07/25/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออสออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 Static Function CarregaCols(aCols1, aCols2, nOpc, cAlias)
+Local nUsado 	:= 0
+Local cVarTemp 	:= ""
+Local cCodigo	:= IIf( Type("DBI_CODIGO") == "C", M->DBI_CODIGO, "")
+Local cCpoCod	:= IIf( Type("DBI_CODIGO") == "C", "DBJ->DBJ_CODIGO", "''")
+Default cAlias 	:= "DBH"
 
-	Local nUsado 	:= 0
-	Local cVarTemp 	:= ""
-	Local cCodigo	:= IIf( Type("DBI_CODIGO") == "C", M->DBI_CODIGO, "")
-	Local cCpoCod	:= IIf( Type("DBI_CODIGO") == "C", "DBJ->DBJ_CODIGO", "''")
-	Default cAlias 	:= "DBH"
+dbSelectArea(cAlias)
+dbSetOrder(2)
+dbSeek( xFilial(cAlias) + "1" + cCodigo )
 
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
+While !Eof() .And. (cAlias)->&(cAlias+"_FILIAL") + (cAlias)->&(cAlias+"_TIPO") + &(cCpoCod) == xFilial(cAlias) + "1" + cCodigo
 
-	//--< Processamento da Rotina >-----------------------------
-	dbSelectArea(cAlias)
-	(cAlias)->(dbSetOrder(2))
-	(cAlias)->(dbSeek( xFilial(cAlias) + "1" + cCodigo ))
+	aAdd( aCols1, Array(Len(aHeader)+1))
+	aCols1[Len(aCols1)][Len(aCols1[Len(aCols1)])] := .F.
 
-	OpenSxs(,,,,cEmpAnt,"SX3MDI","SX3",,.F.)
-	SX3MDI->(dbSeek( cAlias ))
-
-	While !Eof() .And. (cAlias)->&(cAlias+"_FILIAL") + (cAlias)->&(cAlias+"_TIPO") + &(cCpoCod) == xFilial(cAlias) + "1" + cCodigo
-
-		aAdd( aCols1, Array(Len(aHeader)+1))
-		aCols1[Len(aCols1)][Len(aCols1[Len(aCols1)])] := .F.
-
-		nUsado:=0
-		While !EOF() .And. SX3MDI->X3_ARQUIVO == cAlias
-			If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
-				nUsado++
-				cVarTemp := cAlias+"->"+(SX3MDI->X3_CAMPO)
-				If SX3MDI->X3_CONTEXT # "V"
-					aCols1[Len(aCols1),nUsado] := &cVarTemp
-				ElseIf SX3MDI->X3_CONTEXT == "V"
-					aCols1[Len(aCols1),nUsado] := CriaVar(AllTrim(SX3MDI->X3_CAMPO))
-				Endif
-
-			Endif
-			SX3MDI->(dbSkip())
-		End
-		dbSelectArea(cAlias)
-		(cAlias)->(dbSkip())
-	End
-
-	dbSelectArea(cAlias)
-	(cAlias)->(dbSetOrder(2))
-	(cAlias)->(dbSeek( xFilial(cAlias) + "2" + cCodigo))
-
-	While !Eof() .And. (cAlias)->&(cAlias+"_FILIAL") + (cAlias)->&(cAlias+"_TIPO") + &(cCpoCod) == xFilial(cAlias) + "2" + cCodigo
-
-		aAdd( aCOLS2, Array(Len(aHeader)+1))
-		aCols2[Len(aCols2)][Len(aCols2[Len(aCols2)])] := .F.
-
-		nUsado:=0
-		SX3MDI->(DbGotop())
-		SX3MDI->(dbSeek( cAlias ))
-		While !EOF() .And. SX3MDI->X3_ARQUIVO == cAlias
-			If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
-				nUsado++
-				cVarTemp := cAlias+"->"+(SX3MDI->X3_CAMPO)
-				If SX3MDI->X3_CONTEXT # "V"
-					aCOLS2[Len(aCOLS2),nUsado] := &cVarTemp
-				ElseIf SX3MDI->X3_CONTEXT == "V"
-					aCOLS2[Len(aCOLS2),nUsado] := CriaVar(AllTrim(SX3MDI->X3_CAMPO))
-				Endif
-
-			Endif
-			SX3MDI->(dbSkip())
-		End
-		dbSelectArea(cAlias)
-		(cAlias)->(dbSkip())
-	End
-
-	SX3MDI->( DbCloseArea() )
-
-Return
-
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} MontaHeader
-Monta o aHeader dos folders de Solicitantes e de Compradores.
-
-@type function
-@author Fabricio Romera
-@since 25/07/2011
-@version P12.1.23
-
-@param aHeader, Array, aHeader do folder de Solicitantes.
-@param nOpc, Num้rico, Op็ใo selecionada 3 = Inclusใo / 4 = Altera็ใo / 5 = Exclusใo.
-@param cAlias, Caractere, Alias da tabela correspondentes aos GetDados dos folders Solictante e Comprador.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
-Static Function MontaHeader(aHeader, nOpc, cAlias)
-
-	Local nUsado := 0
-	Default cAlias := "DBH"
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
-	OpenSxs(,,,,cEmpAnt,"SX3MDI","SX3",,.F.)
-	SX3MDI->( dbSetOrder(1) )
-	SX3MDI->( dbSeek( cAlias ) )
-	While !EOF() .And. SX3MDI->X3_ARQUIVO == cAlias
-		If X3USO(SX3MDI->X3_USADO) .AND. cNivel >= SX3MDI->X3_NIVEL
+	nUsado:=0
+	dbSelectArea("SX3")
+	dbSeek( cAlias )
+	While !EOF() .And. X3_ARQUIVO == cAlias
+		If X3USO(X3_USADO) .AND. cNivel >= X3_NIVEL
 			nUsado++
-			AADD(aHeader,{ TRIM(SX3MDI->X3_TITULO) ,;
-			SX3MDI->X3_CAMPO        ,;
-			SX3MDI->X3_PICTURE      ,;
-			SX3MDI->X3_TAMANHO      ,;
-			SX3MDI->X3_DECIMAL      ,;
-			SX3MDI->X3_VALID        ,;
-			SX3MDI->X3_USADO        ,;
-			SX3MDI->X3_TIPO         ,;
-			SX3MDI->X3_ARQUIVO      ,;
-			SX3MDI->X3_CONTEXT      })
-		Endif
-		SX3MDI->( dbSkip() )
-	End
+			cVarTemp := cAlias+"->"+(X3_CAMPO)
+			If X3_CONTEXT # "V"
+				aCols1[Len(aCols1),nUsado] := &cVarTemp
+			ElseIf X3_CONTEXT == "V"
+				aCols1[Len(aCols1),nUsado] := CriaVar(AllTrim(X3_CAMPO))
+			Endif
 
-	SX3MDI->( DbCloseArea() )
+		Endif
+		dbSkip()
+	End
+	dbSelectArea(cAlias)
+	dbSkip()
+End
+
+dbSelectArea(cAlias)
+dbSetOrder(2)
+dbSeek( xFilial(cAlias) + "2" + cCodigo)
+
+While !Eof() .And. (cAlias)->&(cAlias+"_FILIAL") + (cAlias)->&(cAlias+"_TIPO") + &(cCpoCod) == xFilial(cAlias) + "2" + cCodigo
+
+	aAdd( aCOLS2, Array(Len(aHeader)+1))
+	aCols2[Len(aCols2)][Len(aCols2[Len(aCols2)])] := .F.
+
+	nUsado:=0
+	dbSelectArea("SX3")
+	dbSeek( cAlias )
+	While !EOF() .And. X3_ARQUIVO == cAlias
+		If X3USO(X3_USADO) .AND. cNivel >= X3_NIVEL
+			nUsado++
+			cVarTemp := cAlias+"->"+(X3_CAMPO)
+			If X3_CONTEXT # "V"
+				aCOLS2[Len(aCOLS2),nUsado] := &cVarTemp
+			ElseIf X3_CONTEXT == "V"
+				aCOLS2[Len(aCOLS2),nUsado] := CriaVar(AllTrim(X3_CAMPO))
+			Endif
+
+		Endif
+		dbSkip()
+	End
+	dbSelectArea(cAlias)
+	dbSkip()
+End
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} A188Cols
-Salva o conteudo da GetDados se existir.
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออหออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCarregaColsบAutor ณFabricio Romera     บ Data ณ  07/25/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออสออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+Static Function MontaHeader(aHeader, nOpc, cAlias)
+Local nUsado := 0
+Default cAlias := "DBH"
 
-@type function
-@author Fabricio Romera
-@since 25/07/2011
-@version P12.1.23
+	dbSelectArea("SX3")
+	dbSetOrder(1)
+	dbSeek( cAlias )
+	While !EOF() .And. X3_ARQUIVO == cAlias
+		If X3USO(X3_USADO) .AND. cNivel >= X3_NIVEL
+			nUsado++
+			AADD(aHeader,{ TRIM(X3Titulo()) ,;
+			                X3_CAMPO        ,;
+			                X3_PICTURE      ,;
+			                X3_TAMANHO      ,;
+			                X3_DECIMAL      ,;
+			                X3_VALID        ,;
+			                X3_USADO        ,;
+			                X3_TIPO         ,;
+			                X3_ARQUIVO      ,;
+			                X3_CONTEXT      })
+		Endif
+		dbSkip()
+	End
 
-@param nGetDados, Num้rico, Indica o aCols a ser salvo.
+Return
 
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหออออออัออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณA188Cols     บAutor ณFabricio Romera   บ Data ณ  07/25/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออออสออออออฯออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function A188Cols(nGetDados)
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 
 	//Salva o conteudo da GetDados se existir
 	If nGetDados = 1
@@ -379,105 +327,85 @@ User Function A188Cols(nGetDados)
 
 Return .T.
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} A188SetOption
-Salva o conteudo da GetDados.
-
-@type function
-@author Fabricio Romera
-@since 25/07/2011
-@version P12.1.23
-
-@param nFolder, Num้rico, Folder Selecionado.
-@param nOldFolder, Num้rico, Folder POosicionado.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหออออออัออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณA188SetOptionบAutor ณFabricio Romera   บ Data ณ  07/25/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออออสออออออฯออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ                                                            บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 Static Function A188SetOption(nFolder,nOldFolder)
 
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
+//Salva o conteudo da GetDados
+If nOldFolder = 1
+	aCols1		:= {}
+	aCols1		:= aClone(aCols)
+	oGet1:oBrowse:lDisablePaint	:= .T.
+ElseIf nOldFolder = 2
+	aCols2		:= {}
+	aCols2		:= aClone(aCols)
+	oGet2:oBrowse:lDisablePaint	:= .T.
+EndIf
 
-	//--< Processamento da Rotina >-----------------------------
+//Restaura o conteudo da GetDados
+If nFolder = 1
+	oGet1:oBrowse:lDisablePaint	:= .F.
+	aCols	:= {}
+	aCols	:= aCols1 //aClone(aCols1)
+	n := 1
+	oGet1:oBrowse:Refresh()
 
-	//Salva o conteudo da GetDados
-	If nOldFolder = 1
-		aCols1		:= {}
-		aCols1		:= aClone(aCols)
-		oGet1:oBrowse:lDisablePaint	:= .T.
-	ElseIf nOldFolder = 2
-		aCols2		:= {}
-		aCols2		:= aClone(aCols)
-		oGet2:oBrowse:lDisablePaint	:= .T.
-	EndIf
-
-	//Restaura o conteudo da GetDados
-	If nFolder = 1
-		oGet1:oBrowse:lDisablePaint	:= .F.
-		aCols	:= {}
-		aCols	:= aCols1 //aClone(aCols1)
-		n := 1
-		oGet1:oBrowse:Refresh()
-
-	ElseIf nFolder = 2
-		oGet2:oBrowse:lDisablePaint	:= .F.
-		aCols	:= {}
-		aCols	:= aCols2 //aClone(aCols2)
-		n := 1
-		oGet2:oBrowse:Refresh()
-	EndIf
+ElseIf nFolder = 2
+	oGet2:oBrowse:lDisablePaint	:= .F.
+	aCols	:= {}
+	aCols	:= aCols2 //aClone(aCols2)
+	n := 1
+	oGet2:oBrowse:Refresh()
+EndIf
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} C188AFMan
-Avaliacao de Fornecedores.
-
-@type function
-@author Fabricio Romera
-@since 22/08/2011
-@version P12.1.23
-
-@param cAlias, Caractere, Alias da Tabala.
-@param nRecno, Num้rico, Recno do registro posicionado.
-@param nOpc, Num้rico, Op็ใo selecionada.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหออออออัออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCNIA188AF	   บAutor ณFabricio Romera   บ Data ณ  22/08/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออออสออออออฯออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณAvaliacao de Fornecedores                                   บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                            							  บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function C188AFMan(cAlias,nRecno, nOpc)
+Local nSaveSX8  := GetSX8Len()
+Local cTitle 	:= "Avalia็ใo de Fornecedores" //Ler do SX2
+Local aCoord 	:= {}
+Local oDlg
+Local oFld
+Local aCampos 	:= {}
+Local nX, nY  	:= 0
+Local lOk	  	:= .F.
+Local aSize	  	:= {} 
+Local cNomeSol  := "" 
+Local cNomeCom  := ""
+Local _cBody  	:= "" 
+Default nOpc	:= 4
+Private aHeader := {}
+Private aCols	:= {}
+Private aCols1	:= {}
+Private aCols2	:= {}
+Private oGet1, oGet2, oTPane1, oTPane2, oEnchoice
 
-	Local nSaveSX8  := GetSX8Len()
-	Local cTitle 	:= "Avalia็ใo de Fornecedores" //Ler do SX2
-	Local aCoord 	:= {}
-	Local oDlg
-	Local oFld
-	Local aCampos 	:= {}
-	Local nX, nY  	:= 0
-	Local lOk	  	:= .F.
-	Local aSize	  	:= {}
-	Local cNomeSol  := ""
-	Local cNomeCom  := ""
-	Local _cBody  	:= ""
-	Local lSegue    := .T.
-	Default nOpc	:= 4
-	Private aHeader := {}
-	Private aCols	:= {}
-	Private aCols1	:= {}
-	Private aCols2	:= {}
-	Private oGet1, oGet2, oTPane1, oTPane2, oEnchoice
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 	//Carrega registro
 	DBI->(dbGoTo(nRecno))
 	DBI->(RegToMemory("DBI", IIf(nOpc = 3,.T.,.F.) ))
@@ -485,33 +413,65 @@ User Function C188AFMan(cAlias,nRecno, nOpc)
 	//Verifica se pode alterar
 	If  nOpc == 4 .And. M->DBI_STATUS == "4"
 		Aviso("Avalia็ใo de Fornecedores"," Avalia็ใo jแ Finalizada, nใo pode ser Alterada. ",{"Ok"})
-		lSegue := .F.
-	EndIf
-
+		Return
+	EndIf 
+	
 	//Verifica se pode Estornar
-	If lSegue .And. nOpc == 8 .And. M->DBI_STATUS <> "4"
+	If nOpc == 8 .And. M->DBI_STATUS <> "4"
 		Aviso("Avalia็ใo de Fornecedores"," Avalia็ใo nใo finalizada, nใo pode ser Estornada. ",{"Ok"})
-		lSegue := .F.
+		Return
+	EndIf 
+
+/*	//Valida se usuario pode alterar - RETIRADA AS VALIDACOES DE QUEM POSSA ALTERAR, FAZER OU ESTORNAR AVALIACOES, AGORA QUALQUER UM PODE, DESDE QUE TENHA ACESSO ภ ROTINA
+	If nOpc == 4 .And. M->DBI_STATUS == "2" .And. M->DBI_ORIGEM = "1" .And. __cUserID != AllTrim(DBI->(DBI_CODSOL)) 
+		_cBody  :="" 
+	  	_cBody  := Chr(13)+Chr(10)+Chr(13)+Chr(10)
+   		_cBody  += " Apenas o solicitante pode realizar altera็๕es nesta etapa da avalia็ใo. "
+		_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10) 
+		_cBody  += "SOLICITANTE: "+UsrFullName(DBI->DBI_CODSOL)+Chr(13)+Chr(10) 
+		Aviso("Avalia็ใo de Fornecedores",_cBody,{"Ok"},3)
+		Return
+	EndIf   
+	
+	//Valida se usuario pode Estornar
+	If nOpc == 8 .And. M->DBI_STATUS == "4" .And. ( __cUserID != AllTrim(DBI->(DBI_CODSOL)) .And. __cUserID != AllTrim(DBI->(DBI_CODCOM)))
+ 		_cBody  :="" 
+    	_cBody  := Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	    _cBody  += " Apenas o solicitante ou o Comprador podem Estornar esta avalia็ใo. "
+		_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10) 
+ 		_cBody  += "SOLICITANTE: "+UsrFullName(DBI->DBI_CODSOL)+Chr(13)+Chr(10) 
+ 		_cBody  += "COMPRADOR: "+UsrFullName(DBI->DBI_CODCOM)+Chr(13)+Chr(10) 
+		Aviso("Avalia็ใo de Fornecedores",_cBody,{"Ok"},3)
+		Return
 	EndIf
 
-	If lSegue
+	//Valida se usuario pode alterar
+	If nOpc == 4 .And. M->DBI_STATUS == "3" .And. M->DBI_ORIGEM = "1" .And. __cUserID != AllTrim(DBI->(DBI_CODCOM))
+	    _cBody  :="" 
+    	_cBody  := Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	    _cBody  += " Apenas o comprador pode realizar altera็๕es nesta etapa da avalia็ใo. "
+		_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10) 
+ 		_cBody  += "COMPRADOR: "+UsrFullName(DBI->DBI_CODCOM)+Chr(13)+Chr(10) 
+		Aviso("Avalia็ใo de Fornecedores",_cBody,{"Ok"},3)
+		Return
+	EndIf
+*/
+	//Monta aHeader
+	MontaHeader(@aHeader, nOpc, "DBJ")
 
-		//Monta aHeader
-		MontaHeader(@aHeader, nOpc, "DBJ")
+	//Carrega aCols
+	CarregaCols(@aCols1, @aCols2, nOpc, "DBJ")
 
-		//Carrega aCols
-		CarregaCols(@aCols1, @aCols2, nOpc, "DBJ")
+	//Faz calculo automatico das dimensoes
+	aSize := MsAdvSize(,.F.,400)
 
-		//Faz calculo automatico das dimensoes
-		aSize := MsAdvSize(,.F.,400)
-
-		//Cria tela de cadastro
-		DEFINE MSDIALOG oDlg TITLE cTitle From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
+	//Cria tela de cadastro
+	DEFINE MSDIALOG oDlg TITLE cTitle From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
 
 		//Cabe็alho
-		oTPane1 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,150,.T.,.F.)
-		oTPane1:Align := CONTROL_ALIGN_TOP
-		oTPane1:NCLRPANE := 14803406
+	 	oTPane1 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,150,.T.,.F.)
+	  	oTPane1:Align := CONTROL_ALIGN_TOP
+	  	oTPane1:NCLRPANE := 14803406
 
 		//Itens
 		oTPane2 := TPanel():New(0,0,"",oDlg,NIL,.T.,.F.,NIL,NIL,0,120,.T.,.F.)
@@ -520,15 +480,15 @@ User Function C188AFMan(cAlias,nRecno, nOpc)
 
 		//Cria folder | Solicitante | Comprador |
 		@ 000, 000 FOLDER oFld OF oTPane2 PROMPT "Solicitante", "Comprador" PIXEL SIZE 400, 400
-		oFld:Align := CONTROL_ALIGN_ALLCLIENT
+	    oFld:Align := CONTROL_ALIGN_ALLCLIENT
 		oFld:bSetOption:={|nFolder| A188SetOption(nFolder,oFld:nOption) }
 
 		//Cria campos do cabecalho
 		oEnchoice := MsMGet():New("DBI",,nOpc,,,,,{2,2,100,100},,,,,,oTPane1)
 		oEnchoice:oBox:Align := CONTROL_ALIGN_ALLCLIENT
 
-		//Folder 1
-		aCols := aCols1
+	    //Folder 1
+	    aCols := aCols1
 		oGet1 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBJ_ITEM",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[1])
 		oGet1:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
 		oGet1:oBrowse:bDrawSelect	:= {|| U_A188Cols(1)}
@@ -537,8 +497,8 @@ User Function C188AFMan(cAlias,nRecno, nOpc)
 			aCols1[Len(aCols1)][ aScan(aHeader, { |x| AllTrim(x[2]) == "DBJ_TIPO" }) ]  := "1"
 		End If
 
-		//Folder 2
-		aCols := aCols2
+	    //Folder 2
+	    aCols := aCols2
 		oGet2 := MSGetDados():New(0, 0, 0, 0, nOpc,,,"+DBJ_ITEM",.T.,,,,,,,,"AllwaysTrue",oFld:aDialogs[2])
 		oGet2:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
 		oGet2:oBrowse:bDrawSelect	:= {|| U_A188Cols(2)}
@@ -556,87 +516,65 @@ User Function C188AFMan(cAlias,nRecno, nOpc)
 			oFld:aEnable(1, .F.)
 		End If
 
-		ACTIVATE MSDIALOG oDlg CENTER ON INIT EnchoiceBar(oDlg,{|| lOk := ValidCpos(nOpc), If(lOk, oDlg:End(),)},{||oDlg:End()})
+	ACTIVATE MSDIALOG oDlg CENTER ON INIT EnchoiceBar(oDlg,{|| lOk := ValidCpos(nOpc), If(lOk, oDlg:End(),)},{||oDlg:End()})
 
-		If lOk .And. nOpc <> 7
+	If lOk .And. nOpc <> 7
 
-			Begin Transaction
+		Begin Transaction
 
-				//Grava registro
-				If C188AFGrava(cAlias,nRecno, nOpc)
+			//Grava registro
+			If C188AFGrava(cAlias,nRecno, nOpc)
 
-					//Confirma numeracao automatica
-					While ( GetSX8Len() > nSaveSX8 )
-						ConfirmSX8()
-					EndDo
+				//Confirma numeracao automatica
+				While ( GetSX8Len() > nSaveSX8 )
+					ConfirmSX8()
+				EndDo
 
-					Aviso("Avalia็ใo de Fornecedores","Atualiza็ใo concluํda.",{"Ok"})
+				Aviso("Avalia็ใo de Fornecedores","Atualiza็ใo concluํda.",{"Ok"})
 
-				Else
+			Else
 
-					//Cancela numeracao automatica
-					While ( GetSX8Len() > nSaveSX8 )
-						RollBackSX8()
-					EndDo
+				//Cancela numeracao automatica
+				While ( GetSX8Len() > nSaveSX8 )
+					RollBackSX8()
+				EndDo
 
-				End If
+			End If
 
-			End Transaction
+		End Transaction
 
-		Else
-			//Aviso("Criterios de Avalia็ใo"," Processo cancelado. 	",{"Ok"})
-			While ( GetSX8Len() > nSaveSX8 )
-				RollBackSX8()
-			EndDo
-		End If
-
+	Else
+		//Aviso("Criterios de Avalia็ใo"," Processo cancelado. 	",{"Ok"})
+		While ( GetSX8Len() > nSaveSX8 )
+			RollBackSX8()
+		EndDo
 	End If
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} C188AFGrava
-Inclui/Altera/Exclui registro de avaliacao de fornecedores.
-
-@type function
-@author Fabricio Romera
-@since 22/08/2011
-@version P12.1.23
-
-@param cAlias, Caractere, Alias da Tabala.
-@param nRecno, Num้rico, Recno do registro posicionado.
-@param nOpc, Num้rico, Op็ใo selecionada.
-
-@obs Projeto ELO alterado pela FIEG
-
-@return L๓gico, Fixo Verdadeiro.
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-@history 08/05/2019, Kley@TOTVS.com.br, Troca da fun็ใo ACSendMail() por TkSendMail().
-/*/
-/*/================================================================================================================================/*/
-
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหออออออัออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณC188AFGrava  บAutor ณFabricio Romera   บ Data ณ  22/08/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออออสออออออฯออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณInclui/Altera/Exclui registro de avaliacao de fornecedores  บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 Static Function C188AFGrava(cAlias, nRecno, nOpc)
-
-	Local lRet 		:= .T.
-	Local nX		:= 0
-	Local lSeek 	:= .F.
-	Local lFinal	:= .F.
-	Local cStatus   := ""
-	Local _cEMail 	:= ""
-	Local lSegue    := .T.
-	Local _cBody  := ""
-	Local cAccon  := SuperGetMv("MV_RELACNT")
-	Local cPassw  := SuperGetMv("MV_RELAPSW")
-	Local cServer := SuperGetMv("MV_RELSERV")
-	Local cFrom	  := SuperGetMv("MV_RELFROM")
-
-	Private cNomeUser := Alltrim(UsrRetName(__cUserID))
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
+Local lRet 		:= .T.
+Local nX		:= 0
+Local lSeek 	:= .F.
+Local lFinal	:= .F.
+Local cStatus   := ""
+Local _cEMail 	:= ""
+Local _cBody  	:= "" 
+Private cNomeUser := Alltrim(UsrRetName(__cUserID))
 
 	//Verifica se deve passar para proxima etapa/finalizar
 	If (nOpc == 4 .or. nOpc == 3) .And. nOpc <> 8
@@ -644,32 +582,31 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 			lFinal := .T.
 		EndIf
 	Else
-		If nOpc == 8
-			If Aviso("Avalia็ใo de Fornecedores","Confirma estorno da avalia็ใo?",{"Sim", "Nใo"})  == 1
-				lFinal := .T.
-			Else
-				lSegue := lFinal
+	    If nOpc == 8
+	   		If Aviso("Avalia็ใo de Fornecedores","Confirma estorno da avalia็ใo?",{"Sim", "Nใo"})  == 1
+				lFinal := .T. 
+			Else 
+			  	Return lFinal
 			EndIf
-		EndIf
+	   	EndIf
 	EndIf
 
-	If lSegue
 
-		//-------------------------------------------------------------------------------------------------------------------------------
-		//	Itens
-		//-------------------------------------------------------------------------------------------------------------------------------
-		DbSelectArea("DBJ")
-		DBJ->( DbSetOrder(1) )
+//-------------------------------------------------------------------------------------------------------------------------------
+//	Itens
+//-------------------------------------------------------------------------------------------------------------------------------
+	DbSelectArea("DBJ")
+	DbSetOrder(1)
 
-		//Grava aba de solicitantes
-		For nX := 1 to Len(aCols1)
+	//Grava aba de solicitantes
+	For nX := 1 to Len(aCols1)
 
-			lSeek := DBJ->( DbSeek( xFilial("DBJ") + aCols1[nX][1] + aCols1[nX][2] + aCols1[nX][3]) ) //DBJ_FILIAL+DBJ_CODIGO+DBJ_TIPO+DBJ_ITEM
+		lSeek := DbSeek( xFilial("DBJ") + aCols1[nX][1] + aCols1[nX][2] + aCols1[nX][3]) //DBJ_FILIAL+DBJ_CODIGO+DBJ_TIPO+DBJ_ITEM
 
-			//Alteracao e Inclusao
-			If !aCols1[nX][Len(aCols1[nX])] .And. !Empty(aCols1[nX][2]) .And. !Empty(aCols1[nX][4])
+        //Alteracao e Inclusao
+		If !aCols1[nX][Len(aCols1[nX])] .And. !Empty(aCols1[nX][2]) .And. !Empty(aCols1[nX][4])
 
-				RecLock("DBJ", !lSeek)
+			RecLock("DBJ", !lSeek)
 				DBJ->DBJ_FILIAL		:= xFilial("DBJ")
 				DBJ->DBJ_CODIGO		:= aCols1[nX][1]
 				DBJ->DBJ_TIPO  		:= aCols1[nX][2]
@@ -679,31 +616,31 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 				DBJ->DBJ_PESO  		:= aCols1[nX][6]
 				DBJ->DBJ_NOTA  		:= aCols1[nX][7]
 				DBJ->DBJ_PONTUA		:= aCols1[nX][8]
-				DBJ->( MsUnlock() )
+			MsUnlock()
 
-				//Exclusao
-			ElseIf lSeek .And. !Empty(aCols1[nX][2])
+		//Exclusao
+		ElseIf lSeek .And. !Empty(aCols1[nX][2])
 
-				RecLock("DBJ", .F., .T.)
-				DBJ->( DbDelete() )
-				DBJ->( MsUnlock() )
+			RecLock("DBJ", .F., .T.)
+				DbDelete()
+			MsUnlock()
 
-			End If
+		End If
 
-		Next
+	Next
 
-		DbSelectArea("DBJ")
-		DBJ->( DbSetOrder(1) )
+	DbSelectArea("DBJ")
+	DbSetOrder(1)
 
-		//Grava aba de solicitantes
-		For nX := 1 to Len(aCols2)
+	//Grava aba de solicitantes
+	For nX := 1 to Len(aCols2)
 
-			lSeek := DBJ->( DbSeek( xFilial("DBJ") + aCols2[nX][1] + aCols2[nX][2] + aCols2[nX][3] ) ) //DBJ_FILIAL+DBJ_CODIGO+DBJ_TIPO+DBJ_ITEM
+		lSeek := DbSeek( xFilial("DBJ") + aCols2[nX][1] + aCols2[nX][2] + aCols2[nX][3] ) //DBJ_FILIAL+DBJ_CODIGO+DBJ_TIPO+DBJ_ITEM
 
-			//Alteracao e Inclusao
-			If !aCols2[nX][Len(aCols2[nX])] .And. !Empty(aCols2[nX][2])
+        //Alteracao e Inclusao
+		If !aCols2[nX][Len(aCols2[nX])] .And. !Empty(aCols2[nX][2])
 
-				RecLock("DBJ", !lSeek)
+			RecLock("DBJ", !lSeek)
 				DBJ->DBJ_FILIAL		:= xFilial("DBJ")
 				DBJ->DBJ_CODIGO		:= aCols2[nX][1]
 				DBJ->DBJ_TIPO  		:= aCols2[nX][2]
@@ -713,50 +650,50 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 				DBJ->DBJ_PESO  		:= aCols2[nX][6]
 				DBJ->DBJ_NOTA  		:= aCols2[nX][7]
 				DBJ->DBJ_PONTUA		:= aCols2[nX][8]
-				DBJ->( MsUnlock() )
+			MsUnlock()
 
-				//Exclusao
-			ElseIf lSeek .And. !Empty(aCols2[nX][2])
+		//Exclusao
+		ElseIf lSeek .And. !Empty(aCols2[nX][2])
 
-				RecLock("DBJ", .F., .T.)
-				DBJ->( DbDelete() )
-				DBJ->( MsUnlock() )
+			RecLock("DBJ", .F., .T.)
+				DbDelete()
+			MsUnlock()
 
-			End If
+		End If
 
-		Next
+	Next
 
-		//-------------------------------------------------------------------------------------------------------------------------------
-		//	Cabecalho
-		//-------------------------------------------------------------------------------------------------------------------------------
-		DbSelectArea("DBI")
-		DBI->( DbSetOrder(1) )
-		lSeek := DBI->( DbSeek( xFilial("DBI")+ M->DBI_CODIGO) ) //DBI_FILIAL+DBI_CODIGO+DBI_FORNEC
+//-------------------------------------------------------------------------------------------------------------------------------
+//	Cabecalho
+//-------------------------------------------------------------------------------------------------------------------------------
+	DbSelectArea("DBI")
+	DbSetOrder(1)
+	lSeek := DbSeek( xFilial("DBI")+ M->DBI_CODIGO) //DBI_FILIAL+DBI_CODIGO+DBI_FORNEC
 
-		If nOpc = 5
-			RecLock("DBI", .F., .T.)
-			DBI->( DbDelete() )
-			DBI->( MsUnlock() )
+	If nOpc = 5
+		RecLock("DBI", .F., .T.)
+			DbDelete()
+		MsUnlock()
+	Else
+
+		//Verifica Alteracao de Status
+		If !lFinal .Or. (M->DBI_STATUS == "4" .And. nOpc <> 8)	//Verifica Alteracao de Status 
+			cStatus := M->DBI_STATUS
 		Else
-
-			//Verifica Alteracao de Status
-			If !lFinal .Or. (M->DBI_STATUS == "4" .And. nOpc <> 8)	//Verifica Alteracao de Status
-				cStatus := M->DBI_STATUS
+		    If nOpc <> 8
+	    	   cStatus := AllTrim(Str( Val(M->DBI_STATUS) + 1 ) )
 			Else
-				If nOpc <> 8
-					cStatus := AllTrim(Str( Val(M->DBI_STATUS) + 1 ) )
-				Else
-					if __cUserID == AllTrim(DBI->(DBI_CODSOL))
-						cStatus := "3"
-						M->DBI_ORIGEM := "1"
-					Else
-						cStatus := "2"
-						M->DBI_ORIGEM := "1"
-					EndIf
+				if __cUserID == AllTrim(DBI->(DBI_CODSOL))
+					cStatus := "3" 
+					M->DBI_ORIGEM := "1"
+				Else 
+					cStatus := "2"
+					M->DBI_ORIGEM := "1"
 				EndIf
 			EndIf
+		EndIf	
 
-			RecLock("DBI", !lSeek)
+		RecLock("DBI", !lSeek)
 
 			DBI->DBI_FILIAL		:= xFILIAL("DBI")
 			DBI->DBI_CODIGO		:= M->DBI_CODIGO
@@ -775,199 +712,170 @@ Static Function C188AFGrava(cAlias, nRecno, nOpc)
 			DBI->DBI_NOMSOL		:= M->DBI_NOMSOL
 			DBI->DBI_NOMCOM		:= M->DBI_NOMCOM
 			DBI->DBI_CCDESC		:= M->DBI_CCDESC
-			DBI->( MsUnlock() )
+		MsUnlock()
 
-			//Envia e-mail de aviso de conclusao de etapa/processo
-			If lFinal .And. cStatus = "3" .And. M->DBI_ORIGEM <> "1" .And. nOpc <> 8
+		//Envia e-mail de aviso de conclusao de etapa/processo
+		If lFinal .And. cStatus = "3" .And. M->DBI_ORIGEM <> "1" .And. nOpc <> 8
 
-				//Envia email ao comprador
-				_cEMail := Alltrim(UsrRetMail( M->DBI_CODCOM ) )
-				_cBody  := "Prezado(a) Comprador(a),"+CRLF+CRLF
-				_cBody  += "Informamos que o solicitante finalizou sua etapa do processo de avalia็ใo de fornecedor "
-				_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF+CRLF
-				_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
-				_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
-				_cBody  += CRLF+CRLF
-				//ACSendMail( ,,,,_cEMail,"Conclusใo de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
-				TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Conclusใo de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+			//Envia email ao comprador 
+			_cEMail := Alltrim(UsrRetMail( M->DBI_CODCOM ) ) 
+			_cBody  := "Prezado(a) Comprador(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Informamos que o solicitante finalizou sua etapa do processo de avalia็ใo de fornecedor "
+			_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
+			_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+			ACSendMail( ,,,,_cEMail,"Conclusใo de Etapa - Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
 
+		Else
+			If lFinal .And. cStatus = "4" .And. M->DBI_ORIGEM <> "1" .And. nOpc <> 8
+
+				//Envia email ao SUPERVISOR  
+				_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) )
+   	      _cBody  := "Prezado(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				_cBody  += "Informamos que o processo de avalia็ใo de fornecedor "
+				_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)
+				_cBody  += "foi finalizado."
+				_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
+				_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+				ACSendMail( ,,,,_cEMail,"Conclusใo do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
 			Else
-				If lFinal .And. cStatus = "4" .And. M->DBI_ORIGEM <> "1" .And. nOpc <> 8
+				If lFinal .And. nOpc == 8
 
 					//Envia email ao SUPERVISOR
-					_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) )
-					_cBody  := "Prezado(a),"+CRLF+CRLF
-					_cBody  += "Informamos que o processo de avalia็ใo de fornecedor "
-					_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF
-					_cBody  += "foi finalizado."
-					_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
-					_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
-					_cBody  += CRLF+CRLF
-					//ACSendMail( ,,,,_cEMail,"Conclusใo do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
-					TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Conclusใo do Processo de Aval. de Fornecedor. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
-				Else
-					If lFinal .And. nOpc == 8
-
-						//Envia email ao SUPERVISOR
-						_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) )
-						_cBody  := "Prezado(a)"+Alltrim(UsrRetName( SuperGetMV("MV_XAVALIA")))+CRLF+CRLF
-						_cBody  += "Informamos que o processo de avalia็ใo de fornecedor  "
-						_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+CRLF
-						_cBody  += "que encontrava-se Finalizado, foi ESTORNADO pelo usuario "+cNomeUser+CRLF+CRLF
-						_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
-						_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+CRLF	+CRLF
-						_cBody  += CRLF+CRLF
-						//ACSendMail( ,,,,_cEMail,"Estorno do Processo de Avalia็ใo de Fornecedor jแ Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
-						TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Estorno do Processo de Avalia็ใo de Fornecedor jแ Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
-					EndIf
-				EndIf
+					_cEMail := Alltrim(UsrRetMail( SuperGetMV("MV_XAVALIA") ) ) 
+  					_cBody  := "Prezado(a)"+Alltrim(UsrRetName( SuperGetMV("MV_XAVALIA")))+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+					_cBody  += "Informamos que o processo de avalia็ใo de fornecedor  "
+					_cBody  += "referente a Nota Fiscal de Entrada Nr. "+M->DBI_DOC+"/"+M->DBI_SERIE+"."+Chr(13)+Chr(10)
+					_cBody  += "que encontrava-se Finalizado, foi ESTORNADO pelo usuario "+cNomeUser+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+					_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+					_cBody  += "Fornecedor:"+M->DBI_FORNEC+"\"+M->DBI_LOJA+Chr(13)+Chr(10)	+Chr(13)+Chr(10)
+					_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)
+					ACSendMail( ,,,,_cEMail,"Estorno do Processo de Avalia็ใo de Fornecedor jแ Finalizado. NF."+M->DBI_DOC+"/"+M->DBI_SERIE,_cBody)
+           	   	EndIf
 			EndIf
 		EndIf
-
 	EndIf
 
 Return lRet
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CNIA188AF
-Avaliacao de Fornecedores.
-
-@type function
-@author Fabricio Romera
-@since 22/08/2011
-@version P12.1.23
-
-@param lConsulta, L๓gico, Define se แ apenas consulta e eenibe as rotinas de inclusใo/altera็ใo/esclusใo/relat๓rio.
-@param cFiltro, Caractere, Define o Filtro do mBrowse.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัอออออออออออออหออออออัออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCNIA188AF	   บAutor ณFabricio Romera   บ Data ณ  22/08/11   บฑฑ
+ฑฑฬออออออออออุอออออออออออออสออออออฯออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณAvaliacao de Fornecedores                                   บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CNIA188AF(lConsulta, cFiltro)
+Local	aCores	   := {}
 
-	Local	aCores	   := {}
-	Local   lSegue     := .T.
+Default lConsulta  := .F.
+Default cFiltro    := ""
 
-	Default lConsulta  := .F.
-	Default cFiltro    := ""
+Private nUsado     := 0
+Private cCadastro  := "Avalia็ใo de Fornecedores"
+Private cAlias1    := "DBI"
+Private cAlias2    := "DBJ"
+Private aRotina    := {}
+Private aPos       := {15, 1, 70, 315}
+Private oCliente   := Nil
+Private oTotal     := Nil
+Private cCliente   := ""
+Private nTotal     := 0
 
-	Private nUsado     := 0
-	Private cCadastro  := "Avalia็ใo de Fornecedores"
-	Private cAlias1    := "DBI"
-	Private cAlias2    := "DBJ"
-	Private aRotina    := {}
-	Private aPos       := {15, 1, 70, 315}
-	Private oCliente   := Nil
-	Private oTotal     := Nil
-	Private cCliente   := ""
-	Private nTotal     := 0
+Private aSize    := {}
+Private aObjects := {}
+Private aInfo    := {}
+Private aPosObj  := {}
+Private aPosGet  := {}
 
-	Private aSize    := {}
-	Private aObjects := {}
-	Private aInfo    := {}
-	Private aPosObj  := {}
-	Private aPosGet  := {}
+aSize := MsAdvSize()
+aInfo := {aSize[1],aSize[2],aSize[3],aSize[4],3,3}
 
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
+aAdd(aObjects,{100,080,.T.,.F.})
+aAdd(aObjects,{100,100,.T.,.T.})
+aAdd(aObjects,{100,015,.T.,.F.})
 
-	//--< Processamento da Rotina >-----------------------------
+aPosObj := MsObjSize(aInfo,aObjects)
+aPosGet := MsObjGetPos((aSize[3]-aSize[1]),315,{{004,024,240,270}} )
 
-	aSize := MsAdvSize()
-	aInfo := {aSize[1],aSize[2],aSize[3],aSize[4],3,3}
+aAdd( aRotina ,{"Pesquisar" ,"AxPesqui"    ,0,1})
+aAdd( aRotina ,{"Visualizar",'u_C188AFMan' ,0,2})
+If !lConsulta
+	aAdd( aRotina ,{"Incluir"   ,'u_C188AFMan' ,0,3})
+	aAdd( aRotina ,{"Alterar"   ,'u_C188AFMan' ,0,4})
+	aAdd( aRotina ,{"Excluir"   ,'u_C188AFMan' ,0,5})
+	aAdd( aRotina, {"Relatorio"   ,"U_CNIR188"	,0,6})
+EndIf
+aAdd( aRotina, {"Legenda"   ,'U_CA188Leg'  ,0,7,0,.F.})
+aAdd( aRotina ,{"Estorna Avalia็ใo",'u_C188AFMan' ,0,8})
 
-	aAdd(aObjects,{100,080,.T.,.F.})
-	aAdd(aObjects,{100,100,.T.,.T.})
-	aAdd(aObjects,{100,015,.T.,.F.})
+aAdd(aCores,{'DBI_STATUS = "1"'	,'BR_PRETO'		})	//Avalia็ใo Manual
+aAdd(aCores,{'DBI_STATUS = "2"'	,'BR_LARANJA'	})	//Pendente Solicitante
+aAdd(aCores,{'DBI_STATUS = "3"'	,'BR_AMARELO'	})	//Pendente Comprador
+aAdd(aCores,{'DBI_STATUS = "4"'	,'ENABLE'		})	//Avalia็ใo Finalizada
+//aAdd(aCores,{'DBI_ORIGEM = "1"'	,'BR_PRETO'		})	//Avalia็ใo Manual
 
-	aPosObj := MsObjSize(aInfo,aObjects)
-	aPosGet := MsObjGetPos((aSize[3]-aSize[1]),315,{{004,024,240,270}} )
+If Empty(Posicione("SX3",1,cAlias1,"X3_ARQUIVO"))
+   Help("",1,"","NOX3X2IX","NรO ษ POSSอVEL EXECUTAR, FALTA"+ENTER+"X3, X2, IX E X7",1,0)
+   Return
+Endif
 
-	aAdd( aRotina ,{"Pesquisar" ,"AxPesqui"    ,0,1})
-	aAdd( aRotina ,{"Visualizar",'u_C188AFMan' ,0,2})
-	If !lConsulta
-		aAdd( aRotina ,{"Incluir"   ,'u_C188AFMan' ,0,3})
-		aAdd( aRotina ,{"Alterar"   ,'u_C188AFMan' ,0,4})
-		aAdd( aRotina ,{"Excluir"   ,'u_C188AFMan' ,0,5})
-		aAdd( aRotina, {"Relatorio"   ,"U_CNIR188"	,0,6})
-	EndIf
-	aAdd( aRotina, {"Legenda"   ,'U_CA188Leg'  ,0,7,0,.F.})
-	aAdd( aRotina ,{"Estorna Avalia็ใo",'u_C188AFMan' ,0,8})
+dbSelectArea(cAlias2)
+dbSetOrder(1)
 
-	aAdd(aCores,{'DBI_STATUS = "1"'	,'BR_PRETO'		})	//Avalia็ใo Manual
-	aAdd(aCores,{'DBI_STATUS = "2"'	,'BR_LARANJA'	})	//Pendente Solicitante
-	aAdd(aCores,{'DBI_STATUS = "3"'	,'BR_AMARELO'	})	//Pendente Comprador
-	aAdd(aCores,{'DBI_STATUS = "4"'	,'ENABLE'		})	//Avalia็ใo Finalizada
-	//aAdd(aCores,{'DBI_ORIGEM = "1"'	,'BR_PRETO'		})	//Avalia็ใo Manual
+dbSelectArea(cAlias1)
+dbSetOrder(1)
 
-	If Empty(Posicione("SX3",1,cAlias1,"X3_ARQUIVO"))
-		Help("",1,"","NOX3X2IX","NรO ษ POSSอVEL EXECUTAR, FALTA"+ENTER+"X3, X2, IX E X7",1,0)
-		lSegue := .F.
-	Endif
-
-	If lSegue
-
-		dbSelectArea(cAlias2)
-		dbSetOrder(1)
-
-		dbSelectArea(cAlias1)
-		dbSetOrder(1)
-
-		mBrowse(,,,,cAlias1,,,,,,aCores,,,,,,,,cFiltro)
-
-	End If
+mBrowse(,,,,cAlias1,,,,,,aCores,,,,,,,,cFiltro)
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188GetSF1
-Carrega campos a partir de la nota selecionada.
-
-@type function
-@author Fabricio Romera
-@since 24/08/2011
-@version P12.1.23
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-@return L๓gico, Fixo Verdadeiro.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCNIA188   บAutor  ณFabricio Romera     บ Data ณ  08/24/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณCarrega campos a partir de la nota selecionada              บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CA188GetSF1()
+Local aArea := GetArea()
+Local lRet  := .T.
 
-	Local aArea := GetArea()
-	Local lRet  := .T.
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
-
-	//Posiciona SD1
-	DbSelectArea("SD1")
-	SD1->( DbSetOrder(1) )
-	If ! SD1->( DbSeek( xFilial("SD1")+SF1->(F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA) ) )
-		//lRet := .T.
-	End If
+  	//Posiciona SD1
+  	DbSelectArea("SD1")
+	DbSetOrder(1)
+    If !DbSeek( xFilial("SD1")+SF1->(F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA) )
+    	//lRet := .T.
+    End If
 
 	//Posiciona SC7
 	DbSelectArea("SC7")
-	SC7->( DbSetOrder(1) )
-	If ! SC7->( DbSeek(xFilial("SC7")+SD1->D1_PEDIDO) )
-		//lRet := .T.
-	End If
+	DbSetOrder(1)
+    If !DbSeek(xFilial("SC7")+SD1->D1_PEDIDO)
+    	//lRet := .T.
+    End If
 
 	//Posiciona SC1
 	DbSelectArea("SC1")
-	SC1->( DbSetOrder(1) )
-	If ! SC1->( DbSeek(xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC) )
-		//lRet := .T.
+	DbSetOrder(1)
+	If !DbSeek(xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC)
+    	//lRet := .T.
 	End If
 
 	//Carrega campos DBI
@@ -978,49 +886,39 @@ User Function CA188GetSF1()
 	M->DBI_CC		:= SD1->D1_CC //SC1->C1_CC
 	M->DBI_CCDESC	:= Posicione( "CTT", 1, xFilial("CTT")+SD1->D1_CC, "CTT_DESC01" ) //Posicione( "CTT", 1, xFilial("CTT")+SC1->C1_CC, "CTT_DESC01" )
 
-	RestArea(aArea)
-
+RestArea(aArea)
 Return lRet
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188ClcPnt
-Calcula pontuacao final da avaliacao.
-
-@type function
-@author Fabricio Romera
-@since 09/01/2011
-@version P12.1.23
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-@return Num้rico, Pontuacao final da avaliacao.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCNIA188   บAutor  ณFabricio Romera     บ Data ณ  09/01/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณCalcula pontuacao final da avaliacao.                       บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CA188ClcPnt()
-
-	Local nPontua   := 0
-	Local nPeso		:= 0
-	Local nX		:= 0
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
+Local nPontua   := 0
+Local nPeso		:= 0
+Local nX		:= 0
 
 	//Soma pesos e pontuacao parcial - Solicitante
-	For nX := 1 to Len(aCols1)
-		nPeso 	+= aCols1[nX][6] //Peso
-		nPontua += aCols1[nX][8] //Pontua
-	Next
+    For nX := 1 to Len(aCols1)
+    	nPeso 	+= aCols1[nX][6] //Peso
+    	nPontua += aCols1[nX][8] //Pontua
+    Next
 
 	//Soma pesos e pontuacao parcial - Comprador
-	For nX := 1 to Len(aCols2)
-		nPeso 	+= aCols2[nX][6] //Peso
-		nPontua += aCols2[nX][8] //Pontua
-	Next
+    For nX := 1 to Len(aCols2)
+    	nPeso 	+= aCols2[nX][6] //Peso
+    	nPontua += aCols2[nX][8] //Pontua
+    Next
 
 	//Obtem media ponderada
 	nPontua := nPontua / nPeso
@@ -1029,78 +927,43 @@ User Function CA188ClcPnt()
 
 Return nPontua
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188Leg
-Monsta a Tela de Lengendas.
-
-@type function
-@author Thiago Rasmussen
-@since 01/03/2019
-@version P12.1.23
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-/*/
-/*/================================================================================================================================/*/
 User Function CA188Leg()
+Local aCores     := {}
 
-	Local aCores     := {}
+aAdd(aCores,{"BR_PRETO"		,"Avalia็ใo Manual"		})
+aAdd(aCores,{"BR_LARANJA"	,"Pendente Solicitante"	})
+aAdd(aCores,{"BR_AMARELO"	,"Pendente Comprador"	})
+aAdd(aCores,{"ENABLE"		,"Avalia็ใo Finalizada"	})
 
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
-	aAdd(aCores,{"BR_PRETO"		,"Avalia็ใo Manual"		})
-	aAdd(aCores,{"BR_LARANJA"	,"Pendente Solicitante"	})
-	aAdd(aCores,{"BR_AMARELO"	,"Pendente Comprador"	})
-	aAdd(aCores,{"ENABLE"		,"Avalia็ใo Finalizada"	})
-
-	BrwLegenda("Avalia็ใo de Fornecedores","",aCores)
+BrwLegenda("Avalia็ใo de Fornecedores","",aCores)
 
 Return
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188IncA
-Rotina para inclusao automatica de avaliacoes.
-
-@type function
-@author Fabricio Romera
-@since 09/01/2011
-@version P12.1.23
-
-@param aDados, Array, Array com os dados do Fornecedro e Documento.
-
-@obs Projeto ELO alterado pela FIEG
-
-@return L๓gico, Retorna Falso quando: Se houver produtos criticos, se ja existe avaliacao para o dcto, caso docto nao esteja vinculado a S.C.
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-@history 08/05/2019, Kley@TOTVS.com.br, Troca da fun็ใo ACSendMail() por TkSendMail().
-/*/
-/*/================================================================================================================================/*/
-
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCA188IncA บAutor  ณFabricio Romera     บ Data ณ  09/01/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณRotina para inclusao automatica de avaliacoes.              บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CA188IncA(aDados)
+Local aArea 	:= GetArea()
+Local lRet		:= .T.
+Local nX		:= 0
+Local lCrit 	:= .F.
+Local _cEMail 	:= ""
+Local _cBody  	:= ""
 
-	Local aArea   := GetArea()
-	Local lRet	  := .T.
-	Local nX	  := 0
-	Local lCrit   := .F.
-	Local _cEMail := ""
-	Local _cBody  := ""
-	Local cAccon  := SuperGetMv("MV_RELACNT")
-	Local cPassw  := SuperGetMv("MV_RELAPSW")
-	Local cServer := SuperGetMv("MV_RELSERV")
-	Local cFrom	  := SuperGetMv("MV_RELFROM")
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 
 	DbSelectArea("SBZ")
-	SBZ->(DbSetOrder(1))
+	DbSetOrder(1)
 
 	//Verifica se ha produtos criticos
 	For nX := 1 to Len(aCols)
@@ -1115,29 +978,28 @@ User Function CA188IncA(aDados)
 
 	If !lCrit
 		RestArea(aArea)
-		lRet :=  .F.
+		Return .F.
 	End If
 
 	DbSelectArea("DBI")
-	DBI->(DbSetOrder(2))
+	DbSetOrder(2)
 
 	//Verifica se ja existe avaliacao para o dcto.
-	If lRet .And. DBI->( DbSeek( xFilial("DBI")+aDados[3]+aDados[4]+aDados[1]+aDados[2] ) )
+	If DBI->( DbSeek( xFilial("DBI")+aDados[3]+aDados[4]+aDados[1]+aDados[2] ) )
 		RestArea(aArea)
-		lRet := .F.
+		Return .F.
 	End If
 
 	DBI->(RegToMemory("DBI", .T.))
 
 	//Retorna .F. caso docto nao esteja vinculado a S.C.
-	If lRet .And. !U_CA188GetSF1()
+	If !U_CA188GetSF1()
 		RestArea(aArea)
-		lRet :=  .F.
+		Return .F.
 	End If
 
-	If lRet
 
-		RecLock("DBI", .T.)
+	RecLock("DBI", .T.)
 		DBI->DBI_FILIAL		:= xFilial("DBI")
 		DBI->DBI_CODIGO		:= M->DBI_CODIGO
 		DBI->DBI_DATA  		:= M->DBI_DATA
@@ -1157,107 +1019,78 @@ User Function CA188IncA(aDados)
 		DBI->DBI_CCDESC		:= M->DBI_CCDESC
 
 
-		DBI->( MsUnlock() )
+	MsUnlock()
 
-		ConfirmSX8()
+	ConfirmSX8()
 
-		//Envia email ao solicitante
-		_cEMail := Alltrim(UsrRetMail( M->DBI_CODSOL ) )
-		_cBody  := "Prezado(a) Solicitante(a),"+CRLF+CRLF
-		_cBody  += "Informamos que foi aberto o processo de avalia็ใo de fornecedor referente a Nota Fiscal de Entrada Nr. "+aDados[1]+"/"+aDados[2]+"."+CRLF+CRLF
-		_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+CRLF+CRLF
-		_cBody  += "Fornecedor:"+aDados[3]+"\"+aDados[4]+CRLF+CRLF
-		_cBody  += CRLF+CRLF+CRLF
-		//ACSendMail( ,,,,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
-		TKSendMail(cAccon,cPassw,cServer,cFrom,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
+	//Envia email ao solicitante
+	_cEMail := Alltrim(UsrRetMail( M->DBI_CODSOL ) )
+	_cBody  := "Prezado(a) Solicitante(a),"+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	_cBody  += "Informamos que foi aberto o processo de avalia็ใo de fornecedor referente a Nota Fiscal de Entrada Nr. "+aDados[1]+"/"+aDados[2]+"."+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	_cBody  += "Codigo do Processo:"+M->DBI_CODIGO+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	_cBody  += "Fornecedor:"+aDados[3]+"\"+aDados[4]+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	_cBody  += Chr(13)+Chr(10)+Chr(13)+Chr(10)+Chr(13)+Chr(10)
+	ACSendMail( ,,,,_cEMail,"Abertura de Processo de Aval. de Fornecedor. NF."+aDados[1]+"/"+aDados[2],_cBody)
 
-		Aviso("Avalia็ใo de Fornecedores", " Foi gerado registro de avalia็ใo de fornecedor para esta nota fiscal. ",{"Ok"})
+	Aviso("Avalia็ใo de Fornecedores", " Foi gerado registro de avalia็ใo de fornecedor para esta nota fiscal. ",{"Ok"})
 
-	EndIf
-
-	RestArea(aArea)
-
+RestArea(aArea)
 Return lRet
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188VldCC
-Verifica se existe avalia็ใo pendente para um centro custo.
-
-@type function
-@author Fabricio Romera
-@since 09/01/2011
-@version P12.1.23
-
-@param aDados, cCC, Caractere, Centro de Custo.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-@return L๓gico, Retorna falso caso haja Avalia็ใo pendente para o fornecedor.
-
-/*/
-/*/================================================================================================================================/*/
-
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCA188VldCCบAutor  ณFabricio Romera     บ Data ณ  09/01/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณVerifica se existe avalia็ใo pendente para um centro custo  บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CA188VldCC(cCC)
+Local aArea := GetArea()
+Local lRet := .T.
 
-	Local aArea := GetArea()
-	Local lRet := .T.
-	Local lSegue  := .T.
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 	If Empty(cCC)
 		RestArea(aArea)
-		lSegue  := .F.
+		Return lRet
 	End If
 
-	If lSegue
+	DbSelectArea("DBI")
+	DbSetOrder(3) // Filial + Status + Centro Custo
+	If DbSeek(xFilial("DBI")+"2"+cCC)
+	    Aviso("Valida็ใo", "Por favor, verifique a Avalia็ใo de Fornecedor pendente para este Centro de Custo!", {"Ok"}, 3)
+		lRet := .F.
+	ElseIf DbSeek(xFilial("DBI")+"3"+cCC)
+	    Aviso("Valida็ใo", "Por favor, verifique a Avalia็ใo de Fornecedor pendente para este Centro de Custo!", {"Ok"}, 3)
+		lRet := .F.
+	End If
 
-		DbSelectArea("DBI")
-		DbSetOrder(3) // Filial + Status + Centro Custo
-		If DbSeek(xFilial("DBI")+"2"+cCC)
-			Aviso("Valida็ใo", "Por favor, verifique a Avalia็ใo de Fornecedor pendente para este Centro de Custo!", {"Ok"}, 3)
-			lRet := .F.
-		ElseIf DbSeek(xFilial("DBI")+"3"+cCC)
-			Aviso("Valida็ใo", "Por favor, verifique a Avalia็ใo de Fornecedor pendente para este Centro de Custo!", {"Ok"}, 3)
-			lRet := .F.
-		End If
-
-	EndIf
-
-	RestArea(aArea)
-
+RestArea(aArea)
 Return lRet
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} CA188VldCC
-Valida Criterio.
-
-@type function
-@author Fabricio Romera
-@since 09/01/2011
-@version P12.1.23
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-@return L๓gico, Retorna Verdadeiro ou falso para crit้rio vแlido ou nใo.
-
-/*/
-/*/================================================================================================================================/*/
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCA188VldCCบAutor  ณFabricio Romera     บ Data ณ  09/01/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณValida Criterio											  บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 User Function CA188VlCr()
+Local lRet := .T.
+Local nX
 
-	Local lRet := .T.
-	Local nX
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
 	DbSelectArea("DBH")
 	DBH->( DbSetOrder(2) )
 	If DBH->( !DbSeek( xFilial("DBH") + aCols[n][2] + M->DBJ_CRITER ) )
@@ -1280,35 +1113,23 @@ User Function CA188VlCr()
 
 Return lRet
 
-/*/================================================================================================================================/*/
-/*/{Protheus.doc} ValidCpos
-Valida campos obrigatorios para inclusใo/alteracao.
-
-@type function
-@author Fabricio Romera
-@since 09/01/2011
-@version P12.1.23
-
-@param nOpc, Num้rico, Op็ใo selecionada.
-
-@obs Projeto ELO alterado pela FIEG
-
-@history 01/03/2019, elton.alves@TOTVS.com.br, Compatibiliza็ใo para o Protheus 12.1.23.
-
-@return L๓gico, Retorna Verdadeiro ou falso para valida็ใo do campo.
-
-/*/
-/*/================================================================================================================================/*/
-
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออหอออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณCA188VldCCบAutor  ณFabricio Romera     บ Data ณ  09/01/11   บฑฑ
+ฑฑฬออออออออออุออออออออออสอออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณValida campos obrigatorios para inclusใo/alteracao.		  บฑฑ
+ฑฑบ          ณ                                                            บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออนฑฑ
+ฑฑบUso       ณ AP                                                         บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
 Static Function ValidCpos(nOpc)
-
-	Local aArea := GetArea()
-	Local lRet  := .T.
-
-	//--< Log das Personaliza็๕es >-----------------------------
-	U_LogCustom()
-
-	//--< Processamento da Rotina >-----------------------------
+Local aArea := GetArea()
+Local lRet  := .T.
 
 	If nOpc == 3 .or. nOpc == 4
 
@@ -1322,7 +1143,7 @@ Static Function ValidCpos(nOpc)
 			Aviso("Documento de Entrada","Existe(m) campo(s) obrigat๓rio(s) nใo preenchidos.",{"Ok"})
 			lRet := .F.
 
-			//Verifica se jแ existe avaliacao para esta nota
+		//Verifica se jแ existe avaliacao para esta nota
 		ElseIf nOpc == 3
 
 			DbSelectArea("DBI")
@@ -1335,6 +1156,5 @@ Static Function ValidCpos(nOpc)
 
 	End If
 
-	RestArea(aArea)
-
+RestArea(aArea)
 Return lRet
