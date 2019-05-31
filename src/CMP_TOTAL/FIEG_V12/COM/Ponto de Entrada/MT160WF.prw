@@ -3,7 +3,7 @@
 /*/================================================================================================================================/*/
 /*/{Protheus.doc} MT160WF
 Ponto de Entrada Após a gravação dos pedidos de compras e contrato pela analise da cotação.
-Utilizado para popular os campos C7_XESPEC ou CNB_XESPEC com o conteúdo do campo C1_XESPEC do item da solicitação de compras correspondenete.
+Utilizado para popular os campos C7_XESPEC ou CNB_XESPEC com o conteúdo do campo C8_XESPEC do item da cotação de preço correspondenete.
 
 @type function
 @author Elton Teodoro Alves
@@ -21,105 +21,99 @@ User Function MT160WF()
 	Local cNumCot  := PARAMIXB[1]
 	Local aArea    := GetArea()
 	Local aAreaSC7 := SC7->( GetArea() )
+	Local aAreaSC8 := SC8->( GetArea() )
 	Local aAreaCNB := CNB->( GetArea() )
-	Local cNumPed  := SC8->C8_NUMPED
-	Local cNumCon  := SC8->C8_NUMCON
-	Local cSolNum  := ''
-	Local cSolItem := ''
 
-	If !Empty( cNumPed )
+	DbSelectArea( 'SC8' )
+	DbSetOrder( 1 )
 
-		DbSelectArea( 'SC7' )
-		DbSetOrder( 1 )
+	SC8->( DbGoTop() )
 
-		If DbSeek( xFilial( 'SC7' ) + cNumPed )
+	If DbSeek( xFilial( 'SC8' ) + cNumCot )
 
-			Do While SC7->( ! Eof() ) .And. SC7->C7_NUM == cNumPed
+		SetSC7( SC8->C8_NUMPED, SC8->C8_ITEMPED )
 
-				cSolNum  := SC7->C7_NUMSC
-				cSolItem := SC7->C7_ITEMSC
+		SetCNB( SC8->C8_NUMSC, SC8->C8_ITEMSC )
 
-				RecLock( 'SC7', .F. )
-
-				SC7->C7_XESPEC := GetXEspec( cSolNum, cSolItem )
-
-				MsUnlock()
-
-				SC7->( DbSkip() )
-
-			End Do
-
-		End If
-
-	ElseIf !Empty( cNumCon )
-
-		DbSelectArea( 'CNB' )
-		DbSetOrder( 1 )
-
-		If DbSeek( xFilial( 'CNB' ) + cNumCon )
-
-			Do While CNB->( ! Eof() ) .And. CNB->CNB_CONTRA == cNumCon
-
-				cSolNum  := CNB->CNB_NUMSC
-				cSolItem := CNB->CNB_ITEMSC
-
-				RecLock( 'SC7', .F. )
-
-				CNB->CNB_XESPEC := GetXEspec( cSolNum, cSolItem )
-
-				MsUnlock()
-
-				CNB->( DbSkip() )
-
-			End Do
-
-		End If
+		SC8->( DbSkip() )
 
 	End If
 
 	// Restaura as Áreas
 	SC7->( RestArea( aAreaSC7 ) )
+	SC8->( RestArea( aAreaSC8 ) )
 	CNB->( RestArea( aAreaCNB ) )
 	RestArea( aArea )
 
 Return
 
 /*/================================================================================================================================/*/
-/*/{Protheus.doc} GetXEspec
-Retorna o conteúdo do campo C1_XESPEC do item de suma solicitação de compras.
+/*/{Protheus.doc} SetSC7
+Popuala do campo C7_XESPEC com o conteúdo do campo C8_XESPEC.
 
 @type function
 @author Elton Teodoro Alves
 @since 30/05/2018
 @version P12.1.23
 
-@param cSolNum,  Caractere, Número da Solicitação de Compras
-@param cSolItem, Caractere, Item da Solicitação de Compras
+@param cNumPed, Caractere, Número do Pedido de Compra
+@param cItemPed, Caractere, Item do Pedido de Compra
 
 @obs Desenvolvimento FIEG
 
-@history 30/05/2018, elton.alves@TOTVS.com.br, .
+@history 30/05/2018, elton.alves@TOTVS.com.br, Popula do campo C7_XESPEC com o conteúdo do campo C8_XESPEC.
 
 /*/
 /*/================================================================================================================================/*/
-Static Function GetXEspec( cSolNum, cSolItem )
+Static Function SetSC7( cNumPed, cItemPed )
 
-	Local cRet     := ''
-	Local aArea    := GetArea()
-	Local aAreaSC1 := SC1->( GetArea() ) 
-
-	DbSelectArea( 'SC1' )
+	DbSelectArea( 'SC7' )
 	DbSetOrder( 1 )
 
-	If DbSeek( xFilial( 'SC1' ) + cSolNum + cSolItem )
+	If DbSeek( xFilial( 'SC7' ) + cNumPed + cItemPed)
 
-		cRet := SC1->C1_XESPEC
+		RecLock( 'SC7', .F. )
+
+		SC7->C7_XESPEC := SC8->C8_XESPEC
+
+		SC7->( MsUnlock() )
 
 	End If
 
-	// Restaura as Áreas
-	SC1->( RestArea( aAreaSC1 ) )
-	RestArea( aArea )
+Return
 
-Return cRet
+/*/================================================================================================================================/*/
+/*/{Protheus.doc} SetSC7
+Popula do campo CNB_XESPEC com o conteúdo do campo C8_XESPEC.
+
+@type function
+@author Elton Teodoro Alves
+@since 30/05/2018
+@version P12.1.23
+
+@param cNumSc, Caractere, Número da Solicitação de Compra.
+@param cItemSc, Caractere, Item da Solicitação de Compra.
+
+@obs Desenvolvimento FIEG
+
+@history 30/05/2018, elton.alves@TOTVS.com.br, Popula do campo CNB_XESPEC com o conteúdo do campo C8_XESPEC.
+
+/*/
+/*/================================================================================================================================/*/
+Static Function SetCNB( cNumSc, cItemSc )
+
+	DbSelectArea( 'CNB' )
+	DbSetOrder( 2 )
+
+	If DbSeek( xFilial( 'CNB' ) + cNumSc + cItemSc )
+
+		RecLock( 'CNB', .F. )
+
+		CNB->CNB_XESPEC := SC8->C8_XESPEC
+
+		CNB->( MsUnlock() )
+
+	End If
+
+Return
 
